@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ain Tō Sushi - Nhà Hàng Nhật Bản</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+      authDomain: "ain-to-sushi.firebaseapp.com",
+      databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ain-to-sushi",
+      storageBucket: "ain-to-sushi.firebasestorage.app",
+      messagingSenderId: "191817237919",
+      appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+  </script>
+
+
+
+
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li><a href="takeout.html">Đặt Món</a></li>
+                <li><a href="admin/login.html">Đăng Nhập</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Chào Mừng Đến<br>Ain Tō Sushi</h1>
+        <p>Trải nghiệm hương vị Nhật Bản đích thực<br>Trong không gian sang trọng và tinh tế</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+            <a href="reservation.html" class="btn">Đặt Bàn Ngay</a>
+            <a href="menu.html" class="btn btn-secondary">Xem Thực Đơn</a>
+        </div>
+    </section>
+
+    <div class="container">
+        <section>
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Về Chúng Tôi</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🍣 Ẩm Thực Nhật Bản</h3>
+                    <p>Chúng tôi tự hào phục vụ những món ăn Nhật Bản chính thống với nguyên liệu tươi ngon nhất, được chế biến bởi các đầu bếp giàu kinh nghiệm.</p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🏮 Không Gian Độc Đáo</h3>
+                    <p>Không gian nhà hàng được thiết kế theo phong cách Nhật Bản truyền thống, tạo cảm giác ấm cúng và thân thiện cho thực khách.</p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">⭐ Dịch Vụ Chuyên Nghiệp</h3>
+                    <p>Đội ngũ nhân viên được đào tạo chuyên nghiệp, luôn sẵn sàng phục vụ bạn với thái độ nhiệt tình và chu đáo.</p>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-top: 6rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Món Ăn Nổi Bật</h2>
+            <div class="grid">
+                <div class="menu-item">
+                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
+                    <div class="menu-item-content">
+                        <h3>Sushi Set</h3>
+                        <p>Bộ sushi đa dạng với cá tươi ngon</p>
+                        <div class="menu-item-price">350,000đ</div>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
+                    <div class="menu-item-content">
+                        <h3>Ramen Đặc Biệt</h3>
+                        <p>Mì ramen với nước dùng đậm đà</p>
+                        <div class="menu-item-price">120,000đ</div>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍤</div>
+                    <div class="menu-item-content">
+                        <h3>Tempura</h3>
+                        <p>Tôm và rau củ chiên giòn</p>
+                        <div class="menu-item-price">180,000đ</div>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍱</div>
+                    <div class="menu-item-content">
+                        <h3>Bento Box</h3>
+                        <p>Cơm hộp với nhiều món ăn kèm</p>
+                        <div class="menu-item-price">200,000đ</div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="menu.html" class="btn">Xem Toàn Bộ Thực Đơn</a>
+            </div>
+        </section>
+
+        <section style="margin-top: 6rem; background: var(--white); padding: 4rem 3rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Thông Tin Liên Hệ</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="margin-bottom: 1rem;">📍 Địa Chỉ</h3>
+                    <p>123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 1rem;">📞 Điện Thoại</h3>
+                    <p>0123 456 789</p>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 1rem;">🕐 Giờ Mở Cửa</h3>
+                    <p>11:00 - 22:00 (Hàng ngày)</p>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 1rem;">📧 Email</h3>
+                    <p>info@aintosushi.com</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+</body>
+</html>
+

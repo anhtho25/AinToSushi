@@ -1,0 +1,258 @@
+{
+  "users": {
+    "userId": {
+      "username": "",
+      "password": "",
+      "name": "",
+      "email": "",
+      "phone": "",
+      "role": "manager | waiter | chef | cashier",
+      "active": true,
+      "createdAt": "",
+      "lastLogin": ""
+    }
+  },
+
+  "categories": {
+    "categoryId": {
+      "name": "",
+      "nameEn": "",
+      "description": "",
+      "imageUrl": "",
+      "displayOrder": 0,
+      "active": true,
+      "createdAt": ""
+    }
+  },
+
+  "menu": {
+    "foodId": {
+      "name": "",
+      "nameEn": "",
+      "description": "",
+      "price": 0,
+      "imageUrl": "",
+      "categoryId": "",
+      "available": true,
+      "displayOrder": 0,
+      "createdAt": "",
+      "updatedAt": ""
+    }
+  },
+
+  "tables": {
+    "tableId": {
+      "number": "",
+      "name": "",
+      "capacity": 0,
+      "status": "empty | serving | reserved",
+      "currentOrderId": "",
+      "currentCustomerName": "",
+      "reservedUntil": "",
+      "location": "",
+      "active": true
+    }
+  },
+
+  "reservations": {
+    "reservationId": {
+      "customerName": "",
+      "phone": "",
+      "email": "",
+      "date": "",
+      "time": "",
+      "numberOfPeople": 0,
+      "tableId": "",
+      "tableNumber": "",
+      "note": "",
+      "status": "pending | confirmed | canceled | completed",
+      "createdAt": "",
+      "confirmedAt": "",
+      "canceledAt": ""
+    }
+  },
+
+  "orders": {
+    "orderId": {
+      "orderNumber": "",
+      "tableId": "",
+      "tableNumber": "",
+      "customerType": "dine-in | takeaway",
+      "customerName": "",
+      "customerPhone": "",
+      "customerAddress": "",
+      "staffId": "",
+      "staffName": "",
+      "status": "pending | confirmed | cooking | ready | serving | completed | paid | canceled",
+      "items": {},
+      "subtotal": 0,
+      "discount": 0,
+      "totalAmount": 0,
+      "paymentMethod": "",
+      "paymentStatus": "unpaid | paid | refunded",
+      "note": "",
+      "createdAt": "",
+      "completedAt": "",
+      "paidAt": ""
+    }
+  },
+
+  "orderItems": {
+    "orderItemId": {
+      "orderId": "",
+      "foodId": "",
+      "foodName": "",
+      "quantity": 0,
+      "unitPrice": 0,
+      "totalPrice": 0,
+      "note": "",
+      "status": "pending | cooking | ready | served",
+      "chefId": "",
+      "createdAt": "",
+      "completedAt": ""
+    }
+  },
+
+  "payments": {
+    "paymentId": {
+      "orderId": "",
+      "orderNumber": "",
+      "method": "cash | card | transfer | e-wallet",
+      "amount": 0,
+      "receivedAmount": 0,
+      "change": 0,
+      "transactionId": "",
+      "paidAt": "",
+      "cashierId": "",
+      "cashierName": "",
+      "status": "success | failed | refunded",
+      "note": ""
+    }
+  },
+
+  "inventory": {
+    "ingredientId": {
+      "name": "",
+      "nameEn": "",
+      "unit": "kg | g | l | ml | piece | box",
+      "quantity": 0,
+      "minQuantity": 0,
+      "maxQuantity": 0,
+      "supplier": "",
+      "lastRestocked": "",
+      "updatedAt": "",
+      "active": true
+    }
+  },
+
+  "inventoryTransactions": {
+    "transactionId": {
+      "ingredientId": "",
+      "ingredientName": "",
+      "type": "in | out",
+      "quantity": 0,
+      "unit": "",
+      "reason": "",
+      "staffId": "",
+      "staffName": "",
+      "createdAt": ""
+    }
+  },
+
+  "promotions": {
+    "promotionId": {
+      "name": "",
+      "description": "",
+      "type": "percent | fixed",
+      "value": 0,
+      "applyTo": "all | category | food",
+      "categoryId": "",
+      "foodId": "",
+      "minOrderAmount": 0,
+      "maxDiscount": 0,
+      "startDate": "",
+      "endDate": "",
+      "active": true,
+      "createdAt": "",
+      "updatedAt": ""
+    }
+  },
+
+  "takeoutOrders": {
+    "takeoutId": {
+      "orderNumber": "",
+      "customerName": "",
+      "customerPhone": "",
+      "customerAddress": "",
+      "pickupTime": "",
+      "items": {},
+      "subtotal": 0,
+      "discount": 0,
+      "totalAmount": 0,
+      "paymentMethod": "",
+      "paymentStatus": "unpaid | paid",
+      "status": "pending | preparing | ready | completed | canceled",
+      "note": "",
+      "createdAt": "",
+      "completedAt": ""
+    }
+  },
+
+  "reports": {
+    "daily": {
+      "date": {
+        "date": "",
+        "totalOrders": 0,
+        "totalRevenue": 0,
+        "totalCustomers": 0,
+        "averageOrderValue": 0,
+        "topFoods": {},
+        "tableUtilization": 0
+      }
+    },
+    "monthly": {
+      "month": {
+        "month": "",
+        "totalOrders": 0,
+        "totalRevenue": 0,
+        "totalCustomers": 0,
+        "averageOrderValue": 0,
+        "topFoods": {},
+        "topCategories": {}
+      }
+    },
+    "yearly": {
+      "year": {
+        "year": "",
+        "totalOrders": 0,
+        "totalRevenue": 0,
+        "totalCustomers": 0,
+        "averageOrderValue": 0,
+        "monthlyBreakdown": {}
+      }
+    }
+  },
+
+  "settings": {
+    "restaurant": {
+      "name": "Ain Tō Sushi",
+      "nameEn": "Ain Tō Sushi",
+      "address": "",
+      "phone": "",
+      "email": "",
+      "openingHours": {
+        "monday": { "open": "11:00", "close": "22:00", "closed": false },
+        "tuesday": { "open": "11:00", "close": "22:00", "closed": false },
+        "wednesday": { "open": "11:00", "close": "22:00", "closed": false },
+        "thursday": { "open": "11:00", "close": "22:00", "closed": false },
+        "friday": { "open": "11:00", "close": "22:00", "closed": false },
+        "saturday": { "open": "11:00", "close": "22:00", "closed": false },
+        "sunday": { "open": "11:00", "close": "22:00", "closed": false }
+      },
+      "taxRate": 0,
+      "serviceCharge": 0,
+      "currency": "VND"
+    }
+  }
+}
+  

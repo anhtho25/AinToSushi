@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Bàn - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li><a href="takeout.html">Đặt Món</a></li>
+                <li><a href="admin/login.html">Đăng Nhập</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section style="margin-top: 2rem;">
+            <h1 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">Đặt Bàn Trực Tuyến</h1>
+            
+            <div class="grid">
+                <div class="card">
+                    <h2 class="card-header">Thông Tin Đặt Bàn</h2>
+                    <form action="#" method="POST">
+                        <div class="form-group">
+                            <label for="name">Họ và Tên *</label>
+                            <input type="text" id="name" name="name" required placeholder="Nhập họ và tên">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Số Điện Thoại *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="0123 456 789">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Ngày Đặt Bàn *</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Giờ Đặt Bàn *</label>
+                            <input type="time" id="time" name="time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="guests">Số Lượng Người *</label>
+                            <select id="guests" name="guests" required>
+                                <option value="">Chọn số lượng người</option>
+                                <option value="1">1 người</option>
+                                <option value="2">2 người</option>
+                                <option value="3">3 người</option>
+                                <option value="4">4 người</option>
+                                <option value="5">5 người</option>
+                                <option value="6">6 người</option>
+                                <option value="7">7 người trở lên</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="table">Chọn Bàn (Tùy chọn)</label>
+                            <select id="table" name="table">
+                                <option value="">Để nhà hàng sắp xếp</option>
+                                <option value="1">Bàn 1 (2 người)</option>
+                                <option value="2">Bàn 2 (2 người)</option>
+                                <option value="3">Bàn 3 (4 người)</option>
+                                <option value="4">Bàn 4 (4 người)</option>
+                                <option value="5">Bàn 5 (6 người)</option>
+                                <option value="6">Bàn 6 (6 người)</option>
+                                <option value="7">Bàn VIP (8 người)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Ghi Chú Đặc Biệt</label>
+                            <textarea id="notes" name="notes" placeholder="Ví dụ: Kỷ niệm sinh nhật, yêu cầu bàn gần cửa sổ..."></textarea>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Xác Nhận Đặt Bàn</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-header">Thông Tin Nhà Hàng</h2>
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📍 Địa Chỉ</h3>
+                        <p>123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🕐 Giờ Mở Cửa</h3>
+                        <p><strong>Thứ 2 - Chủ Nhật:</strong> 11:00 - 22:00</p>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📞 Liên Hệ</h3>
+                        <p>Điện thoại: 0123 456 789</p>
+                        <p>Email: info@sakurarestaurant.com</p>
+                    </div>
+                    <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 10px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">💡 Lưu Ý</h3>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 0.5rem;">✓ Vui lòng đến đúng giờ đã đặt</li>
+                            <li style="margin-bottom: 0.5rem;">✓ Đặt bàn trước ít nhất 2 giờ</li>
+                            <li style="margin-bottom: 0.5rem;">✓ Có thể hủy đặt bàn trước 1 giờ</li>
+                            <li style="margin-bottom: 0.5rem;">✓ Chúng tôi sẽ gọi điện xác nhận</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+</body>
+</html>
+
