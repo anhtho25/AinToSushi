@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 
-const VNP_TMN_CODE = 'Z4LMR0L0';
 const VNP_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
 const VNP_RETURN_URL = 'https://aintosushi.netlify.app/vnpay_return.html';
 
@@ -44,8 +43,9 @@ exports.handler = async (event, context) => {
   }
 
   const secret = process.env.VNP_HASH_SECRET;
-  if (!secret) {
-    return jsonResponse(500, { error: 'VNP_HASH_SECRET not configured' });
+  const tmnCode = process.env.VNP_TMN_CODE;
+  if (!secret || !tmnCode) {
+    return jsonResponse(500, { error: 'VNP_HASH_SECRET or VNP_TMN_CODE not configured' });
   }
 
   let body;
@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
     vnp_OrderInfo: 'Thanh toan don hang ' + vnp_TxnRef,
     vnp_OrderType: 'other',
     vnp_ReturnUrl: VNP_RETURN_URL,
-    vnp_TmnCode: VNP_TMN_CODE,
+    vnp_TmnCode: tmnCode,
     vnp_TxnRef: vnp_TxnRef,
     vnp_Version: '2.1.0',
   };

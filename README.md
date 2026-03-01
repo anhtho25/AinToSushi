@@ -1,5 +1,21 @@
 # Website Quản Lý Quán Ăn Nhật Bản - Sakura Restaurant
 
+git init
+git add .
+git commit -m "Update: Thêm mới... "
+git remote add origin <repository-url>
+git Push origin main
+
+
+
+
+# Rename local branch from master to main
+git branch -M main
+
+# Push to main branch
+git push -u origin main --force   
+
+
 ## 📋 Mô Tả
 
 Website quản lý quán ăn Nhật Bản là một hệ thống quản lý toàn diện hỗ trợ các hoạt động hàng ngày của nhà hàng, từ quản lý đơn hàng, bàn ăn, thực đơn đến quản lý nhân viên và báo cáo doanh thu.
@@ -112,6 +128,17 @@ DOANCS2/
 - **HTML5** - Cấu trúc trang web
 - **CSS3** - Styling và layout
 - **Responsive Design** - Tương thích mọi thiết bị
+
+## 🔐 Biến môi trường (Netlify)
+
+Khi deploy lên Netlify, cấu hình trong **Site settings → Environment variables**:
+
+| Biến | Mô tả |
+|------|--------|
+| `VNP_TMN_CODE` | Mã website VNPay (TMN Code) |
+| `VNP_HASH_SECRET` | Chuỗi bí mật ký giao dịch VNPay (Hash Secret) |
+
+**Không** commit file `.env` hoặc giá trị thật của các key lên GitHub. Dùng `.env.example` chỉ để tham khảo tên biến.
 
 ## 📝 Lưu Ý
 
