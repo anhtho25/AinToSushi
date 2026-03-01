@@ -4,7 +4,7 @@ git init
 git add .
 git commit -m "Update: Thêm mới... "
 git remote add origin <repository-url>
-git Push origin main
+git push origin main
 
 
 

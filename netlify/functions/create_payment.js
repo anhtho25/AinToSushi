@@ -82,9 +82,9 @@ exports.handler = async (event, context) => {
   const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]));
   const queryString = queryParts.join('&');
 
-  const hmac = crypto.createHmac('sha512', secret);
-  hmac.update(queryString);
-  const vnp_SecureHash = hmac.digest('hex');
+  // VNPay Sandbox thường dùng SHA512(secret + queryString), không phải HMAC-SHA512
+  const signData = secret + queryString;
+  const vnp_SecureHash = crypto.createHash('sha512').update(signData, 'utf8').digest('hex');
 
   const paymentUrl = VNP_URL + '?' + queryString + '&vnp_SecureHash=' + vnp_SecureHash;
 

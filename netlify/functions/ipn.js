@@ -20,7 +20,6 @@ function getQueryFromEvent(event) {
 
 function verifySecureHash(params, secret) {
   const secureHash = params.vnp_SecureHash;
-  const secureHashType = params.vnp_SecureHashType;
   if (!secureHash) return false;
 
   const filtered = { ...params };
@@ -28,12 +27,12 @@ function verifySecureHash(params, secret) {
   delete filtered.vnp_SecureHashType;
 
   const sortedKeys = Object.keys(filtered).sort();
-  const queryParts = sortedKeys.map((k) => k + '=' + (filtered[k] ?? ''));
+  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(filtered[k] ?? ''));
   const queryString = queryParts.join('&');
 
-  const hmac = crypto.createHmac('sha512', secret);
-  hmac.update(queryString);
-  const expected = hmac.digest('hex');
+  // Cùng cách với create_payment: SHA512(secret + queryString)
+  const signData = secret + queryString;
+  const expected = crypto.createHash('sha512').update(signData, 'utf8').digest('hex');
   return expected === secureHash;
 }
 
