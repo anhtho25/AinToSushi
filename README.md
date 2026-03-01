@@ -133,10 +133,12 @@ DOANCS2/
 
 Khi deploy lên Netlify, cấu hình trong **Site settings → Environment variables**:
 
-| Biến | Mô tả |
-|------|--------|
-| `VNP_TMN_CODE` | Mã website VNPay (TMN Code) |
-| `VNP_HASH_SECRET` | Chuỗi bí mật ký giao dịch VNPay (Hash Secret) |
+| Biến | Bắt buộc | Mô tả |
+|------|----------|--------|
+| `GOOGLE_API_KEY` | Tùy chọn | API key Google (Firebase / dịch vụ Google) |
+| `VNP_TMN_CODE` | Có (VNPay) | Mã website VNPay (TMN Code) |
+| `VNP_HASH_SECRET` | Có (VNPay) | Chuỗi bí mật ký giao dịch VNPay (Hash Secret) |
+| `VNP_LEGACY_HASH` | Tùy chọn | Đặt `1` hoặc `true` nếu VNPay dùng kiểu hash cũ (SHA512). Mặc định dùng HMAC-SHA512. |
 
 **Không** commit file `.env` hoặc giá trị thật của các key lên GitHub. Dùng `.env.example` chỉ để tham khảo tên biến.
 
