@@ -42,8 +42,8 @@ exports.handler = async (event, context) => {
     return jsonResponse(405, { error: 'Method Not Allowed' });
   }
 
-  const secret = process.env.VNP_HASH_SECRET;
-  const tmnCode = process.env.VNP_TMN_CODE;
+  const secret = (process.env.VNP_HASH_SECRET || '').trim();
+  const tmnCode = (process.env.VNP_TMN_CODE || '').trim();
   if (!secret || !tmnCode) {
     return jsonResponse(500, { error: 'VNP_HASH_SECRET or VNP_TMN_CODE not configured' });
   }
@@ -79,12 +79,21 @@ exports.handler = async (event, context) => {
   };
 
   const sortedKeys = Object.keys(params).sort();
-  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]));
+  // Chuỗi dùng để ký: format giống PHP urlencode (dấu cách = '+')
+  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]).replace(/%20/g, '+'));
   const queryString = queryParts.join('&');
 
-  // VNPay Sandbox thường dùng SHA512(secret + queryString), không phải HMAC-SHA512
-  const signData = secret + queryString;
-  const vnp_SecureHash = crypto.createHash('sha512').update(signData, 'utf8').digest('hex');
+  let vnp_SecureHash;
+  const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
+  if (useLegacyHash) {
+    // Một số merchant cũ: SHA512(secret + queryString)
+    vnp_SecureHash = crypto.createHash('sha512').update(secret + queryString, 'utf8').digest('hex');
+  } else {
+    // VNPay 2.1.0 chuẩn: HMAC-SHA512(key=secret, data=queryString)
+    const hmac = crypto.createHmac('sha512', secret);
+    hmac.update(queryString, 'utf8');
+    vnp_SecureHash = hmac.digest('hex');
+  }
 
   const paymentUrl = VNP_URL + '?' + queryString + '&vnp_SecureHash=' + vnp_SecureHash;
 

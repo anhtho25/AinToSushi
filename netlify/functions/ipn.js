@@ -27,17 +27,23 @@ function verifySecureHash(params, secret) {
   delete filtered.vnp_SecureHashType;
 
   const sortedKeys = Object.keys(filtered).sort();
-  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(filtered[k] ?? ''));
+  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(String(filtered[k] ?? '')).replace(/%20/g, '+'));
   const queryString = queryParts.join('&');
 
-  // Cùng cách với create_payment: SHA512(secret + queryString)
-  const signData = secret + queryString;
-  const expected = crypto.createHash('sha512').update(signData, 'utf8').digest('hex');
+  const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
+  let expected;
+  if (useLegacyHash) {
+    expected = crypto.createHash('sha512').update(secret + queryString, 'utf8').digest('hex');
+  } else {
+    const hmac = crypto.createHmac('sha512', secret);
+    hmac.update(queryString, 'utf8');
+    expected = hmac.digest('hex');
+  }
   return expected === secureHash;
 }
 
 exports.handler = async (event, context) => {
-  const secret = process.env.VNP_HASH_SECRET;
+  const secret = (process.env.VNP_HASH_SECRET || '').trim();
   if (!secret) {
     return {
       statusCode: 500,
