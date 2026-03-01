@@ -6,7 +6,7 @@
     <title>Đặt Bàn - Ain Tō Sushi</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="theme-aintosushi">
     <header>
         <nav>
             <a href="index.html" class="logo">
@@ -17,15 +17,19 @@
                 <li><a href="index.html">Trang Chủ</a></li>
                 <li><a href="menu.html">Thực Đơn</a></li>
                 <li><a href="reservation.html">Đặt Bàn</a></li>
-                <li><a href="takeout.html">Đặt Món</a></li>
-                <li><a href="admin/login.html">Đăng Nhập</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
             </ul>
         </nav>
     </header>
 
     <div class="container">
         <section style="margin-top: 2rem;">
-            <h1 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">Đặt Bàn Trực Tuyến</h1>
+            <h1 class="page-title">Đặt Bàn Trực Tuyến</h1>
             
             <div class="grid">
                 <div class="card">
@@ -117,6 +121,64 @@
     <footer>
         <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
     </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        let currentUser = null;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user || null;
+            const wrap = document.getElementById('navAuthWrap');
+            if (wrap) {
+                const guests = wrap.querySelectorAll('.nav-auth-guest');
+                const userSpan = wrap.querySelector('.nav-auth-user');
+                if (user) {
+                    guests.forEach(el => { el.style.display = 'none'; });
+                    if (userSpan) userSpan.style.display = 'inline-block';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                    else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+                } else {
+                    guests.forEach(el => { el.style.display = 'inline-block'; });
+                    if (userSpan) userSpan.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                    if (ph) ph.style.display = 'inline-block';
+                }
+                wrap.style.visibility = 'visible';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            if (!form) return;
+            form.addEventListener('submit', (e) => {
+                if (!currentUser) {
+                    e.preventDefault();
+                    window.location.href = 'auth/login.html';
+                    return;
+                }
+                e.preventDefault();
+                alert('Đặt bàn thành công! (demo, chưa lưu vào hệ thống)');
+                form.reset();
+            });
+        });
+    </script>
 </body>
 </html>
 

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả thanh toán VNPay - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.vnpay-return.theme-aintosushi { background: #0f0f0f; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .vnpay-result {
+            max-width: 420px;
+            margin: 2rem;
+            padding: 2.5rem;
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            text-align: center;
+        }
+        .vnpay-result .icon { font-size: 4rem; margin-bottom: 1rem; }
+        .vnpay-result.success .icon { color: var(--success, #10B981); }
+        .vnpay-result.fail .icon { color: var(--danger, #EF4444); }
+        .vnpay-result h1 { font-size: 1.35rem; color: var(--theme-white, #f8f6f2); margin-bottom: 0.5rem; }
+        .vnpay-result p { color: var(--theme-white-muted, rgba(248,246,242,0.85)); margin-bottom: 1.5rem; }
+        .vnpay-result a {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--gold);
+            color: #0f0f0f;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .vnpay-result a:hover { background: var(--gold-light); }
+    </style>
+</head>
+<body class="vnpay-return theme-aintosushi">
+    <div class="vnpay-result" id="result">
+        <div class="icon" id="icon">⏳</div>
+        <h1 id="title">Đang xử lý...</h1>
+        <p id="message"></p>
+        <a href="index.html">Về trang chủ</a>
+    </div>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const responseCode = params.get('vnp_ResponseCode') || '';
+            const resultEl = document.getElementById('result');
+            const iconEl = document.getElementById('icon');
+            const titleEl = document.getElementById('title');
+            const msgEl = document.getElementById('message');
+
+            if (responseCode === '00') {
+                resultEl.classList.add('success');
+                iconEl.textContent = '✓';
+                titleEl.textContent = 'Thanh toán thành công';
+                msgEl.textContent = 'Đơn hàng của bạn đã được thanh toán qua VNPay. Cảm ơn bạn đã sử dụng dịch vụ.';
+            } else {
+                resultEl.classList.add('fail');
+                iconEl.textContent = '✕';
+                titleEl.textContent = 'Thanh toán thất bại';
+                msgEl.textContent = responseCode
+                    ? 'Giao dịch không thành công. Bạn có thể thử lại hoặc chọn phương thức thanh toán khác.'
+                    : 'Không xác định được kết quả. Vui lòng kiểm tra lại.';
+            }
+        })();
+    </script>
+</body>
+</html>

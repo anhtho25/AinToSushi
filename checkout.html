@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.checkout-page.theme-aintosushi { background: #0f0f0f; min-height: 100vh; }
+        .checkout-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .checkout-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .checkout-card h2 {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gold);
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.35rem; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .payment-options { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .payment-option {
+            flex: 1;
+            min-width: 140px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .payment-option:hover { border-color: var(--gold); }
+        .payment-option.selected { border-color: var(--gold); background: rgba(212, 175, 55, 0.08); }
+        .payment-option input { display: none; }
+        .order-summary { margin: 1.5rem 0; padding: 1rem; background: var(--light-bg); border-radius: 10px; }
+        .order-summary .row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .order-summary .total { font-weight: 700; font-size: 1.1rem; color: var(--primary-color); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); }
+        .btn-confirm {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--gray-dark) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .btn-confirm:hover { background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%); color: var(--dark-bg); }
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border: 2px solid var(--gold);
+            color: var(--primary-color);
+            background: var(--white);
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { background: var(--gold); color: var(--dark-bg); }
+        .success-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            display: none;
+        }
+        .success-message.show { display: block; }
+        .success-message .icon { font-size: 4rem; margin-bottom: 1rem; }
+        .success-message h3 { color: var(--primary-color); margin-bottom: 0.5rem; font-size: 1.5rem; }
+        .success-message p { color: var(--text-light); margin-bottom: 1.5rem; }
+        .checkout-empty { text-align: center; padding: 3rem 2rem; color: var(--text-light); }
+    </style>
+</head>
+<body class="checkout-page theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="checkout-wrap">
+        <a href="cart.html" class="btn-back">← Quay lại giỏ hàng</a>
+
+        <div id="checkoutEmpty" class="checkout-empty" style="display: none;">
+            <p>Giỏ hàng trống. Vui lòng thêm món trước khi thanh toán.</p>
+            <a href="menu.html" class="btn-back" style="margin-top: 1rem;">Xem thực đơn</a>
+        </div>
+
+        <div id="checkoutFormCard" class="checkout-card">
+            <h2>Thông tin thanh toán</h2>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label for="customerName">Họ và tên *</label>
+                    <input type="text" id="customerName" required placeholder="Nhập họ tên">
+                </div>
+                <div class="form-group">
+                    <label for="customerPhone">Số điện thoại *</label>
+                    <input type="tel" id="customerPhone" required placeholder="0912 345 678">
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Email</label>
+                    <input type="email" id="customerEmail" placeholder="email@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="customerAddress">Địa chỉ giao hàng *</label>
+                    <textarea id="customerAddress" required placeholder="Số nhà, đường, phường/xã, quận/huyện..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Phương thức thanh toán *</label>
+                    <div class="payment-options">
+                        <label class="payment-option selected" data-method="cod">
+                            <input type="radio" name="paymentMethod" value="cod" checked>
+                            Thanh toán khi nhận hàng (COD)
+                        </label>
+                        <label class="payment-option" data-method="vnpay">
+                            <input type="radio" name="paymentMethod" value="vnpay">
+                            VNPAY
+                        </label>
+                    </div>
+                </div>
+                <div class="order-summary">
+                    <div class="row"><span>Tạm tính</span><span id="summarySubtotal">0 ₫</span></div>
+                    <div class="row"><span>VAT (8%)</span><span id="summaryVat">0 ₫</span></div>
+                    <div class="row total"><span>Tổng thanh toán</span><span id="summaryTotal">0 ₫</span></div>
+                </div>
+                <button type="submit" class="btn-confirm" id="btnConfirm">XÁC NHẬN THANH TOÁN</button>
+            </form>
+        </div>
+
+        <div id="checkoutSuccess" class="checkout-card success-message">
+            <div class="icon">🎉</div>
+            <h3>Đặt hàng thành công!</h3>
+            <p>Cảm ơn bạn đã mua hàng.</p>
+            <a href="cart.html" class="btn-back">← Quay lại giỏ hàng</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user || null;
+            const wrap = document.getElementById('navAuthWrap');
+            if (wrap) {
+                const guests = wrap.querySelectorAll('.nav-auth-guest');
+                const userSpan = wrap.querySelector('.nav-auth-user');
+                if (user) {
+                    guests.forEach(el => { el.style.display = 'none'; });
+                    if (userSpan) userSpan.style.display = 'inline-block';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                    else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+                } else {
+                    guests.forEach(el => { el.style.display = 'inline-block'; });
+                    if (userSpan) userSpan.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                    if (ph) ph.style.display = 'inline-block';
+                }
+                wrap.style.visibility = 'visible';
+            }
+        });
+
+        const CART_KEY = 'cart';
+
+        function getCart() {
+            try {
+                const raw = localStorage.getItem(CART_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setCart(items) {
+            localStorage.setItem(CART_KEY, JSON.stringify(items));
+        }
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '0 ₫';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + ' ₫';
+        }
+
+        function getTotals(cart) {
+            let subtotal = 0;
+            cart.forEach(item => {
+                const price = Number(item.price) || 0;
+                const qty = Math.max(1, Number(item.quantity) || 1);
+                subtotal += price * qty;
+            });
+            const vat = subtotal * 0.08;
+            const total = subtotal + vat;
+            return { subtotal, vat, total };
+        }
+
+        document.querySelectorAll('.payment-option').forEach(el => {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+            });
+        });
+
+        function initCheckout() {
+            const cart = getCart();
+            const emptyEl = document.getElementById('checkoutEmpty');
+            const formCard = document.getElementById('checkoutFormCard');
+            const successEl = document.getElementById('checkoutSuccess');
+
+            if (!cart.length) {
+                emptyEl.style.display = 'block';
+                formCard.style.display = 'none';
+                successEl.classList.remove('show');
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+            formCard.style.display = 'block';
+            const totals = getTotals(cart);
+            document.getElementById('summarySubtotal').textContent = formatPrice(totals.subtotal);
+            document.getElementById('summaryVat').textContent = formatPrice(totals.vat);
+            document.getElementById('summaryTotal').textContent = formatPrice(totals.total);
+        }
+
+        document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cart = getCart();
+            if (!cart.length) {
+                initCheckout();
+                return;
+            }
+            if (!currentUser) {
+                window.location.href = 'auth/login.html';
+                return;
+            }
+
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const customerInfo = {
+                name: document.getElementById('customerName').value.trim(),
+                phone: document.getElementById('customerPhone').value.trim(),
+                email: document.getElementById('customerEmail').value.trim() || '',
+                address: document.getElementById('customerAddress').value.trim()
+            };
+
+            const totals = getTotals(cart);
+            const totalAmount = Math.round(totals.total);
+            const status = paymentMethod === 'cod' ? 'confirmed' : 'pending';
+
+            const orderData = {
+                items: cart,
+                totalAmount,
+                customerInfo,
+                paymentMethod,
+                status,
+                createdAt: Date.now(),
+                userId: currentUser.uid
+            };
+
+            const btn = document.getElementById('btnConfirm');
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
+
+            try {
+                const ordersRef = ref(database, 'orders');
+                const newRef = push(ordersRef);
+                await set(newRef, orderData);
+                setCart([]);
+            } catch (err) {
+                console.error(err);
+                alert('Đặt hàng thất bại. Vui lòng thử lại.');
+                btn.disabled = false;
+                btn.textContent = 'XÁC NHẬN THANH TOÁN';
+                return;
+            }
+
+            if (paymentMethod === 'vnpay') {
+                try {
+                    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(window.location.origin);
+                    const apiUrl = isLocal
+                        ? 'https://aintosushi.netlify.app/.netlify/functions/create_payment'
+                        : window.location.origin + '/.netlify/functions/create_payment';
+                    const res = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: totalAmount })
+                    });
+                    const raw = await res.text();
+                    let data = {};
+                    if (raw) {
+                        try { data = JSON.parse(raw); } catch (_) { throw new Error('Phản hồi từ server không hợp lệ.'); }
+                    }
+                    if (!res.ok) throw new Error(data.error || 'Lỗi ' + res.status);
+                    if (data.paymentUrl) {
+                        window.location.href = data.paymentUrl;
+                        return;
+                    }
+                    throw new Error(data.error || 'Không tạo được link thanh toán');
+                } catch (err) {
+                    console.error(err);
+                    alert(err?.message || 'Tạo link VNPay thất bại. Vui lòng thử lại.');
+                }
+                btn.disabled = false;
+                btn.textContent = 'XÁC NHẬN THANH TOÁN';
+                return;
+            }
+
+            document.getElementById('checkoutFormCard').style.display = 'none';
+            document.getElementById('checkoutSuccess').classList.add('show');
+            btn.disabled = false;
+            btn.textContent = 'XÁC NHẬN THANH TOÁN';
+        });
+
+        initCheckout();
+    </script>
+</body>
+</html>

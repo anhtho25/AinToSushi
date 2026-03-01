@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thực Đơn - Hệ Thống Quản Lý</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="theme-aintosushi">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { initRoleGuard } from '../js/roleGuard.js';
+        import { logout } from '../js/auth.js';
+
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dghchzl3r/image/upload';
+        const UPLOAD_PRESET = 'obrs8sja';
+
+        async function uploadImageToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            const response = await fetch(CLOUDINARY_URL, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err || 'Upload thất bại');
+            }
+            const data = await response.json();
+            return data.secure_url;
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const MENU_PATH = 'menu/menuOnline';
+        const CATEGORIES_PATH = 'menu/categories';
+        const DEFAULT_CATEGORIES = ['SUSHI', 'SASHIMI', 'MAKI', 'TEMPURA', 'YAKIMONO', 'MỲ', 'CƠM', 'SALAD', 'ĐỒ UỐNG', 'SET'];
+        const ITEMS_PER_PAGE = 6;
+        let mode = 'ADD'; // 'ADD' | 'EDIT'
+        let editingId = null;
+        let menuList = [];
+        let categoryList = [];
+        let currentPage = 1;
+        let filterCategory = '';
+        let filterStatus = '';
+        let searchText = '';
+
+        initRoleGuard();
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutLink = document.querySelector('a[href="../auth/admin.html"]');
+            if (logoutLink) {
+                logoutLink.href = '#';
+                logoutLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) await logout();
+                });
+            }
+
+            const formCard = document.getElementById('menuFormCard');
+            const categoryFormCard = document.getElementById('categoryFormCard');
+            const btnAdd = document.getElementById('btnAddMenu');
+            const btnAddCategory = document.getElementById('btnAddCategory');
+            const form = document.getElementById('menuForm');
+            const categoryForm = document.getElementById('categoryForm');
+            const tbody = document.getElementById('menuTableBody');
+            const filterCategoryEl = document.getElementById('filter-category');
+            const filterStatusEl = document.getElementById('filter-status');
+            const searchMenuEl = document.getElementById('search-menu');
+
+            formCard.style.display = 'none';
+            if (categoryFormCard) categoryFormCard.style.display = 'none';
+
+            function fillCategoryDropdowns() {
+                const opts = categoryList.length ? categoryList : DEFAULT_CATEGORIES;
+                const optionsHtml = opts.map(c => `<option value="${c}">${c}</option>`).join('');
+                const prevFilter = filterCategoryEl.value;
+                filterCategoryEl.innerHTML = '<option value="">Tất cả</option>' + optionsHtml;
+                filterCategoryEl.value = opts.includes(prevFilter) ? prevFilter : '';
+                const dishCat = document.getElementById('dish-category');
+                if (dishCat) {
+                    const prevDish = dishCat.value;
+                    dishCat.innerHTML = optionsHtml;
+                    dishCat.value = opts.includes(prevDish) ? prevDish : (opts[0] || '');
+                }
+            }
+
+            btnAdd.addEventListener('click', () => {
+                mode = 'ADD';
+                editingId = null;
+                resetForm();
+                formCard.style.display = 'block';
+                requestAnimationFrame(() => {
+                    formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => {
+                        const firstInput = document.getElementById('dish-name');
+                        if (firstInput) firstInput.focus();
+                    }, 350);
+                });
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('dish-name').value.trim();
+                const category = document.getElementById('dish-category').value;
+                const price = Number(document.getElementById('dish-price').value) || 0;
+                const description = document.getElementById('dish-description').value.trim();
+                const fileInput = document.getElementById('dish-image-file');
+                const available = document.getElementById('dish-status').value === 'available';
+
+                let imageUrl = document.getElementById('dish-image-current').value.trim();
+                const selectedFile = fileInput.files && fileInput.files[0];
+                if (selectedFile) {
+                    try {
+                        imageUrl = await uploadImageToCloudinary(selectedFile);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Tải ảnh lên Cloudinary thất bại. Vui lòng thử lại.');
+                        return;
+                    }
+                }
+
+                const now = Date.now();
+                const defaultCat = (categoryList.length ? categoryList[0] : DEFAULT_CATEGORIES[0]) || 'SUSHI';
+                const payload = {
+                    name,
+                    category: category || defaultCat,
+                    price,
+                    description,
+                    image: imageUrl,
+                    available,
+                    createdAt: mode === 'ADD' ? now : Number(document.getElementById('dish-createdAt').value) || now,
+                    updatedAt: now
+                };
+
+                try {
+                    if (mode === 'ADD') {
+                        const newRef = push(ref(database, MENU_PATH));
+                        await set(newRef, payload);
+                    } else {
+                        if (!editingId) {
+                            alert('Không xác định được món cần sửa. Vui lòng thử lại.');
+                            return;
+                        }
+                        await set(ref(database, `${MENU_PATH}/${editingId}`), payload);
+                    }
+                    resetForm();
+                    formCard.style.display = 'none';
+                } catch (err) {
+                    console.error(err);
+                    alert('Lưu thất bại. Vui lòng thử lại.\n' + (err?.message || ''));
+                }
+            });
+
+            form.querySelector('button[type="reset"]').addEventListener('click', () => {
+                resetForm();
+                if (mode === 'ADD') formCard.style.display = 'none';
+            });
+
+            if (btnAddCategory) {
+                btnAddCategory.addEventListener('click', () => {
+                    categoryFormCard.style.display = categoryFormCard.style.display === 'none' ? 'block' : 'none';
+                    if (categoryFormCard.style.display === 'block') {
+                        categoryForm.reset();
+                        categoryFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const input = document.getElementById('category-name');
+                        if (input) setTimeout(() => input.focus(), 200);
+                    }
+                });
+            }
+            if (categoryForm) {
+                categoryForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('category-name').value.trim().toUpperCase();
+                    if (!name) {
+                        alert('Vui lòng nhập tên danh mục.');
+                        return;
+                    }
+                    if (categoryList.includes(name)) {
+                        alert('Danh mục này đã tồn tại.');
+                        return;
+                    }
+                    try {
+                        await set(ref(database, `${CATEGORIES_PATH}/${name}`), true);
+                        categoryForm.reset();
+                        categoryFormCard.style.display = 'none';
+                    } catch (err) {
+                        console.error(err);
+                        alert('Lưu danh mục thất bại.');
+                    }
+                });
+            }
+
+            function applyFilters(list) {
+                let out = list;
+                if (filterCategory) out = out.filter(item => (item.category || '') === filterCategory);
+                if (filterStatus === 'available') out = out.filter(item => item.available !== false);
+                if (filterStatus === 'out-of-stock') out = out.filter(item => item.available === false);
+                if (searchText) {
+                    const q = searchText.toLowerCase();
+                    out = out.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
+                }
+                return out;
+            }
+
+            if (filterCategoryEl) filterCategoryEl.addEventListener('change', () => { filterCategory = filterCategoryEl.value; currentPage = 1; renderMenuTable(); });
+            if (filterStatusEl) filterStatusEl.addEventListener('change', () => { filterStatus = filterStatusEl.value; currentPage = 1; renderMenuTable(); });
+            if (searchMenuEl) {
+                const searchBtn = document.querySelector('.card .btn[type="button"]');
+                const doSearch = () => { searchText = searchMenuEl.value.trim(); currentPage = 1; renderMenuTable(); };
+                searchMenuEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
+                if (searchBtn) searchBtn.addEventListener('click', doSearch);
+            }
+
+            function resetForm() {
+                form.reset();
+                document.getElementById('dish-status').value = 'available';
+                const firstCat = (categoryList.length ? categoryList[0] : DEFAULT_CATEGORIES[0]) || 'SUSHI';
+                document.getElementById('dish-category').value = firstCat;
+                document.getElementById('dish-createdAt').value = '';
+                document.getElementById('dish-image-current').value = '';
+                document.getElementById('dish-image-file').value = '';
+                editingId = null;
+                mode = 'ADD';
+            }
+
+            function openEdit(itemId, item) {
+                editingId = itemId;
+                mode = 'EDIT';
+                document.getElementById('dish-name').value = item.name || '';
+                const cats = categoryList.length ? categoryList : DEFAULT_CATEGORIES;
+                document.getElementById('dish-category').value = (item.category && cats.includes(item.category)) ? item.category : (cats[0] || 'SUSHI');
+                document.getElementById('dish-price').value = item.price != null ? item.price : '';
+                document.getElementById('dish-description').value = item.description || '';
+                document.getElementById('dish-image-current').value = item.image || '';
+                document.getElementById('dish-image-file').value = '';
+                document.getElementById('dish-status').value = item.available !== false ? 'available' : 'out-of-stock';
+                document.getElementById('dish-createdAt').value = item.createdAt != null ? item.createdAt : '';
+                formCard.style.display = 'block';
+                formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function formatPrice(n) {
+                if (n == null || isNaN(n)) return '—';
+                return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+            }
+
+            function renderMenuTable() {
+                const filtered = applyFilters(menuList);
+                const total = filtered.length;
+                const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+                if (currentPage > totalPages) currentPage = totalPages;
+                const start = (currentPage - 1) * ITEMS_PER_PAGE;
+                const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+                tbody.innerHTML = '';
+                pageItems.forEach((entry) => {
+                    const { id, name, category, price, description, image, available } = entry;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><div class="menu-thumb" style="width:60px;height:60px;border-radius:5px;background:var(--light-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                            ${image ? `<img src="${image}" alt="" style="width:100%;height:100%;object-fit:cover;">` : '<span style="font-size:1.5rem;">🍽️</span>'}
+                        </div></td>
+                        <td><strong>${name || '—'}</strong></td>
+                        <td>${category || '—'}</td>
+                        <td>${formatPrice(price)}</td>
+                        <td><small>${(description || '').slice(0, 50)}${(description && description.length > 50) ? '...' : ''}</small></td>
+                        <td><span class="badge ${available !== false ? 'badge-success' : 'badge-danger'}">${available !== false ? 'Còn hàng' : 'Hết hàng'}</span></td>
+                        <td>
+                            <button type="button" class="btn btn-info btn-edit" style="padding:0.3rem 0.8rem;font-size:0.85rem;margin-bottom:0.3rem;width:100%;">Sửa</button>
+                            <button type="button" class="btn btn-danger btn-delete" style="padding:0.3rem 0.8rem;font-size:0.85rem;width:100%;">Xóa</button>
+                        </td>
+                    `;
+                    tr.querySelector('.btn-edit').addEventListener('click', () => openEdit(id, entry));
+                    tr.querySelector('.btn-delete').addEventListener('click', () => {
+                        if (!confirm('Bạn có chắc muốn xóa món này?')) return;
+                        remove(ref(database, `${MENU_PATH}/${id}`)).catch(err => { console.error(err); alert('Xóa thất bại.'); });
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                const pagEl = document.getElementById('menuTablePagination');
+                if (totalPages <= 1 || total === 0) {
+                    pagEl.innerHTML = '';
+                    return;
+                }
+                const end = Math.min(start + ITEMS_PER_PAGE, total);
+                pagEl.innerHTML = `
+                    <button type="button" id="menuPagePrev" ${currentPage <= 1 ? 'disabled' : ''} style="padding:0.5rem 1rem;margin-right:0.5rem;border:2px solid var(--border-color);background:var(--white);border-radius:6px;cursor:pointer;">← Trước</button>
+                    <span style="color:var(--text-light);font-size:0.9rem;">${start + 1} – ${end} / ${total} món</span>
+                    <button type="button" id="menuPageNext" ${currentPage >= totalPages ? 'disabled' : ''} style="padding:0.5rem 1rem;margin-left:0.5rem;border:2px solid var(--border-color);background:var(--white);border-radius:6px;cursor:pointer;">Sau →</button>
+                `;
+                pagEl.querySelector('#menuPagePrev').onclick = () => { currentPage--; renderMenuTable(); };
+                pagEl.querySelector('#menuPageNext').onclick = () => { currentPage++; renderMenuTable(); };
+            }
+
+            onValue(ref(database, MENU_PATH), (snapshot) => {
+                const data = snapshot.val();
+                menuList = !data ? [] : Object.entries(data).map(([id, item]) => ({ id, ...item }));
+                currentPage = 1;
+                renderMenuTable();
+            }, (err) => {
+                console.error(err);
+                menuList = [];
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light);">Không tải được danh sách.</td></tr>';
+                document.getElementById('menuTablePagination').innerHTML = '';
+            });
+
+            onValue(ref(database, CATEGORIES_PATH), (snapshot) => {
+                const data = snapshot.val();
+                if (!data || Object.keys(data).length === 0) {
+                    const seed = {};
+                    DEFAULT_CATEGORIES.forEach(c => { seed[c] = true; });
+                    set(ref(database, CATEGORIES_PATH), seed).catch(() => {});
+                    categoryList = [...DEFAULT_CATEGORIES];
+                } else {
+                    categoryList = Object.keys(data).sort();
+                }
+                fillCategoryDropdowns();
+                renderMenuTable();
+            }, (err) => {
+                console.error(err);
+                categoryList = [...DEFAULT_CATEGORIES];
+                fillCategoryDropdowns();
+            });
+        });
+    </script>
+    <div style="display: flex;">
+        <aside class="sidebar">
+            <div style="padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h2 style="color: var(--gold); display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="../images/logo3.png" alt="Ain Tō Sushi Logo" style="height: 50px; width: auto; filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.4));">
+                    <span>Ain Tō Sushi</span>
+                </h2>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Hệ thống quản lý</p>
+            </div>
+            <ul>
+                <li><a href="admin.html">📊 Dashboard</a></li>
+                <li><a href="orders.html">📋 Quản Lý Đơn Hàng</a></li>
+                <li><a href="tables.html">🪑 Quản Lý Bàn Ăn</a></li>
+                <li><a href="menu-management.html" class="active">🍽️ Quản Lý Thực Đơn</a></li>
+                <li><a href="staff.html">👥 Quản Lý Nhân Viên</a></li>
+                <li><a href="reports.html">📈 Báo Cáo</a></li>
+                <li><a href="inventory.html">📦 Quản Lý Kho</a></li>
+                <li><a href="promotions.html">🎁 Khuyến Mãi</a></li>
+                <li><a href="../index.html">🏠 Về Trang Chủ</a></li>
+                <li><a href="../auth/admin.html">🚪 Đăng Xuất</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 style="color: var(--primary-color);">Quản Lý Thực Đơn</h1>
+                    <p style="color: var(--text-light);">Thêm, sửa, xóa và quản lý các món ăn</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                    <button class="btn" id="btnAddMenu">+ Thêm Món Mới</button>
+                    <button class="btn btn-secondary" id="btnAddCategory" style="background: rgba(212, 175, 55, 0.15); color: var(--gold); border: 1px solid var(--gold);">+ Thêm Danh Mục</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="filter-category">Lọc theo danh mục</label>
+                        <select id="filter-category" name="filter-category">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-status">Lọc theo trạng thái</label>
+                        <select id="filter-status" name="filter-status">
+                            <option value="">Tất cả</option>
+                            <option value="available">Còn hàng</option>
+                            <option value="out-of-stock">Hết hàng</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="search-menu">Tìm kiếm</label>
+                        <input type="text" id="search-menu" name="search-menu" placeholder="Tên món ăn...">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn" type="button" style="width: 100%;">Tìm Kiếm</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-header">Danh Sách Món Ăn</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hình Ảnh</th>
+                            <th>Tên Món</th>
+                            <th>Danh Mục</th>
+                            <th>Giá</th>
+                            <th>Mô Tả</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menuTableBody">
+                        <tr><td colspan="7" style="text-align:center;color:var(--text-light);">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+                <div id="menuTablePagination" style="display:flex;align-items:center;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;gap:0.5rem;"></div>
+            </div>
+
+            <div class="card" id="menuFormCard" style="margin-top: 2rem; display: none;">
+                <h2 class="card-header">Thêm/Sửa Món Ăn</h2>
+                <form id="menuForm">
+                    <input type="hidden" id="dish-createdAt" name="dish-createdAt">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="dish-name">Tên Món *</label>
+                            <input type="text" id="dish-name" name="dish-name" required placeholder="Nhập tên món">
+                        </div>
+                        <div class="form-group">
+                            <label for="dish-category">Danh Mục *</label>
+                            <select id="dish-category" name="dish-category" required>
+                                <option value="SUSHI">SUSHI</option>
+                                <option value="SASHIMI">SASHIMI</option>
+                                <option value="MAKI">MAKI</option>
+                                <option value="TEMPURA">TEMPURA</option>
+                                <option value="YAKIMONO">YAKIMONO</option>
+                                <option value="MỲ">MỲ</option>
+                                <option value="CƠM">CƠM</option>
+                                <option value="SALAD">SALAD</option>
+                                <option value="ĐỒ UỐNG">ĐỒ UỐNG</option>
+                                <option value="SET">SET</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dish-price">Giá *</label>
+                            <input type="number" id="dish-price" name="dish-price" required min="0" placeholder="VNĐ">
+                        </div>
+                        <div class="form-group">
+                            <label for="dish-status">Trạng Thái *</label>
+                            <select id="dish-status" name="dish-status" required>
+                                <option value="available">Còn hàng</option>
+                                <option value="out-of-stock">Hết hàng</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="dish-description">Mô Tả</label>
+                            <textarea id="dish-description" name="dish-description" placeholder="Mô tả món ăn"></textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="dish-image-file">Hình Ảnh (tải lên)</label>
+                            <input type="file" id="dish-image-file" name="dish-image" accept="image/*">
+                            <input type="hidden" id="dish-image-current" name="dish-image-current">
+                            <small style="color:var(--text-light);">Khi sửa: chọn file mới để đổi ảnh, không chọn thì giữ ảnh hiện tại.</small>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn">Lưu Món Ăn</button>
+                            <button type="reset" class="btn btn-secondary" style="margin-left: 1rem;">Đặt Lại</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card" id="categoryFormCard" style="margin-top: 1rem; display: none;">
+                <h2 class="card-header">Thêm Danh Mục</h2>
+                <form id="categoryForm">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="category-name">Tên danh mục *</label>
+                            <input type="text" id="category-name" name="category-name" required placeholder="VD: SUSHI, ĐỒ UỐNG..." maxlength="50">
+                            <small style="color: var(--text-light);">Danh mục sẽ được lưu in hoa, dùng cho lọc và chọn khi thêm/sửa món.</small>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn">Lưu Danh Mục</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

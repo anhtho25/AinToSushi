@@ -5,33 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ain Tō Sushi - Nhà Hàng Nhật Bản</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
-      authDomain: "ain-to-sushi.firebaseapp.com",
-      databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "ain-to-sushi",
-      storageBucket: "ain-to-sushi.firebasestorage.app",
-      messagingSenderId: "191817237919",
-      appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
-    };
-  
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-  </script>
-
-
-
-
-<body>
+<body class="index-page theme-aintosushi">
     <header>
         <nav>
             <a href="index.html" class="logo">
@@ -42,107 +21,197 @@
                 <li><a href="index.html">Trang Chủ</a></li>
                 <li><a href="menu.html">Thực Đơn</a></li>
                 <li><a href="reservation.html">Đặt Bàn</a></li>
-                <li><a href="takeout.html">Đặt Món</a></li>
-                <li><a href="admin/login.html">Đăng Nhập</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
             </ul>
         </nav>
     </header>
-
-    <section class="hero">
-        <h1>Chào Mừng Đến<br>Ain Tō Sushi</h1>
-        <p>Trải nghiệm hương vị Nhật Bản đích thực<br>Trong không gian sang trọng và tinh tế</p>
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
-            <a href="reservation.html" class="btn">Đặt Bàn Ngay</a>
-            <a href="menu.html" class="btn btn-secondary">Xem Thực Đơn</a>
+    <section class="hero" data-inview>
+        <div class="hero__inner">
+            <h1>Chào Mừng Đến<br>Ain Tō Sushi</h1>
+            <p>Trải nghiệm hương vị Nhật Bản đích thực<br>Tinh hoa ẩm thực Nhật giữa lòng thành phố</p>
+            <div class="hero__btns">
+                <a href="reservation.html" class="btn">Đặt Bàn Ngay</a>
+                <a href="menu.html" class="btn btn-secondary">Xem Thực Đơn</a>
+            </div>
+        </div>
+    </section>
+    <!-- Section trang chủ: 2 cột 50/50, Luxury Japanese -->
+    <section class="home-intro" id="homeIntro">
+        <div class="home-intro__left" data-inview>
+            <div class="home-intro__left-inner">
+                <p class="home-intro__tagline">HƯƠNG VỊ CHUẨN NHẬT</p>
+                <p class="home-intro__lead">từ nguyên liệu tuyển chọn cao cấp.</p>
+                <p class="home-intro__quote">"Trải nghiệm tinh hoa ẩm thực Nhật Bản"<br>ngay tại Ain To Sushi.</p>
+            </div>
+        </div>
+        <div class="home-intro__right" data-inview>
+            <div class="home-intro__right-pattern" aria-hidden="true"></div>
+            <div class="home-intro__right-inner">
+                <p class="home-intro__desc">
+                    Ain To Sushi mang đến không gian ẩm thực Nhật Bản thuần khiết với nguyên liệu nhập khẩu cao cấp và kỹ thuật chế biến truyền thống. Mỗi món ăn là sự kết tinh giữa tinh hoa xứ Phù Tang và sự tinh tế trong từng chi tiết phục vụ. Hãy để chúng tôi đưa bạn đến hành trình khám phá hương vị đích thực, từ sushi tươi sống đến những món nóng hổi đầy cảm xúc.
+                </p>
+                <a href="menu.html" class="home-intro__cta">XEM THÊM</a>
+            </div>
         </div>
     </section>
 
-    <div class="container">
-        <section>
-            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Về Chúng Tôi</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🍣 Ẩm Thực Nhật Bản</h3>
-                    <p>Chúng tôi tự hào phục vụ những món ăn Nhật Bản chính thống với nguyên liệu tươi ngon nhất, được chế biến bởi các đầu bếp giàu kinh nghiệm.</p>
+    <!-- Section giới thiệu xen kẽ (Chiyoda style) -->
+    <section class="about-chiyoda" id="aboutChiyoda">
+        <div class="about-chiyoda__inner">
+            <!-- Block 1: Hình trái, chữ phải -->
+            <div class="about-chiyoda__block" data-inview>
+                <div class="about-chiyoda__media">
+                    <img src="images/hinh1.jpg" alt="Ẩm thực Nhật Bản tại Ain Tō Sushi">
                 </div>
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🏮 Không Gian Độc Đáo</h3>
-                    <p>Không gian nhà hàng được thiết kế theo phong cách Nhật Bản truyền thống, tạo cảm giác ấm cúng và thân thiện cho thực khách.</p>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">⭐ Dịch Vụ Chuyên Nghiệp</h3>
-                    <p>Đội ngũ nhân viên được đào tạo chuyên nghiệp, luôn sẵn sàng phục vụ bạn với thái độ nhiệt tình và chu đáo.</p>
+                <div class="about-chiyoda__content">
+                    <span class="about-chiyoda__num">01</span>
+                    <h2 class="about-chiyoda__title">Ẩm Thực Nhật Bản</h2>
+                    <p class="about-chiyoda__text">Chúng tôi tự hào phục vụ những món ăn Nhật Bản chính thống với nguyên liệu tươi ngon nhất, được chế biến bởi các đầu bếp giàu kinh nghiệm. Mỗi món là sự kết tinh giữa truyền thống và sự tinh tế hiện đại.</p>
                 </div>
             </div>
-        </section>
+            <!-- Block 2: Chữ trái, hình phải - nền đỏ Nhật -->
+            <div class="about-chiyoda__block about-chiyoda__block--red about-chiyoda__block--reverse" data-inview>
+                <div class="about-chiyoda__media">
+                    <img src="images/hinh2.png" alt="Không gian Ain Tō Sushi">
+                </div>
+                <div class="about-chiyoda__content">
+                    <span class="about-chiyoda__num">02</span>
+                    <h2 class="about-chiyoda__title">Không Gian Độc Đáo</h2>
+                    <p class="about-chiyoda__text">Không gian nhà hàng được thiết kế theo phong cách Nhật Bản truyền thống, tạo cảm giác ấm cúng và thân thiện. Trải nghiệm ẩm thực trong bầu không khí thuần khiết phương Đông.</p>
+                </div>
+            </div>
+            <!-- Block 3: Hình trái, chữ phải -->
+            <div class="about-chiyoda__block" data-inview>
+                <div class="about-chiyoda__media">
+                    <img src="images/hinh3.png" alt="Dịch vụ chuyên nghiệp">
+                </div>
+                <div class="about-chiyoda__content">
+                    <span class="about-chiyoda__num">03</span>
+                    <h2 class="about-chiyoda__title">Dịch Vụ Chuyên Nghiệp</h2>
+                    <p class="about-chiyoda__text">Đội ngũ nhân viên được đào tạo chuyên nghiệp, luôn sẵn sàng phục vụ bạn với thái độ nhiệt tình và chu đáo. Mọi chi tiết đều được chăm chút để mang đến trải nghiệm trọn vẹn.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <section style="margin-top: 6rem;">
-            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Món Ăn Nổi Bật</h2>
-            <div class="grid">
-                <div class="menu-item">
-                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
-                    <div class="menu-item-content">
-                        <h3>Sushi Set</h3>
-                        <p>Bộ sushi đa dạng với cá tươi ngon</p>
-                        <div class="menu-item-price">350,000đ</div>
-                    </div>
-                </div>
-                <div class="menu-item">
-                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
-                    <div class="menu-item-content">
-                        <h3>Ramen Đặc Biệt</h3>
-                        <p>Mì ramen với nước dùng đậm đà</p>
-                        <div class="menu-item-price">120,000đ</div>
-                    </div>
-                </div>
-                <div class="menu-item">
-                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍤</div>
-                    <div class="menu-item-content">
-                        <h3>Tempura</h3>
-                        <p>Tôm và rau củ chiên giòn</p>
-                        <div class="menu-item-price">180,000đ</div>
-                    </div>
-                </div>
-                <div class="menu-item">
-                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍱</div>
-                    <div class="menu-item-content">
-                        <h3>Bento Box</h3>
-                        <p>Cơm hộp với nhiều món ăn kèm</p>
-                        <div class="menu-item-price">200,000đ</div>
-                    </div>
-                </div>
+    <div class="container index-container">
+        <section class="featured-section" id="featuredSection" data-inview>
+            <h2 class="featured-section__title">Món Ăn Nổi Bật</h2>
+            <div class="featured-section__grid" id="featuredMenuGrid">
+                <div class="featured-loading" id="featuredLoading">Đang tải món ăn...</div>
             </div>
-            <div style="text-align: center; margin-top: 2rem;">
+            <div class="featured-section__more">
                 <a href="menu.html" class="btn">Xem Toàn Bộ Thực Đơn</a>
             </div>
         </section>
 
-        <section style="margin-top: 6rem; background: var(--white); padding: 4rem 3rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
-            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-dark); font-size: 2.5rem; font-weight: 700; letter-spacing: -1px;">Thông Tin Liên Hệ</h2>
-            <div class="grid-2">
-                <div>
-                    <h3 style="margin-bottom: 1rem;">📍 Địa Chỉ</h3>
-                    <p>123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
-                </div>
-                <div>
-                    <h3 style="margin-bottom: 1rem;">📞 Điện Thoại</h3>
-                    <p>0123 456 789</p>
-                </div>
-                <div>
-                    <h3 style="margin-bottom: 1rem;">🕐 Giờ Mở Cửa</h3>
-                    <p>11:00 - 22:00 (Hàng ngày)</p>
-                </div>
-                <div>
-                    <h3 style="margin-bottom: 1rem;">📧 Email</h3>
-                    <p>info@aintosushi.com</p>
-                </div>
+        <section class="contact-section" data-inview>
+            <h2 class="contact-section__title">Thông Tin Liên Hệ</h2>
+            <div class="contact-section__grid">
+                <div><h3>📍 Địa Chỉ</h3><p>123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p></div>
+                <div><h3>📞 Điện Thoại</h3><p>0123 456 789</p></div>
+                <div><h3>🕐 Giờ Mở Cửa</h3><p>11:00 - 22:00 (Hàng ngày)</p></div>
+                <div><h3>📧 Email</h3><p>info@aintosushi.com</p></div>
             </div>
         </section>
     </div>
 
-    <footer>
+    <footer class="index-footer">
         <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
     </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        getAnalytics(app);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        window.firebase = { auth, database };
+
+        onAuthStateChanged(auth, (user) => {
+            const wrap = document.getElementById('navAuthWrap');
+            if (!wrap) return;
+            const guests = wrap.querySelectorAll('.nav-auth-guest');
+            const userSpan = wrap.querySelector('.nav-auth-user');
+            if (user) {
+                guests.forEach(el => { el.style.display = 'none'; });
+                if (userSpan) userSpan.style.display = 'inline-block';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+            } else {
+                guests.forEach(el => { el.style.display = 'inline-block'; });
+                if (userSpan) userSpan.style.display = 'none';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                if (ph) ph.style.display = 'inline-block';
+            }
+            wrap.style.visibility = 'visible';
+        });
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '—';
+            return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+        }
+
+        const featuredGrid = document.getElementById('featuredMenuGrid');
+        const featuredLoading = document.getElementById('featuredLoading');
+        if (featuredGrid) {
+            onValue(ref(database, 'menu/menuOnline'), (snapshot) => {
+                const data = snapshot.val();
+                let list = !data ? [] : Object.entries(data).map(([id, item]) => ({ id, ...item }));
+                list = list.filter(item => item.available !== false).slice(0, 6);
+                if (featuredLoading) featuredLoading.remove();
+                featuredGrid.innerHTML = list.length ? list.map(function(item) {
+                    const name = item.name || 'Món';
+                    const price = formatPrice(item.price);
+                    const img = (item.image && item.image.trim()) ? item.image.trim() : '';
+                    const desc = (item.description || '').slice(0, 60) + ((item.description || '').length > 60 ? '...' : '');
+                    const url = 'product.html?id=' + encodeURIComponent(item.id);
+                    return '<a href="' + url + '" class="featured-card" data-inview><div class="featured-card__img">' +
+                        (img ? '<img src="' + img + '" alt="' + name + '">' : '<span class="featured-card__placeholder">🍽️</span>') +
+                        '</div><div class="featured-card__body"><h3>' + name + '</h3><p>' + desc + '</p><span class="featured-card__price">' + price + '</span></div></a>';
+                }).join('') : '<p class="featured-empty">Chưa có món nào.</p>';
+                observeInView();
+            }, function() {
+                if (featuredLoading) featuredLoading.remove();
+                featuredGrid.innerHTML = '<p class="featured-empty">Không tải được thực đơn.</p>';
+            });
+        }
+
+        function observeInView() {
+            const els = document.querySelectorAll('[data-inview]');
+            const io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) entry.target.classList.add('in-view');
+                    else entry.target.classList.remove('in-view');
+                });
+            }, { rootMargin: '0px 0px -60px 0px', threshold: 0.05 });
+            els.forEach(function(el) { io.observe(el); });
+        }
+        observeInView();
+    </script>
 </body>
 </html>
 

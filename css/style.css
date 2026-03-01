@@ -23,6 +23,10 @@
     --gold: #D4AF37;
     --gold-light: #F4D03F;
     --gold-dark: #B8941F;
+    --japanese-red: #8b0000;
+    --theme-white: #f8f6f2;
+    --theme-white-muted: rgba(248, 246, 242, 0.85);
+    --theme-border: rgba(248, 246, 242, 0.12);
     --black: #000000;
     --gray-dark: #2D2D2D;
     --gray-light: #F5F5F5;
@@ -41,6 +45,423 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Trang index: nền đồng nhất #0f0f0f, bỏ khoảng trắng thừa */
+.index-page {
+    background: #0f0f0f;
+    color: rgba(255, 255, 255, 0.9);
+}
+.index-page .container {
+    background: transparent;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+/* ========== Theme đồng bộ toàn site (Ain Tō Sushi) ========== */
+body.theme-aintosushi {
+    background: #0f0f0f;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .container {
+    background: transparent;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+body.theme-aintosushi .card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .card-header,
+body.theme-aintosushi h1:not(.hero h1),
+body.theme-aintosushi h2,
+body.theme-aintosushi .card h3 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .card-header {
+    border-bottom-color: var(--theme-border);
+}
+
+body.theme-aintosushi .card p,
+body.theme-aintosushi .card li {
+    color: var(--theme-white-muted);
+}
+
+body.theme-aintosushi .form-group label {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi input,
+body.theme-aintosushi select,
+body.theme-aintosushi textarea {
+    background: #2d2d2d;
+    border: 1px solid var(--theme-border);
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi input::placeholder,
+body.theme-aintosushi textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+body.theme-aintosushi input:focus,
+body.theme-aintosushi select:focus,
+body.theme-aintosushi textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+body.theme-aintosushi footer {
+    background: #0f0f0f;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 4rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+body.theme-aintosushi footer::before {
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+}
+
+/* Theme: bảng */
+body.theme-aintosushi table {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-aintosushi thead th {
+    color: var(--gold);
+    border-bottom-color: rgba(212, 175, 55, 0.3);
+}
+
+body.theme-aintosushi tbody td {
+    color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.theme-aintosushi tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Theme: menu page */
+body.theme-aintosushi.menu-page-body {
+    background: #0f0f0f;
+}
+
+body.theme-aintosushi .menu-section h1 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .menu-card {
+    background: #1a1a1a;
+    border: 2px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1);
+}
+
+body.theme-aintosushi .menu-card .card-name,
+body.theme-aintosushi .menu-card .card-name a {
+    color: var(--theme-white);
+    font-weight: 600;
+}
+
+body.theme-aintosushi .menu-card .card-category {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+body.theme-aintosushi .menu-card .card-price {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .menu-card .btn-add-cart {
+    text-decoration: none;
+    background: var(--gold);
+    color: #0f0f0f;
+}
+
+body.theme-aintosushi .menu-card .btn-add-cart:hover {
+    background: var(--gold-light);
+    color: #0f0f0f;
+    text-decoration: none;
+}
+
+body.theme-aintosushi .filter-cat-btn {
+    background: #2d2d2d;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-aintosushi .filter-cat-btn.active,
+body.theme-aintosushi .filter-cat-btn:hover {
+    background: var(--gold);
+    color: #0f0f0f;
+    border-color: var(--gold);
+}
+
+body.theme-aintosushi .menu-filters h3,
+body.theme-aintosushi .menu-toolbar .result-info,
+body.theme-aintosushi .menu-toolbar label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+body.theme-aintosushi .menu-toolbar select {
+    background: #2d2d2d;
+    border-color: var(--theme-border);
+    color: var(--theme-white);
+}
+
+/* Theme: Manager - main content */
+body.theme-aintosushi .main-content {
+    background: #0f0f0f;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .main-content h1 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .main-content p {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+body.theme-aintosushi .stat-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .stat-card h3 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .stat-card p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+body.theme-aintosushi .sidebar {
+    background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
+    border-right: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+body.theme-aintosushi .sidebar ul li a:hover,
+body.theme-aintosushi .sidebar ul li a.active {
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--gold);
+}
+
+/* Theme: Auth pages */
+body.theme-aintosushi .auth-container {
+    background: #0f0f0f;
+}
+
+body.theme-aintosushi .auth-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-aintosushi .auth-header h1 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .auth-header p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Theme: Cart / Checkout / Profile - wrapper cards */
+body.theme-aintosushi .cart-card,
+body.theme-aintosushi .cart-summary,
+body.theme-aintosushi .profile-card,
+body.theme-aintosushi .checkout-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .cart-card {
+    border: 2px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1);
+}
+
+body.theme-aintosushi .cart-breadcrumb {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+body.theme-aintosushi .cart-breadcrumb span.current {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .cart-table th {
+    color: rgba(255, 255, 255, 0.8);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-aintosushi .cart-table td {
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.theme-aintosushi .profile-card h2 {
+    color: var(--gold);
+    border-bottom-color: rgba(212, 175, 55, 0.3);
+}
+
+body.theme-aintosushi .profile-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+body.theme-aintosushi .profile-value {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .grid-2 > div h3 {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .grid-2 > div p {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+body.theme-aintosushi .order-summary {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+body.theme-aintosushi .order-summary .row {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .order-summary .total {
+    color: var(--gold);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-aintosushi .payment-option {
+    background: #2d2d2d;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .payment-option.selected {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.15);
+}
+
+body.theme-aintosushi .btn-back {
+    background: transparent;
+    color: var(--gold);
+    border-color: var(--gold);
+}
+
+body.theme-aintosushi .btn-back:hover {
+    background: var(--gold);
+    color: #0f0f0f;
+}
+
+body.theme-aintosushi .success-message h3 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .success-message p {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+body.theme-aintosushi .checkout-empty {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Theme: Product page */
+body.theme-aintosushi .product-detail {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .product-section h1 {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .product-detail .product-category {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .product-detail .product-price {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .product-detail .product-description {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+body.theme-aintosushi .reviews-section,
+body.theme-aintosushi .similar-section {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .reviews-section h2,
+body.theme-aintosushi .similar-section h2 {
+    color: var(--theme-white);
+    border-bottom-color: rgba(212, 175, 55, 0.3);
+}
+
+body.theme-aintosushi .similar-card {
+    background: #2d2d2d;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.theme-aintosushi .similar-card .card-name {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-aintosushi .similar-card .card-price {
+    color: var(--gold);
+}
+
+body.theme-aintosushi .product-loading,
+body.theme-aintosushi .product-notfound {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+body.theme-aintosushi .review-item {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .review-item .review-meta,
+body.theme-aintosushi .review-item .review-content {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Theme: Manager form controls */
+body.theme-aintosushi .main-content .card {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aintosushi .main-content .card-header {
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .main-content .btn {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: #0f0f0f;
+}
+
+body.theme-aintosushi .main-content .btn-secondary {
+    background: #2d2d2d;
+    color: var(--theme-white);
+    border: 1px solid var(--theme-border);
+}
+
+body.theme-aintosushi .page-title {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--theme-white);
+}
+
+body.theme-aintosushi .about-chiyoda__title,
+body.theme-aintosushi .featured-section__title,
+body.theme-aintosushi .contact-section__title {
+    color: var(--theme-white);
 }
 
 /* Header Styles */
@@ -139,6 +560,50 @@ nav ul li a:hover::before {
     width: 60%;
 }
 
+nav .nav-cart-icon {
+    font-size: 1.35rem;
+    padding: 0.35em 0.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+nav .nav-avatar-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+nav .nav-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(212,175,55,0.2);
+    color: var(--gold);
+}
+
+nav .nav-avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold);
+}
+
+/* Auth nav: ẩn cho đến khi Firebase xác nhận trạng thái (tránh flash) */
+#navAuthWrap .nav-auth-guest,
+#navAuthWrap .nav-auth-user {
+    display: inline-block;
+}
+#navAuthWrap .nav-auth-guest + .nav-auth-guest {
+    margin-left: 0.25rem;
+}
+
 /* Container */
 .container {
     max-width: 1400px;
@@ -148,7 +613,7 @@ nav ul li a:hover::before {
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(135deg, rgba(15, 15, 15, 0.7) 0%, rgba(26, 26, 26, 0.65) 100%),
+    background: linear-gradient(135deg, rgba(15, 15, 15, 0.85) 0%, rgba(26, 26, 26, 0.8) 100%),
                 url('../images/banner1.png');
     background-size: cover;
     background-position: center;
@@ -157,15 +622,19 @@ nav ul li a:hover::before {
     color: var(--white);
     padding: 8rem 2rem;
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 0;
     position: relative;
     overflow: hidden;
-    border-bottom: 3px solid var(--gold);
-    min-height: 600px;
+    border-bottom: 2px solid var(--gold);
+    min-height: 560px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.index-page .hero::before {
+    background: linear-gradient(180deg, rgba(15, 15, 15, 0.5) 0%, rgba(15, 15, 15, 0.3) 100%);
 }
 
 .hero::before {
@@ -179,14 +648,33 @@ nav ul li a:hover::before {
     z-index: 0;
 }
 
+.hero__inner {
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero.in-view .hero__inner {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hero__btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
 .hero h1 {
     font-size: 4rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
     letter-spacing: -1px;
     line-height: 1.2;
-    position: relative;
-    z-index: 2;
     background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -200,9 +688,449 @@ nav ul li a:hover::before {
     color: rgba(255, 255, 255, 0.95);
     font-weight: 400;
     letter-spacing: 0.5px;
-    position: relative;
-    z-index: 2;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Home Intro Section - 2 cột 50/50, Luxury Japanese (inspired by chiyodasushi.vn) */
+.home-intro {
+    display: flex;
+    width: 100%;
+    min-height: 75vh;
+    margin-bottom: 0;
+}
+
+.home-intro__left {
+    width: 50%;
+    background: linear-gradient(160deg, #930c1c 0%, #610b18 35%, #430910 100%);
+    color: #fff;
+    padding: 80px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    opacity: 0;
+    transform: translateX(-36px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-intro__left.in-view {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.home-intro__left-inner {
+    text-align: center;
+    max-width: 420px;
+}
+
+.home-intro__tagline {
+    font-family: 'Noto Serif JP', 'Shippori Mincho', Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    opacity: 0.95;
+}
+
+.home-intro__lead {
+    font-family: 'Noto Serif JP', 'Shippori Mincho', Georgia, serif;
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+}
+
+.home-intro__quote {
+    font-family: 'Noto Serif JP', 'Shippori Mincho', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 1.8;
+    opacity: 0.92;
+    letter-spacing: 0.03em;
+}
+
+.home-intro__right {
+    width: 50%;
+    background: #1a1a1a;
+    padding: 80px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(36px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-intro__right.in-view {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.home-intro__right-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image: radial-gradient(circle at 20% 30%, #333 1px, transparent 1px),
+                      radial-gradient(circle at 80% 70%, #333 1.5px, transparent 1.5px),
+                      radial-gradient(circle at 50% 50%, #333 1px, transparent 1px);
+    background-size: 80px 80px, 100px 100px, 60px 60px;
+    pointer-events: none;
+}
+
+.home-intro__right-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+}
+
+.home-intro__desc {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: rgba(255, 255, 255, 0.88);
+    margin-bottom: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+.home-intro__cta {
+    display: inline-block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+    padding-bottom: 4px;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.home-intro__cta::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 0;
+    height: 1px;
+    background: #d4af37;
+    transition: width 0.35s ease;
+}
+
+.home-intro__cta:hover {
+    color: #f4d03f;
+}
+
+.home-intro__cta:hover::after {
+    width: 100%;
+}
+
+/* About Section - Layout xen kẽ (Chiyoda style) */
+.about-chiyoda {
+    background: #0f0f0f;
+    padding: 6rem 2rem;
+    margin-bottom: 0;
+}
+
+.about-chiyoda__inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.about-chiyoda__block {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    min-height: 420px;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.about-chiyoda__block:last-child {
+    margin-bottom: 0;
+}
+
+.about-chiyoda__block.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.about-chiyoda__block--reverse {
+    flex-direction: row-reverse;
+}
+
+.about-chiyoda__block--red .about-chiyoda__content {
+    background: #8b0000;
+    color: #f8f8f8;
+    padding: 4rem;
+}
+
+.about-chiyoda__block--red .about-chiyoda__title {
+    color: #fff;
+}
+
+.about-chiyoda__block--red .about-chiyoda__title::after {
+    background: #d4af37;
+}
+
+.about-chiyoda__block--red .about-chiyoda__text {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.about-chiyoda__block--red .about-chiyoda__num {
+    color: #d4af37;
+}
+
+.about-chiyoda__media {
+    flex: 0 0 50%;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.about-chiyoda__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    min-height: 380px;
+    transition: transform 0.6s ease;
+}
+
+.about-chiyoda__media:hover img {
+    transform: scale(1.06);
+}
+
+.about-chiyoda__content {
+    flex: 1;
+    padding: 3rem 0;
+    min-width: 0;
+}
+
+.about-chiyoda__num {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: #d4af37;
+    margin-bottom: 1rem;
+}
+
+.about-chiyoda__title {
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    position: relative;
+}
+
+.about-chiyoda__title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 48px;
+    height: 3px;
+    background: #d4af37;
+}
+
+.about-chiyoda__text {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+}
+
+/* Featured section - Món ăn nổi bật (6 món từ thực đơn) */
+.featured-section {
+    padding: 4rem 0;
+}
+
+.featured-section__title {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.featured-section.in-view .featured-section__title {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.index-page .featured-section__title::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: #d4af37;
+    margin: 1rem auto 0;
+}
+
+.featured-section__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.featured-section__more {
+    text-align: center;
+    margin-top: 2.5rem;
+}
+
+.featured-loading,
+.featured-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.featured-card {
+    display: block;
+    background: #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, box-shadow 0.3s;
+}
+
+.featured-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.featured-card:nth-child(1) { transition-delay: 0.05s; }
+.featured-card:nth-child(2) { transition-delay: 0.1s; }
+.featured-card:nth-child(3) { transition-delay: 0.15s; }
+.featured-card:nth-child(4) { transition-delay: 0.2s; }
+.featured-card:nth-child(5) { transition-delay: 0.25s; }
+.featured-card:nth-child(6) { transition-delay: 0.3s; }
+
+.featured-card:hover {
+    border-color: rgba(212, 175, 55, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.featured-card__img {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: #0f0f0f;
+}
+
+.featured-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.featured-card:hover .featured-card__img img {
+    transform: scale(1.08);
+}
+
+.featured-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 3rem;
+}
+
+.featured-card__body {
+    padding: 1.5rem;
+}
+
+.featured-card__body h3 {
+    color: #fff;
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.featured-card__body p {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.featured-card__price {
+    color: #d4af37;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Contact section - index */
+.contact-section {
+    padding: 4rem 0;
+    margin-top: 2rem;
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contact-section.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.contact-section__title {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.contact-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+}
+
+.contact-section__grid h3 {
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.contact-section__grid p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+}
+
+.index-footer {
+    background: #0f0f0f;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.index-footer p {
+    margin: 0;
+    color: inherit;
+}
+
+.index-page footer.index-footer {
+    margin-top: 0;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 /* Buttons */
@@ -829,6 +1757,96 @@ footer::before {
         font-size: 1.1rem;
     }
 
+    /* Home Intro: 1 cột, đỏ lên trên, padding giảm */
+    .home-intro {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .home-intro__left,
+    .home-intro__right {
+        width: 100%;
+        padding: 40px 24px;
+    }
+
+    .home-intro__left {
+        order: 1;
+        min-height: 320px;
+    }
+
+    .home-intro__right {
+        order: 2;
+    }
+
+    .home-intro__tagline {
+        font-size: 0.8rem;
+        letter-spacing: 0.25em;
+    }
+
+    .home-intro__lead {
+        font-size: 1.4rem;
+    }
+
+    .home-intro__quote {
+        font-size: 1rem;
+    }
+
+    .home-intro__desc {
+        font-size: 1rem;
+    }
+
+    /* About Chiyoda: xếp dọc */
+    .about-chiyoda {
+        padding: 3rem 1.25rem;
+    }
+
+    .about-chiyoda__block {
+        flex-direction: column !important;
+        gap: 2rem;
+        min-height: auto;
+        margin-bottom: 3rem;
+    }
+
+    .about-chiyoda__block--reverse {
+        flex-direction: column !important;
+    }
+
+    .about-chiyoda__media {
+        flex: none;
+        width: 100%;
+        order: 1;
+    }
+
+    .about-chiyoda__media img {
+        min-height: 260px;
+    }
+
+    .about-chiyoda__content {
+        order: 2;
+        padding: 0;
+    }
+
+    .about-chiyoda__block--red .about-chiyoda__content {
+        padding: 2.5rem 1.5rem;
+    }
+
+    .about-chiyoda__title {
+        font-size: 1.5rem;
+    }
+
+    .about-chiyoda__text {
+        font-size: 1rem;
+    }
+
+    .featured-section__grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .featured-section__title {
+        font-size: 1.75rem;
+    }
+
     .grid {
         grid-template-columns: 1fr;
     }
@@ -836,6 +1854,30 @@ footer::before {
     .table-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
+}
+
+/* Modal overrides for auth */
+#loginModal .btn-primary,
+#registerModal .btn-primary,
+#forgotPasswordModal .btn-primary {
+    background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+    border: none;
+}
+#loginModal .btn-primary:hover,
+#registerModal .btn-primary:hover,
+#forgotPasswordModal .btn-primary:hover {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+}
+#loginModal .modal-header,
+#registerModal .modal-header,
+#forgotPasswordModal .modal-header {
+    border-bottom-color: var(--border-color);
+}
+#loginModal .modal-title,
+#registerModal .modal-title,
+#forgotPasswordModal .modal-title {
+    color: var(--text-dark);
+    font-weight: 700;
 }
 
 /* Sidebar for Admin */
@@ -913,6 +1955,30 @@ footer::before {
     padding: 3rem;
     background: var(--light-bg);
     min-height: 100vh;
+}
+
+/* Tab Buttons */
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-light);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.tab-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
 }
 
 @media (max-width: 768px) {

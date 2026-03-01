@@ -15,7 +15,7 @@ Website quản lý quán ăn Nhật Bản là một hệ thống quản lý toà
 ### 2.2. Nhân viên phục vụ (Waiter/Server)
 - Tiếp nhận đơn hàng từ khách hàng
 - Quản lý bàn ăn và đơn hàng
-
+ 
 ### 2.3. Đầu bếp (Chef)
 - Xem và xử lý đơn hàng từ bếp
 - Cập nhật trạng thái món ăn

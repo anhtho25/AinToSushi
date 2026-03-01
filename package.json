@@ -1,0 +1,24 @@
+{
+  "name": "doancs2",
+  "version": "1.0.0",
+  "description": "Website quản lý quán ăn Nhật Bản là một hệ thống quản lý toàn diện hỗ trợ các hoạt động hàng ngày của nhà hàng, từ quản lý đơn hàng, bàn ăn, thực đơn đến quản lý nhân viên và báo cáo doanh thu.",
+  "main": "vnpay.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anhtho25/AinToSushi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anhtho25/AinToSushi/issues"
+  },
+  "homepage": "https://github.com/anhtho25/AinToSushi#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "qs": "^6.15.0"
+  }
+}

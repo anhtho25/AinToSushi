@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.profile-page.theme-aintosushi { background: #0f0f0f; min-height: 100vh; }
+        .profile-wrap { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .profile-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 2px solid rgba(212, 175, 55, 0.45);
+            box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .profile-card h2 {
+            color: var(--theme-white, #f8f6f2);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.35);
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-avatar-wrap {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold);
+            background: #2d2d2d;
+        }
+        .profile-avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #2d2d2d;
+            border: 3px solid var(--gold);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        .profile-avatar-upload {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: #0f0f0f;
+            border: 2px solid #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .profile-avatar-upload:hover { background: var(--gold-light); }
+        .profile-avatar-upload input { display: none; }
+        .profile-username {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--theme-white, #f8f6f2);
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-label { color: rgba(248, 246, 242, 0.8); font-size: 0.9rem; }
+        .profile-value { font-weight: 600; color: var(--theme-white, #f8f6f2); }
+        .profile-edit .profile-value { display: none; }
+        .profile-edit .profile-edit-input { display: block; }
+        .profile-edit-input {
+            display: none;
+            width: 100%;
+            max-width: 280px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: #2d2d2d;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .profile-edit-input:focus { outline: none; border-color: var(--gold); }
+        .profile-edit-input.readonly { opacity: 0.8; cursor: not-allowed; }
+        .profile-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-edit-profile, .btn-update-profile {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+        .btn-edit-profile {
+            background: transparent;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+        }
+        .btn-edit-profile:hover { background: rgba(212, 175, 55, 0.15); }
+        .btn-update-profile {
+            background: var(--gold);
+            color: #0f0f0f;
+        }
+        .btn-update-profile:hover { background: var(--gold-light); }
+        .btn-update-profile:disabled { opacity: 0.6; cursor: not-allowed; }
+        .profile-view .btn-update-profile { display: none; }
+        .profile-edit .btn-edit-profile { display: none; }
+        .profile-loading { text-align: center; padding: 3rem; color: rgba(248,246,242,0.7); }
+        .profile-message { margin-top: 0.75rem; font-size: 0.9rem; }
+        .profile-message.success { color: #10B981; }
+        .profile-message.error { color: #EF4444; }
+        /* Đặt bàn / Đơn hàng */
+        .profile-list { list-style: none; padding: 0; margin: 0; }
+        .profile-list li {
+            padding: 1rem;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .profile-list li:last-child { margin-bottom: 0; }
+        .profile-list-empty { color: rgba(248,246,242,0.5); text-align: center; padding: 2rem; font-size: 0.95rem; }
+        .profile-list-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-bottom: 0.35rem; font-size: 0.9rem; }
+        .profile-list-row span:first-child { color: var(--gold); min-width: 90px; }
+        .profile-list-row span:last-child { color: var(--theme-white, #f8f6f2); }
+        .btn-detail {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-detail:hover { background: rgba(212,175,55,0.15); }
+        .btn-logout-wrap { text-align: center; margin-top: 1.5rem; }
+        .btn-logout {
+            padding: 0.75rem 2rem;
+            background: transparent;
+            color: #ef4444;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.15); }
+        .order-history-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .order-nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .order-nav-btn:hover:not(:disabled) { background: rgba(212,175,55,0.2); }
+        .order-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .order-nav-info { color: rgba(248,246,242,0.8); font-size: 0.9rem; }
+    </style>
+</head>
+<body class="profile-page theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="profile-wrap">
+        <div id="profileLoading" class="profile-loading">Đang tải...</div>
+        <div id="profileContent" style="display: none;">
+            <!-- 1. Thông tin cá nhân -->
+            <div class="profile-card profile-view" id="profileCard">
+                <h2>1. Thông tin cá nhân</h2>
+                <div class="profile-header">
+                    <div class="profile-avatar-wrap">
+                        <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar" style="display: none;">
+                        <div id="profileAvatarPlaceholder" class="profile-avatar-placeholder">👤</div>
+                        <label class="profile-avatar-upload" title="Tải ảnh lên">
+                            📷
+                            <input type="file" id="avatarInput" accept="image/*">
+                        </label>
+                    </div>
+                    <p class="profile-username" id="profileUsername">—</p>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Ảnh đại diện</span>
+                    <span class="profile-value">Tải ảnh bằng nút 📷 bên trên</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Họ tên</span>
+                    <span class="profile-value" id="profileName">—</span>
+                    <input type="text" id="inputName" class="profile-edit-input" placeholder="Họ và tên">
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Email</span>
+                    <span class="profile-value" id="profileEmail">—</span>
+                    <input type="email" id="inputEmail" class="profile-edit-input readonly" placeholder="Email" readonly>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Số điện thoại</span>
+                    <span class="profile-value" id="profilePhone">—</span>
+                    <input type="tel" id="inputPhone" class="profile-edit-input" placeholder="Số điện thoại">
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Địa chỉ</span>
+                    <span class="profile-value" id="profileAddress">—</span>
+                    <input type="text" id="inputAddress" class="profile-edit-input" placeholder="Địa chỉ">
+                </div>
+                <div class="profile-actions">
+                    <button type="button" class="btn-edit-profile" id="btnEdit">Chỉnh sửa thông tin</button>
+                    <button type="button" class="btn-update-profile" id="btnUpdate">Cập nhật thông tin</button>
+                </div>
+                <p id="profileMessage" class="profile-message" style="display: none;"></p>
+            </div>
+
+            <!-- 2. Đặt bàn của tôi -->
+            <div class="profile-card">
+                <h2>2. Đặt bàn của tôi</h2>
+                <ul class="profile-list" id="reservationList"></ul>
+            </div>
+
+            <!-- 3. Lịch sử đơn hàng -->
+            <div class="profile-card">
+                <h2>3. Lịch sử đơn hàng</h2>
+                <div class="order-history-wrap">
+                    <ul class="profile-list" id="orderList"></ul>
+                    <div class="order-history-nav" id="orderHistoryNav" style="display: none;">
+                        <button type="button" class="order-nav-btn" id="orderPrev" aria-label="Trước">←</button>
+                        <span class="order-nav-info" id="orderNavInfo"></span>
+                        <button type="button" class="order-nav-btn" id="orderNext" aria-label="Sau">→</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Đăng xuất -->
+            <div class="profile-card">
+                <h2>4. Đăng xuất</h2>
+                <div class="btn-logout-wrap">
+                    <button type="button" class="btn-logout" id="btnLogout">Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dghchzl3r/image/upload';
+        const UPLOAD_PRESET = 'obrs8sja';
+        async function uploadImage(file) {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', UPLOAD_PRESET);
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+            if (!res.ok) throw new Error('Tải ảnh thất bại');
+            const data = await res.json();
+            return data.secure_url;
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        function updateHeader(user) {
+            const wrap = document.getElementById('navAuthWrap');
+            if (!wrap) return;
+            const guests = wrap.querySelectorAll('.nav-auth-guest');
+            const userSpan = wrap.querySelector('.nav-auth-user');
+            if (user) {
+                guests.forEach(el => { el.style.display = 'none'; });
+                if (userSpan) userSpan.style.display = 'inline-block';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+            } else {
+                guests.forEach(el => { el.style.display = 'inline-block'; });
+                if (userSpan) userSpan.style.display = 'none';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                if (ph) ph.style.display = 'inline-block';
+            }
+            wrap.style.visibility = 'visible';
+        }
+
+        function showMessage(text, isError) {
+            const el = document.getElementById('profileMessage');
+            el.textContent = text;
+            el.className = 'profile-message ' + (isError ? 'error' : 'success');
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 4000);
+        }
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '—';
+            return new Intl.NumberFormat('vi-VN').format(n) + '₫';
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            updateHeader(user);
+            if (!user) {
+                window.location.replace('auth/login.html');
+                return;
+            }
+            document.getElementById('profileLoading').style.display = 'none';
+            document.getElementById('profileContent').style.display = 'block';
+
+            const card = document.getElementById('profileCard');
+            const profileName = document.getElementById('profileName');
+            const profileEmail = document.getElementById('profileEmail');
+            const profilePhone = document.getElementById('profilePhone');
+            const profileAddress = document.getElementById('profileAddress');
+            const profileUsername = document.getElementById('profileUsername');
+            const inputName = document.getElementById('inputName');
+            const inputEmail = document.getElementById('inputEmail');
+            const inputPhone = document.getElementById('inputPhone');
+            const inputAddress = document.getElementById('inputAddress');
+            const avatarImg = document.getElementById('profileAvatar');
+            const avatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+            let userData = { name: null, phone: null, address: null, photoURL: null };
+            try {
+                const userRef = ref(database, `users/${user.uid}`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) userData = { ...userData, ...snapshot.val() };
+            } catch (err) { console.error(err); }
+
+            const photoURL = userData.photoURL || user.photoURL || null;
+            const displayName = userData.name || user.displayName || user.email?.split('@')[0] || '—';
+            const email = user.email || '—';
+            const phone = userData.phone || '—';
+            const address = userData.address || '—';
+
+            profileUsername.textContent = displayName;
+            profileName.textContent = displayName;
+            profileEmail.textContent = email;
+            profilePhone.textContent = phone;
+            profileAddress.textContent = address;
+            inputName.value = displayName === '—' ? '' : displayName;
+            inputEmail.value = email === '—' ? '' : email;
+            inputPhone.value = phone === '—' ? '' : phone;
+            inputAddress.value = address === '—' ? '' : address;
+
+            if (photoURL) {
+                avatarImg.src = photoURL;
+                avatarImg.style.display = 'inline-block';
+                avatarPlaceholder.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                avatarPlaceholder.style.display = 'inline-flex';
+            }
+
+            document.getElementById('avatarInput').onchange = async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                try {
+                    const url = await uploadImage(file);
+                    await update(ref(database, `users/${user.uid}`), { photoURL: url });
+                    await updateProfile(auth.currentUser, { photoURL: url });
+                    avatarImg.src = url;
+                    avatarImg.style.display = 'inline-block';
+                    avatarPlaceholder.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const navPh = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.src = url; navImg.style.display = 'inline-block'; }
+                    if (navPh) navPh.style.display = 'none';
+                    showMessage('Đã cập nhật ảnh đại diện.', false);
+                } catch (err) {
+                    console.error(err);
+                    showMessage(err?.message || 'Tải ảnh thất bại.', true);
+                }
+                e.target.value = '';
+            };
+
+            document.getElementById('btnEdit').onclick = () => {
+                card.classList.remove('profile-view');
+                card.classList.add('profile-edit');
+            };
+
+            document.getElementById('btnUpdate').onclick = async () => {
+                const name = inputName.value.trim();
+                const phone = inputPhone.value.trim();
+                const address = inputAddress.value.trim();
+                const btnUpdate = document.getElementById('btnUpdate');
+                btnUpdate.disabled = true;
+                try {
+                    await updateProfile(auth.currentUser, { displayName: name || user.email?.split('@')[0] || '' });
+                    await update(ref(database, `users/${user.uid}`), {
+                        name: name || null,
+                        phone: phone || null,
+                        address: address || null
+                    });
+                    profileUsername.textContent = name || '—';
+                    profileName.textContent = name || '—';
+                    profilePhone.textContent = phone || '—';
+                    profileAddress.textContent = address || '—';
+                    card.classList.remove('profile-edit');
+                    card.classList.add('profile-view');
+                    showMessage('Đã cập nhật thông tin.', false);
+                } catch (err) {
+                    console.error(err);
+                    showMessage(err?.message || 'Cập nhật thất bại.', true);
+                }
+                btnUpdate.disabled = false;
+            };
+
+            document.getElementById('btnLogout').onclick = async () => {
+                try {
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                } catch (err) { console.error(err); }
+            };
+
+            // Đặt bàn của tôi
+            const reservationList = document.getElementById('reservationList');
+            try {
+                const resRef = ref(database, 'reservations');
+                onValue(resRef, (snap) => {
+                    const data = snap.val();
+                    const list = !data ? [] : Object.entries(data)
+                        .map(([id, r]) => ({ id, ...r }))
+                        .filter(r => r.userId === user.uid)
+                        .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
+                    if (list.length === 0) {
+                        reservationList.innerHTML = '<li class="profile-list-empty">Chưa có đặt bàn nào.</li>';
+                        return;
+                    }
+                    reservationList.innerHTML = list.map(r => `
+                        <li>
+                            <div class="profile-list-row"><span>Thời gian:</span><span>${r.date || '—'} ${r.time || ''}</span></div>
+                            <div class="profile-list-row"><span>Số người:</span><span>${r.guests || '—'}</span></div>
+                            <div class="profile-list-row"><span>Trạng thái:</span><span>${r.status || 'Đã đặt'}</span></div>
+                        </li>
+                    `).join('');
+                });
+            } catch (err) {
+                reservationList.innerHTML = '<li class="profile-list-empty">Chưa có đặt bàn nào.</li>';
+            }
+
+            // Lịch sử đơn hàng: chỉ hiển thị 2 đơn mới nhất, mũi tên chuyển trang
+            const ORDER_PAGE_SIZE = 2;
+            let orderListFull = [];
+            let orderPage = 0;
+            const orderList = document.getElementById('orderList');
+            const orderHistoryNav = document.getElementById('orderHistoryNav');
+            const orderPrev = document.getElementById('orderPrev');
+            const orderNext = document.getElementById('orderNext');
+            const orderNavInfo = document.getElementById('orderNavInfo');
+
+            function renderOrderPage() {
+                const total = orderListFull.length;
+                const totalPages = Math.max(1, Math.ceil(total / ORDER_PAGE_SIZE));
+                if (orderPage >= totalPages) orderPage = totalPages - 1;
+                if (orderPage < 0) orderPage = 0;
+                const start = orderPage * ORDER_PAGE_SIZE;
+                const pageItems = orderListFull.slice(start, start + ORDER_PAGE_SIZE);
+                const statusText = { pending: 'Đang xử lý', completed: 'Hoàn thành', cancelled: 'Đã huỷ' };
+                orderList.innerHTML = pageItems.map(o => {
+                    const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : (o.date || '—');
+                    const status = statusText[o.status] || o.status || 'Đang xử lý';
+                    return `
+                    <li>
+                        <div class="profile-list-row"><span>Mã đơn:</span><span>#${o.id || o.key || '—'}</span></div>
+                        <div class="profile-list-row"><span>Ngày đặt:</span><span>${date}</span></div>
+                        <div class="profile-list-row"><span>Tổng tiền:</span><span>${formatPrice(o.total)}</span></div>
+                        <div class="profile-list-row"><span>Trạng thái:</span><span>${status}</span></div>
+                        <a href="checkout.html?order=${o.id || o.key}" class="btn-detail">Xem chi tiết</a>
+                    </li>
+                `;
+                }).join('');
+                orderPrev.disabled = orderPage <= 0;
+                orderNext.disabled = orderPage >= totalPages - 1 || total <= ORDER_PAGE_SIZE;
+                orderNavInfo.textContent = total <= ORDER_PAGE_SIZE ? '' : (orderPage + 1) + ' / ' + totalPages;
+            }
+
+            try {
+                const ordersRef = ref(database, 'orders');
+                onValue(ordersRef, (snap) => {
+                    const data = snap.val();
+                    orderListFull = !data ? [] : Object.entries(data)
+                        .map(([id, o]) => ({ id, ...o }))
+                        .filter(o => o.userId === user.uid)
+                        .filter(o => o.status === 'confirmed' || o.status === 'completed')
+                        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    if (orderListFull.length === 0) {
+                        orderList.innerHTML = '<li class="profile-list-empty">Chưa có đơn hàng nào.</li>';
+                        orderHistoryNav.style.display = 'none';
+                        return;
+                    }
+                    orderHistoryNav.style.display = orderListFull.length > ORDER_PAGE_SIZE ? 'flex' : 'none';
+                    orderPage = 0;
+                    renderOrderPage();
+                });
+            } catch (err) {
+                orderList.innerHTML = '<li class="profile-list-empty">Chưa có đơn hàng nào.</li>';
+            }
+            orderPrev.onclick = () => { orderPage--; renderOrderPage(); };
+            orderNext.onclick = () => { orderPage++; renderOrderPage(); };
+        });
+    </script>
+</body>
+</html>

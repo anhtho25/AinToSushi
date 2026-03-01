@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.cart-page-body.theme-aintosushi { background: #0f0f0f; min-height: 100vh; }
+        .cart-wrap {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .cart-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .cart-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+        }
+        .cart-breadcrumb span.current { color: var(--primary-color); font-weight: 600; }
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2rem;
+        }
+        @media (max-width: 900px) {
+            .cart-layout { grid-template-columns: 1fr; }
+        }
+        .cart-table-wrap { overflow-x: auto; }
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cart-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .cart-table th:nth-child(1) { width: 40%; }
+        .cart-table th:nth-child(2), .cart-table th:nth-child(3), .cart-table th:nth-child(4) { width: 15%; }
+        .cart-table td {
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .cart-item-product {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .cart-item-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .cart-item-remove:hover { background: var(--danger); color: var(--white); border-color: var(--danger); }
+        .cart-item-thumb {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            background: var(--gray-light);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-thumb .placeholder { font-size: 1.75rem; color: var(--gold); }
+        .cart-item-name { font-weight: 600; color: var(--text-dark); }
+        .cart-item-price { color: var(--text-dark); font-weight: 500; }
+        .cart-qty {
+            display: inline-flex;
+            align-items: center;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cart-qty button {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--gray-light);
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .cart-qty button:hover { background: var(--gold); color: var(--dark-bg); }
+        .cart-qty input {
+            width: 48px;
+            height: 36px;
+            border: none;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .cart-item-total { font-weight: 700; color: var(--primary-color); }
+        .cart-continue {
+            display: inline-block;
+            margin-top: 1.25rem;
+            padding: 0.65rem 1.25rem;
+            border: 2px solid var(--gold);
+            color: var(--primary-color);
+            background: var(--white);
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .cart-continue:hover { background: var(--gold); color: var(--dark-bg); }
+        .cart-summary-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-color); }
+        .cart-summary-row { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem; }
+        .cart-summary-row.total { font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color); }
+        .cart-checkout-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--gray-dark) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            margin-top: 1.25rem;
+            transition: all 0.3s;
+        }
+        .cart-checkout-btn:hover { background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%); color: var(--dark-bg); box-shadow: var(--shadow-gold); }
+        .cart-checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .cart-empty { text-align: center; padding: 3rem 2rem; color: var(--text-light); }
+        .cart-empty p { margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="cart-page-body theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="cart-wrap">
+        <div class="cart-card">
+            <nav class="cart-breadcrumb">
+                <span class="current">Giỏ hàng</span>
+                <span>›</span>
+                <span>Thanh toán</span>
+                <span>›</span>
+                <span>Hoàn thành</span>
+            </nav>
+
+            <div id="cartEmpty" class="cart-empty" style="display: none;">
+                <p>Giỏ hàng trống.</p>
+                <a href="menu.html" class="cart-continue">← TIẾP TỤC XEM SẢN PHẨM</a>
+            </div>
+
+            <div id="cartContent" class="cart-layout" style="display: none;">
+                <div>
+                    <div class="cart-table-wrap">
+                        <table class="cart-table">
+                            <thead>
+                                <tr>
+                                    <th>SẢN PHẨM</th>
+                                    <th>GIÁ</th>
+                                    <th>SỐ LƯỢNG</th>
+                                    <th>TỔNG CỘNG</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartTableBody"></tbody>
+                        </table>
+                    </div>
+                    <a href="menu.html" class="cart-continue">← TIẾP TỤC XEM SẢN PHẨM</a>
+                </div>
+                <div>
+                    <div class="cart-summary-title">TỔNG SỐ LƯỢNG</div>
+                    <div class="cart-summary-row">
+                        <span>Tổng tiền hàng</span>
+                        <span id="subtotalText">0 ₫</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>VAT (8%)</span>
+                        <span id="vatText">0 ₫</span>
+                    </div>
+                    <div class="cart-summary-row total">
+                        <span>Tổng thanh toán</span>
+                        <span id="totalText">0 ₫</span>
+                    </div>
+                    <button type="button" id="btnCheckout" class="cart-checkout-btn">TIẾN HÀNH THANH TOÁN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        let currentUser = null;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user || null;
+            const wrap = document.getElementById('navAuthWrap');
+            if (wrap) {
+                const guests = wrap.querySelectorAll('.nav-auth-guest');
+                const userSpan = wrap.querySelector('.nav-auth-user');
+                if (user) {
+                    guests.forEach(el => { el.style.display = 'none'; });
+                    if (userSpan) userSpan.style.display = 'inline-block';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                    else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+                } else {
+                    guests.forEach(el => { el.style.display = 'inline-block'; });
+                    if (userSpan) userSpan.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                    if (ph) ph.style.display = 'inline-block';
+                }
+                wrap.style.visibility = 'visible';
+            }
+        });
+
+        const CART_KEY = 'cart';
+
+        function getCart() {
+            try {
+                const raw = localStorage.getItem(CART_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setCart(items) {
+            localStorage.setItem(CART_KEY, JSON.stringify(items));
+        }
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '0 ₫';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + ' ₫';
+        }
+
+        function calculateTotals(cart) {
+            let subtotal = 0;
+            cart.forEach(item => {
+                const price = Number(item.price) || 0;
+                const qty = Math.max(1, Number(item.quantity) || 1);
+                subtotal += price * qty;
+            });
+            const vat = subtotal * 0.08;
+            const total = subtotal + vat;
+            return { subtotal, vat, total };
+        }
+
+        function render() {
+            const cart = getCart();
+            const cartEmpty = document.getElementById('cartEmpty');
+            const cartContent = document.getElementById('cartContent');
+            const tbody = document.getElementById('cartTableBody');
+
+            if (!cart.length) {
+                cartEmpty.style.display = 'block';
+                cartContent.style.display = 'none';
+                document.getElementById('subtotalText').textContent = '0 ₫';
+                document.getElementById('vatText').textContent = '0 ₫';
+                document.getElementById('totalText').textContent = '0 ₫';
+                return;
+            }
+
+            cartEmpty.style.display = 'none';
+            cartContent.style.display = 'grid';
+
+            let subtotal = 0;
+            tbody.innerHTML = cart.map((item, index) => {
+                const price = Number(item.price) || 0;
+                const qty = Math.max(1, Number(item.quantity) || 1);
+                const lineTotal = price * qty;
+                subtotal += lineTotal;
+                const imgHtml = item.image && String(item.image).trim()
+                    ? '<img src=\"' + String(item.image).trim() + '\" alt=\"\">'
+                    : '<div class=\"placeholder\">🍽️</div>';
+                return '<tr data-index=\"' + index + '\">' +
+                    '<td><div class=\"cart-item-product\">' +
+                    '<button type=\"button\" class=\"cart-item-remove\" title=\"Xóa\">×</button>' +
+                    '<div class=\"cart-item-thumb\">' + imgHtml + '</div>' +
+                    '<span class=\"cart-item-name\">' + String(item.name || 'Món').replace(/</g, '&lt;') + '</span>' +
+                    '</div></td>' +
+                    '<td><span class=\"cart-item-price\">' + formatPrice(price) + '</span></td>' +
+                    '<td><div class=\"cart-qty\">' +
+                    '<button type=\"button\" class=\"qty-minus\">−</button>' +
+                    '<input type=\"number\" min=\"1\" value=\"' + qty + '\" readonly>' +
+                    '<button type=\"button\" class=\"qty-plus\">+</button>' +
+                    '</div></td>' +
+                    '<td><span class=\"cart-item-total\">' + formatPrice(lineTotal) + '</span></td>' +
+                    '</tr>';
+            }).join('');
+
+            const vat = subtotal * 0.08;
+            const total = subtotal + vat;
+            document.getElementById('subtotalText').textContent = formatPrice(subtotal);
+            document.getElementById('vatText').textContent = formatPrice(vat);
+            document.getElementById('totalText').textContent = formatPrice(total);
+
+            tbody.querySelectorAll('.cart-item-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tr = btn.closest('tr');
+                    const idx = parseInt(tr.getAttribute('data-index'), 10);
+                    const next = getCart().filter((_, i) => i !== idx);
+                    setCart(next);
+                    render();
+                });
+            });
+
+            tbody.querySelectorAll('.qty-minus').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tr = btn.closest('tr');
+                    const idx = parseInt(tr.getAttribute('data-index'), 10);
+                    const next = getCart().slice();
+                    const q = Math.max(1, (Number(next[idx].quantity) || 1) - 1);
+                    next[idx] = { ...next[idx], quantity: q };
+                    setCart(next);
+                    render();
+                });
+            });
+
+            tbody.querySelectorAll('.qty-plus').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tr = btn.closest('tr');
+                    const idx = parseInt(tr.getAttribute('data-index'), 10);
+                    const next = getCart().slice();
+                    const q = (Number(next[idx].quantity) || 1) + 1;
+                    next[idx] = { ...next[idx], quantity: q };
+                    setCart(next);
+                    render();
+                });
+            });
+        }
+
+        document.getElementById('btnCheckout').addEventListener('click', () => {
+            const cart = getCart();
+            if (!cart.length) return;
+            if (!currentUser) {
+                window.location.href = 'auth/login.html';
+                return;
+            }
+            window.location.href = 'checkout.html';
+        });
+
+        render();
+    </script>
+</body>
+</html>
+

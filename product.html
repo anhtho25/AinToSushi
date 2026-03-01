@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết món - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.product-page-body.theme-aintosushi { background: #0f0f0f; min-height: 100vh; }
+        .product-section { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .product-section h1 { color: var(--primary-color); margin-bottom: 0.5rem; font-size: 1.75rem; }
+        .product-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            align-items: start;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+        }
+        @media (max-width: 768px) {
+            .product-detail { grid-template-columns: 1fr; }
+        }
+        .product-detail .product-image {
+            aspect-ratio: 1;
+            background: var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .product-detail .product-image img { width: 100%; height: 100%; object-fit: cover; }
+        .product-detail .product-image .placeholder { font-size: 4rem; color: var(--gold); opacity: 0.7; }
+        .product-detail .product-info { padding: 2rem; }
+        .product-detail .product-category {
+            font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-light);
+            text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .product-detail .product-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin: 1rem 0; }
+        .product-detail .product-description { color: var(--text-dark); line-height: 1.7; margin-bottom: 1.5rem; }
+        .product-detail .btn-add-cart {
+            display: inline-block; padding: 0.85rem 2rem; background: linear-gradient(135deg, var(--primary-color) 0%, var(--gray-dark) 100%);
+            color: var(--white); border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+            text-transform: uppercase; cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+        }
+        .product-detail .btn-add-cart:hover {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+            color: var(--dark-bg); box-shadow: var(--shadow-gold);
+        }
+        .reviews-section, .similar-section {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+        .reviews-section h2, .similar-section h2 {
+            font-size: 1.25rem; color: var(--primary-color); margin-bottom: 1.25rem; border-bottom: 2px solid var(--gold); padding-bottom: 0.5rem;
+        }
+        .review-form .form-group { margin-bottom: 1rem; }
+        .review-form label { display: block; font-size: 0.9rem; color: var(--text-dark); margin-bottom: 0.35rem; }
+        .review-form input, .review-form textarea {
+            width: 100%; max-width: 400px; padding: 0.6rem 0.75rem;
+            border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem;
+        }
+        .review-form textarea { min-height: 100px; resize: vertical; }
+        .review-form .stars-wrap { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .review-form .stars-wrap button {
+            width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border-color);
+            background: var(--gray-light); color: var(--text-light); font-size: 1rem; cursor: pointer; transition: all 0.2s;
+        }
+        .review-form .stars-wrap button.active, .review-form .stars-wrap button:hover { background: var(--gold); color: var(--dark-bg); border-color: var(--gold); }
+        .review-form .btn-submit {
+            padding: 0.65rem 1.5rem; background: var(--primary-color); color: var(--white); border: none;
+            border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;
+        }
+        .review-form .btn-submit:hover { background: var(--gold); color: var(--dark-bg); }
+        .review-list { margin-top: 1.5rem; }
+        .review-item {
+            padding: 1rem 0; border-bottom: 1px solid var(--border-color);
+        }
+        .review-item:last-child { border-bottom: none; }
+        .review-item .review-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.35rem; }
+        .review-item .review-stars { color: var(--gold); letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+        .review-item .review-content { color: var(--text-dark); line-height: 1.5; }
+        .similar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+        @media (max-width: 900px) { .similar-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .similar-grid { grid-template-columns: 1fr; } }
+        .similar-card {
+            background: var(--light-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s, transform 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .similar-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .similar-card .card-img {
+            aspect-ratio: 1;
+            background: var(--gray-light);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .similar-card .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .similar-card .card-img .placeholder { font-size: 2rem; color: var(--gold); }
+        .similar-card .card-body { padding: 1rem; }
+        .similar-card .card-name { font-weight: 600; color: var(--text-dark); margin-bottom: 0.35rem; font-size: 0.95rem; }
+        .similar-card .card-price { font-size: 0.95rem; font-weight: 700; color: var(--primary-color); }
+        .product-loading, .product-notfound { text-align: center; padding: 4rem 2rem; color: var(--text-light); }
+    </style>
+</head>
+<body class="product-page-body theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="product-section">
+        <div id="productLoading" class="product-loading">Đang tải...</div>
+        <div id="productNotFound" class="product-notfound" style="display: none;">
+            <p>Không tìm thấy món ăn.</p>
+            <a href="menu.html" class="btn">Quay lại Thực đơn</a>
+        </div>
+        <div id="productContent" style="display: none;">
+            <div class="product-detail">
+                <div class="product-image" id="productImage"></div>
+                <div class="product-info">
+                    <div class="product-category" id="productCategory"></div>
+                    <h1 id="productName"></h1>
+                    <div class="product-price" id="productPrice"></div>
+                    <p class="product-description" id="productDescription"></p>
+                    <a href="#" id="btnAddToCart" class="btn-add-cart">Thêm vào giỏ hàng</a>
+                </div>
+            </div>
+
+            <div class="reviews-section">
+                <h2>Đánh giá</h2>
+                <form id="reviewForm" class="review-form">
+                    <div class="form-group">
+                        <label for="reviewName">Tên *</label>
+                        <input type="text" id="reviewName" required placeholder="Tên của bạn">
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewEmail">Email *</label>
+                        <input type="email" id="reviewEmail" required placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Số sao *</label>
+                        <div class="stars-wrap" id="starsWrap">
+                            <button type="button" data-star="1">1</button>
+                            <button type="button" data-star="2">2</button>
+                            <button type="button" data-star="3">3</button>
+                            <button type="button" data-star="4">4</button>
+                            <button type="button" data-star="5">5</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewContent">Nội dung đánh giá *</label>
+                        <textarea id="reviewContent" required placeholder="Viết đánh giá của bạn..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Gửi đánh giá</button>
+                </form>
+                <div class="review-list" id="reviewList"></div>
+            </div>
+
+            <div class="similar-section">
+                <h2>Sản phẩm tương tự</h2>
+                <div class="similar-grid" id="similarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        let currentUser = null;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user || null;
+            const wrap = document.getElementById('navAuthWrap');
+            if (wrap) {
+                const guests = wrap.querySelectorAll('.nav-auth-guest');
+                const userSpan = wrap.querySelector('.nav-auth-user');
+                if (user) {
+                    guests.forEach(el => { el.style.display = 'none'; });
+                    if (userSpan) userSpan.style.display = 'inline-block';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                    else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+                } else {
+                    guests.forEach(el => { el.style.display = 'inline-block'; });
+                    if (userSpan) userSpan.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                    if (ph) ph.style.display = 'inline-block';
+                }
+                wrap.style.visibility = 'visible';
+            }
+        });
+
+        const MENU_PATH = 'menu/menuOnline';
+
+        function getProductId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id') || '';
+        }
+
+        function formatPrice(price) {
+            if (price == null || price === '') return '—';
+            const n = Number(price);
+            if (isNaN(n)) return String(price);
+            return new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+        }
+
+        let currentProductId = '';
+        let currentProduct = null;
+        let selectedStars = 0;
+        let allMenuItems = [];
+
+        function renderProduct(product, productId) {
+            const name = product.name || product.nameEn || 'Món';
+            const price = formatPrice(product.price);
+            const imageUrl = (product.image && product.image.trim()) ? product.image.trim() : '';
+            const category = product.category || '';
+            const description = product.description || 'Chưa có mô tả.';
+
+            document.title = name + ' - Ain Tō Sushi';
+            document.getElementById('productCategory').textContent = category;
+            document.getElementById('productName').textContent = name;
+            document.getElementById('productPrice').textContent = price;
+            document.getElementById('productDescription').textContent = description;
+
+            const imgEl = document.getElementById('productImage');
+            if (imageUrl) {
+                imgEl.innerHTML = '<img src="' + imageUrl + '" alt="' + name + '">';
+            } else {
+                imgEl.innerHTML = '<div class="placeholder">🍽️</div>';
+            }
+
+            const btnCart = document.getElementById('btnAddToCart');
+            btnCart.href = 'cart.html';
+            btnCart.onclick = function(e) {
+                e.preventDefault();
+                if (!currentUser) {
+                    window.location.href = 'auth/login.html';
+                    return;
+                }
+                addCurrentProductToCart();
+                window.location.href = 'cart.html';
+            };
+        }
+
+        function addCurrentProductToCart() {
+            if (!currentProductId || !currentProduct) return;
+            const item = {
+                id: currentProductId,
+                name: currentProduct.name || currentProduct.nameEn || 'Món',
+                image: (currentProduct.image && currentProduct.image.trim()) ? currentProduct.image.trim() : '',
+                price: Number(currentProduct.price) || 0,
+                quantity: 1
+            };
+            let cart = [];
+            try {
+                const raw = localStorage.getItem('cart');
+                cart = raw ? JSON.parse(raw) : [];
+            } catch (err) {}
+            const existing = cart.find(x => x.id === item.id);
+            if (existing) existing.quantity = (existing.quantity || 1) + 1;
+            else cart.push(item);
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function renderReviews(reviews) {
+            const list = document.getElementById('reviewList');
+            if (!reviews || Object.keys(reviews).length === 0) {
+                list.innerHTML = '<p style="color:var(--text-light);">Chưa có đánh giá nào.</p>';
+                return;
+            }
+            const items = Object.entries(reviews)
+                .map(([id, r]) => ({ id, ...r }))
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            list.innerHTML = items.map(r => {
+                const stars = Number(r.stars) || 0;
+                const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+                const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '';
+                return '<div class="review-item">' +
+                    '<div class="review-meta">' + (r.reviewerName || 'Khách') + ' · ' + date + '</div>' +
+                    '<div class="review-stars">' + starStr + '</div>' +
+                    '<div class="review-content">' + (r.content || '').replace(/</g, '&lt;') + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function renderSimilar(category, excludeId) {
+            const list = allMenuItems
+                .filter(item => item.id !== excludeId && (item.available !== false))
+                .filter(item => (item.category || '') === (category || ''))
+                .slice(0, 4);
+            const grid = document.getElementById('similarGrid');
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="grid-column:1/-1;color:var(--text-light);">Chưa có món cùng danh mục.</p>';
+                return;
+            }
+            grid.innerHTML = list.map(item => {
+                const name = item.name || item.nameEn || 'Món';
+                const price = formatPrice(item.price);
+                const imageUrl = (item.image && item.image.trim()) ? item.image.trim() : '';
+                const imgHtml = imageUrl
+                    ? '<img src="' + imageUrl + '" alt="' + name + '" loading="lazy">'
+                    : '<div class="placeholder">🍽️</div>';
+                return '<a href="product.html?id=' + encodeURIComponent(item.id) + '" class="similar-card">' +
+                    '<div class="card-img">' + imgHtml + '</div>' +
+                    '<div class="card-body">' +
+                    '<div class="card-name">' + name + '</div>' +
+                    '<div class="card-price">' + price + '</div>' +
+                    '</div></a>';
+            }).join('');
+        }
+
+        function initReviewForm() {
+            const form = document.getElementById('reviewForm');
+            const starsWrap = document.getElementById('starsWrap');
+
+            starsWrap.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedStars = Number(btn.getAttribute('data-star')) || 0;
+                    starsWrap.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    starsWrap.querySelectorAll('button').forEach(b => {
+                        if (Number(b.getAttribute('data-star')) <= selectedStars) b.classList.add('active');
+                    });
+                });
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('reviewName').value.trim();
+                const email = document.getElementById('reviewEmail').value.trim();
+                const content = document.getElementById('reviewContent').value.trim();
+                if (!currentProductId) return;
+                if (selectedStars < 1 || selectedStars > 5) {
+                    alert('Vui lòng chọn số sao từ 1 đến 5.');
+                    return;
+                }
+                try {
+                    const reviewsRef = ref(database, `${MENU_PATH}/${currentProductId}/reviews`);
+                    const newRef = push(reviewsRef);
+                    await set(newRef, {
+                        reviewerName: name,
+                        email,
+                        stars: selectedStars,
+                        content,
+                        createdAt: Date.now()
+                    });
+                    form.reset();
+                    selectedStars = 0;
+                    starsWrap.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                } catch (err) {
+                    console.error(err);
+                    alert('Gửi đánh giá thất bại. Vui lòng thử lại.');
+                }
+            });
+        }
+
+        function showContent() {
+            document.getElementById('productLoading').style.display = 'none';
+            document.getElementById('productContent').style.display = 'block';
+            renderProduct(currentProduct, currentProductId);
+            renderSimilar(currentProduct ? currentProduct.category : '', currentProductId);
+            initReviewForm();
+        }
+
+        function showNotFound() {
+            document.getElementById('productLoading').style.display = 'none';
+            document.getElementById('productNotFound').style.display = 'block';
+        }
+
+        currentProductId = getProductId();
+        if (!currentProductId) {
+            showNotFound();
+        } else {
+            const productRef = ref(database, `${MENU_PATH}/${currentProductId}`);
+            onValue(productRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data || typeof data !== 'object') {
+                    showNotFound();
+                    return;
+                }
+                currentProduct = { ...data };
+                showContent();
+            }, (err) => {
+                console.error(err);
+                showNotFound();
+            });
+
+            const reviewsRef = ref(database, `${MENU_PATH}/${currentProductId}/reviews`);
+            onValue(reviewsRef, (snapshot) => {
+                const data = snapshot.val();
+                renderReviews(data || {});
+            });
+
+            const menuRef = ref(database, MENU_PATH);
+            onValue(menuRef, (snapshot) => {
+                const data = snapshot.val();
+                allMenuItems = !data ? [] : Object.entries(data).map(([id, item]) => ({ id, ...item }));
+                if (currentProduct) {
+                    renderSimilar(currentProduct.category, currentProductId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

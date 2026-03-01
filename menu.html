@@ -5,8 +5,337 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thực Đơn - Ain Tō Sushi</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Menu grid - tông màu DOANCS2 (đen, vàng gold, nền sáng) */
+        body.menu-page-body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+        }
+
+        .menu-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 3rem 4rem;
+        }
+
+        .menu-section h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        /* Thanh trên: Hiển thị X-Y của Z + Sắp xếp */
+        .menu-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .menu-toolbar .result-info {
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .menu-toolbar .sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .menu-toolbar .sort-wrap label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .menu-toolbar select {
+            padding: 0.6rem 2rem 0.6rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        .menu-toolbar select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        /* Lưới món - 5 cột desktop, responsive */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 1200px) {
+            .menu-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .menu-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        }
+
+        /* Card món - nền trắng, bóng nhẹ */
+        .menu-card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+        }
+        .menu-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .menu-card .card-img {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .menu-card .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .menu-card .card-img .placeholder {
+            font-size: 3rem;
+            color: var(--gold);
+            opacity: 0.7;
+        }
+
+        .menu-card .card-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        .menu-card .card-category {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+        .menu-card .card-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .menu-card .card-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .menu-card .btn-add-cart {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--gray-dark) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+        .menu-card .btn-add-cart:hover {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+            color: var(--dark-bg);
+            box-shadow: var(--shadow-gold);
+        }
+
+        /* Phân trang */
+        .menu-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .menu-pagination button {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-dark);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .menu-pagination button:hover:not(:disabled) {
+            border-color: var(--gold);
+            background: var(--gold);
+            color: var(--dark-bg);
+        }
+        .menu-pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .menu-pagination .page-num {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Loading & empty */
+        .menu-loading, .menu-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+        .menu-empty .menu-section .menu-toolbar,
+        .menu-empty .menu-section .menu-grid { display: none; }
+
+        /* Panel lọc */
+        .menu-filters {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .menu-filters h3 {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 1.5rem 2rem;
+        }
+        .filter-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .filter-categories label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-right: 0.25rem;
+        }
+        .filter-cat-btn {
+            padding: 0.4rem 0.9rem;
+            border: 2px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-dark);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-cat-btn:hover {
+            border-color: var(--gold);
+            color: var(--primary-color);
+        }
+        .filter-cat-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--gold);
+        }
+        .filter-price-block {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+        }
+        .price-range-wrap {
+            position: relative;
+            width: 220px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+        }
+        .price-range-wrap input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            pointer-events: none;
+        }
+        .price-range-wrap input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gray-dark);
+            cursor: pointer;
+            pointer-events: auto;
+            border: 2px solid var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+        .price-range-wrap input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gray-dark);
+            cursor: pointer;
+            pointer-events: auto;
+            border: 2px solid var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+        .price-range-track-bg {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: var(--gray-light);
+            border-radius: 4px;
+        }
+        .price-range-track-fill {
+            position: absolute;
+            height: 8px;
+            background: var(--gray-dark);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .filter-price-display {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            min-width: 200px;
+        }
+        .btn-filter-apply {
+            padding: 0.6rem 1.5rem;
+            background: var(--gray-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-filter-apply:hover {
+            background: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
 </head>
-<body>
+<body class="menu-page-body theme-aintosushi">
     <header>
         <nav>
             <a href="index.html" class="logo">
@@ -17,196 +346,351 @@
                 <li><a href="index.html">Trang Chủ</a></li>
                 <li><a href="menu.html">Thực Đơn</a></li>
                 <li><a href="reservation.html">Đặt Bàn</a></li>
-                <li><a href="takeout.html">Đặt Món</a></li>
-                <li><a href="admin/login.html">Đăng Nhập</a></li>
+                <li id="navAuthWrap" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
             </ul>
         </nav>
     </header>
 
-    <div class="container">
-        <section style="margin-top: 2rem;">
-            <h1 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">Thực Đơn</h1>
-            
-            <div style="margin-bottom: 2rem; text-align: center;">
-                <input type="text" placeholder="Tìm kiếm món ăn..." style="padding: 0.8rem 1.5rem; width: 100%; max-width: 500px; border: 2px solid var(--border-color); border-radius: 25px; font-size: 1rem;">
+    <div class="menu-section">
+        <h1>Thực Đơn</h1>
+
+        <div id="menuLoading" class="menu-loading">Đang tải thực đơn...</div>
+        <div id="menuEmpty" class="menu-empty" style="display: none;">
+            <p>Chưa có món nào trong thực đơn.</p>
+        </div>
+
+        <div id="menuContent" style="display: none;">
+            <div class="menu-filters">
+                <h3>Lọc theo danh mục</h3>
+                <div class="filter-categories" id="filterCategories">
+                    <!-- Nút danh mục được tạo từ Firebase menu/categories -->
+                </div>
+                <h3 style="margin-top: 1.5rem;">Lọc theo giá</h3>
+                <div class="filter-row">
+                    <div class="filter-price-block">
+                        <div class="price-range-wrap" id="priceRangeWrap">
+                            <div class="price-range-track-bg"></div>
+                            <div class="price-range-track-fill" id="priceRangeFill"></div>
+                            <input type="range" id="priceMin" min="0" max="100" value="0" aria-label="Giá tối thiểu">
+                            <input type="range" id="priceMax" min="0" max="100" value="100" aria-label="Giá tối đa">
+                        </div>
+                        <span class="filter-price-display" id="priceRangeDisplay">Giá 0 ₫ – 0 ₫</span>
+                        <button type="button" class="btn-filter-apply" id="btnFilter">Lọc</button>
+                    </div>
+                </div>
             </div>
-
-            <!-- Sushi -->
-            <section style="margin-bottom: 4rem;">
-                <h2 class="card-header">🍣 Sushi & Sashimi</h2>
-                <div class="grid">
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
-                        <div class="menu-item-content">
-                            <h3>Sushi Set Deluxe</h3>
-                            <p>10 miếng sushi đa dạng với cá tươi ngon</p>
-                            <div class="menu-item-price">450,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
-                        <div class="menu-item-content">
-                            <h3>Sushi Set Premium</h3>
-                            <p>15 miếng sushi cao cấp</p>
-                            <div class="menu-item-price">650,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
-                        <div class="menu-item-content">
-                            <h3>Sashimi Mix</h3>
-                            <p>Cá sống tươi ngon đa dạng</p>
-                            <div class="menu-item-price">380,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍣</div>
-                        <div class="menu-item-content">
-                            <h3>Salmon Sashimi</h3>
-                            <p>Cá hồi sống tươi ngon</p>
-                            <div class="menu-item-price">280,000đ</div>
-                        </div>
-                    </div>
+            <div class="menu-toolbar">
+                <span class="result-info" id="resultInfo">Hiển thị 1-0 của 0 kết quả</span>
+                <div class="sort-wrap">
+                    <label for="sortSelect">Sắp xếp:</label>
+                    <select id="sortSelect">
+                        <option value="default">Thứ tự mặc định</option>
+                        <option value="priceAsc">Giá tăng dần</option>
+                        <option value="priceDesc">Giá giảm dần</option>
+                        <option value="nameAz">Tên A-Z</option>
+                    </select>
                 </div>
-            </section>
-
-            <!-- Ramen -->
-            <section style="margin-bottom: 4rem;">
-                <h2 class="card-header">🍜 Mì Ramen</h2>
-                <div class="grid">
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
-                        <div class="menu-item-content">
-                            <h3>Ramen Tonkotsu</h3>
-                            <p>Mì ramen với nước dùng xương heo đậm đà</p>
-                            <div class="menu-item-price">150,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
-                        <div class="menu-item-content">
-                            <h3>Ramen Shoyu</h3>
-                            <p>Mì ramen với nước dùng xì dầu</p>
-                            <div class="menu-item-price">130,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
-                        <div class="menu-item-content">
-                            <h3>Ramen Miso</h3>
-                            <p>Mì ramen với nước dùng miso</p>
-                            <div class="menu-item-price">140,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍜</div>
-                        <div class="menu-item-content">
-                            <h3>Ramen Spicy</h3>
-                            <p>Mì ramen cay đặc biệt</p>
-                            <div class="menu-item-price">145,000đ</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Tempura -->
-            <section style="margin-bottom: 4rem;">
-                <h2 class="card-header">🍤 Tempura</h2>
-                <div class="grid">
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍤</div>
-                        <div class="menu-item-content">
-                            <h3>Tempura Tôm</h3>
-                            <p>Tôm chiên giòn với bột tempura</p>
-                            <div class="menu-item-price">200,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍤</div>
-                        <div class="menu-item-content">
-                            <h3>Tempura Rau Củ</h3>
-                            <p>Rau củ chiên giòn</p>
-                            <div class="menu-item-price">150,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍤</div>
-                        <div class="menu-item-content">
-                            <h3>Tempura Mix</h3>
-                            <p>Tôm và rau củ hỗn hợp</p>
-                            <div class="menu-item-price">220,000đ</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Bento -->
-            <section style="margin-bottom: 4rem;">
-                <h2 class="card-header">🍱 Bento Box</h2>
-                <div class="grid">
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍱</div>
-                        <div class="menu-item-content">
-                            <h3>Bento Box Cá Hồi</h3>
-                            <p>Cơm với cá hồi nướng và nhiều món kèm</p>
-                            <div class="menu-item-price">250,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍱</div>
-                        <div class="menu-item-content">
-                            <h3>Bento Box Thịt Bò</h3>
-                            <p>Cơm với thịt bò nướng và món kèm</p>
-                            <div class="menu-item-price">280,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍱</div>
-                        <div class="menu-item-content">
-                            <h3>Bento Box Gà</h3>
-                            <p>Cơm với gà teriyaki và món kèm</p>
-                            <div class="menu-item-price">220,000đ</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Đồ Uống -->
-            <section style="margin-bottom: 4rem;">
-                <h2 class="card-header">🥤 Đồ Uống</h2>
-                <div class="grid">
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍶</div>
-                        <div class="menu-item-content">
-                            <h3>Sake Nhật Bản</h3>
-                            <p>Rượu sake truyền thống</p>
-                            <div class="menu-item-price">150,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🍵</div>
-                        <div class="menu-item-content">
-                            <h3>Trà Xanh Nhật Bản</h3>
-                            <p>Trà xanh matcha truyền thống</p>
-                            <div class="menu-item-price">50,000đ</div>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ffe66d 0%, #ff6b6b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">🥤</div>
-                        <div class="menu-item-content">
-                            <h3>Nước Ngọt</h3>
-                            <p>Coca, Pepsi, 7Up</p>
-                            <div class="menu-item-price">30,000đ</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </section>
+            </div>
+            <div class="menu-grid" id="menuGrid"></div>
+            <div class="menu-pagination" id="menuPagination"></div>
+        </div>
     </div>
 
     <footer>
         <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
     </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        let currentUser = null;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user || null;
+            const wrap = document.getElementById('navAuthWrap');
+            if (wrap) {
+                const guests = wrap.querySelectorAll('.nav-auth-guest');
+                const userSpan = wrap.querySelector('.nav-auth-user');
+                if (user) {
+                    guests.forEach(el => { el.style.display = 'none'; });
+                    if (userSpan) userSpan.style.display = 'inline-block';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                    else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
+                } else {
+                    guests.forEach(el => { el.style.display = 'inline-block'; });
+                    if (userSpan) userSpan.style.display = 'none';
+                    const navImg = document.querySelector('.nav-avatar-img');
+                    const ph = document.querySelector('.nav-avatar-placeholder');
+                    if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                    if (ph) ph.style.display = 'inline-block';
+                }
+                wrap.style.visibility = 'visible';
+            }
+        });
+
+        const DEFAULT_CATEGORIES = ['SUSHI', 'SASHIMI', 'MAKI', 'TEMPURA', 'YAKIMONO', 'MỲ', 'CƠM', 'SALAD', 'ĐỒ UỐNG', 'SET'];
+        const ITEMS_PER_PAGE = 45;
+        let menuList = [];
+        let categoryList = [];
+        let currentPage = 1;
+        let sortBy = 'default';
+        let priceMinData = 0;
+        let priceMaxData = 1000000;
+        let sliderMinPct = 0;
+        let sliderMaxPct = 100;
+        let appliedPriceMin = 0;
+        let appliedPriceMax = 1000000;
+        let filterCategory = '';
+
+        function formatPrice(price) {
+            if (price == null || price === '') return '—';
+            const n = Number(price);
+            if (isNaN(n)) return String(price);
+            return new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+        }
+
+        function priceFromPct(pct) {
+            return Math.round(priceMinData + (priceMaxData - priceMinData) * pct / 100);
+        }
+        function getFilteredList() {
+            return menuList.filter(item => {
+                const price = Number(item.price) || 0;
+                if (price < appliedPriceMin || price > appliedPriceMax) return false;
+                if (filterCategory && (item.category || '') !== filterCategory) return false;
+                return true;
+            });
+        }
+        function applySort(list) {
+            const arr = [...list];
+            if (sortBy === 'priceAsc') arr.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+            else if (sortBy === 'priceDesc') arr.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+            else if (sortBy === 'nameAz') arr.sort((a, b) => (a.name || a.nameEn || '').localeCompare(b.name || b.nameEn || ''));
+            else arr.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+            return arr;
+        }
+
+        function renderCard(item) {
+            const name = item.name || item.nameEn || 'Món';
+            const price = formatPrice(item.price);
+            const imageUrl = (item.image && item.image.trim()) ? item.image.trim() : '';
+            const category = item.category || '';
+            const imgHtml = imageUrl
+                ? `<img src="${imageUrl}" alt="${name}" loading="lazy">`
+                : '<div class="placeholder">🍽️</div>';
+            const detailUrl = 'product.html?id=' + encodeURIComponent(item.id);
+            const cartItem = {
+                id: item.id,
+                name: name,
+                image: (item.image && item.image.trim()) ? item.image.trim() : '',
+                price: Number(item.price) || 0,
+                quantity: 1
+            };
+            const cartData = 'data-cart="' + encodeURIComponent(JSON.stringify(cartItem)) + '"';
+            return `
+                <div class="menu-card">
+                    <a href="${detailUrl}" class="card-img" style="text-decoration:none;color:inherit;">${imgHtml}</a>
+                    <div class="card-body">
+                        ${category ? `<div class="card-category">${category}</div>` : ''}
+                        <h3 class="card-name"><a href="${detailUrl}" style="color:inherit;text-decoration:none;">${name}</a></h3>
+                        <div class="card-price">${price}</div>
+                        <a href="cart.html" class="btn-add-cart" ${cartData}>Thêm vào giỏ hàng</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function addToCartFromMenu(e) {
+            const btn = e.target.closest('a.btn-add-cart[data-cart]');
+            if (!btn) return;
+            e.preventDefault();
+            if (!currentUser) {
+                window.location.href = 'auth/login.html';
+                return;
+            }
+            try {
+                const cartItem = JSON.parse(decodeURIComponent(btn.getAttribute('data-cart') || '{}'));
+                let cart = [];
+                try {
+                    const raw = localStorage.getItem('cart');
+                    cart = raw ? JSON.parse(raw) : [];
+                } catch (err) {}
+                const existing = cart.find(x => x.id === cartItem.id);
+                if (existing) existing.quantity = (existing.quantity || 1) + 1;
+                else cart.push({ ...cartItem, quantity: cartItem.quantity || 1 });
+                localStorage.setItem('cart', JSON.stringify(cart));
+                window.location.href = 'cart.html';
+            } catch (err) {
+                console.error(err);
+                window.location.href = 'cart.html';
+            }
+        }
+
+        function updateView() {
+            const filtered = getFilteredList();
+            const sorted = applySort(filtered);
+            const total = sorted.length;
+            const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, total);
+            const pageItems = sorted.slice(start, end);
+
+            document.getElementById('resultInfo').textContent =
+                total === 0 ? 'Hiển thị 0-0 của 0 kết quả' : `Hiển thị ${start + 1}-${end} của ${total} kết quả`;
+
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = pageItems.length ? pageItems.map(renderCard).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--text-light);">Không có món nào.</p>';
+
+            const pagEl = document.getElementById('menuPagination');
+            if (totalPages <= 1) {
+                pagEl.innerHTML = '';
+                return;
+            }
+            pagEl.innerHTML = `
+                <button type="button" id="pgPrev" ${currentPage <= 1 ? 'disabled' : ''}>← Trước</button>
+                <span class="page-num">Trang ${currentPage} / ${totalPages}</span>
+                <button type="button" id="pgNext" ${currentPage >= totalPages ? 'disabled' : ''}>Sau →</button>
+            `;
+            pagEl.querySelector('#pgPrev').onclick = () => { currentPage--; updateView(); };
+            pagEl.querySelector('#pgNext').onclick = () => { currentPage++; updateView(); };
+        }
+
+        function updatePriceRangeUI() {
+            const minVal = priceFromPct(sliderMinPct);
+            const maxVal = priceFromPct(sliderMaxPct);
+            document.getElementById('priceRangeDisplay').textContent =
+                'Giá ' + formatPrice(minVal) + ' – ' + formatPrice(maxVal);
+            const fill = document.getElementById('priceRangeFill');
+            fill.style.left = sliderMinPct + '%';
+            fill.style.width = (sliderMaxPct - sliderMinPct) + '%';
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('filterCategories');
+            if (!container) return;
+            const cats = categoryList.length ? categoryList : DEFAULT_CATEGORIES;
+            container.innerHTML =
+                '<button type="button" class="filter-cat-btn active" data-category="">Tất cả</button>' +
+                cats.map(c => `<button type="button" class="filter-cat-btn" data-category="${c}">${c}</button>`).join('');
+            container.querySelectorAll('.filter-cat-btn').forEach(btn => {
+                btn.onclick = () => {
+                    container.querySelectorAll('.filter-cat-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterCategory = (btn.getAttribute('data-category') || '').trim();
+                    currentPage = 1;
+                    updateView();
+                };
+            });
+        }
+
+        function initMenu() {
+            document.getElementById('menuContent').style.display = 'block';
+
+            const prices = menuList.map(item => Number(item.price) || 0).filter(Boolean);
+            priceMinData = prices.length ? Math.min(...prices) : 0;
+            priceMaxData = prices.length ? Math.max(...prices) : 1000000;
+            if (priceMaxData <= priceMinData) priceMaxData = priceMinData + 10000;
+            appliedPriceMin = priceMinData;
+            appliedPriceMax = priceMaxData;
+            sliderMinPct = 0;
+            sliderMaxPct = 100;
+            document.getElementById('priceMin').value = 0;
+            document.getElementById('priceMax').value = 100;
+            updatePriceRangeUI();
+
+            renderCategoryFilters();
+
+            const inputMin = document.getElementById('priceMin');
+            const inputMax = document.getElementById('priceMax');
+            function syncMin() {
+                let v = Number(inputMin.value) || 0;
+                if (v > sliderMaxPct) v = sliderMaxPct;
+                sliderMinPct = v;
+                inputMin.value = v;
+                updatePriceRangeUI();
+            }
+            function syncMax() {
+                let v = Number(inputMax.value) || 100;
+                if (v < sliderMinPct) v = sliderMinPct;
+                sliderMaxPct = v;
+                inputMax.value = v;
+                updatePriceRangeUI();
+            }
+            inputMin.addEventListener('input', syncMin);
+            inputMax.addEventListener('input', syncMax);
+
+            document.getElementById('btnFilter').onclick = () => {
+                appliedPriceMin = priceFromPct(sliderMinPct);
+                appliedPriceMax = priceFromPct(sliderMaxPct);
+                currentPage = 1;
+                updateView();
+            };
+
+            document.getElementById('sortSelect').value = sortBy;
+            document.getElementById('sortSelect').onchange = (e) => {
+                sortBy = e.target.value;
+                currentPage = 1;
+                updateView();
+            };
+            document.getElementById('menuGrid').addEventListener('click', addToCartFromMenu);
+            updateView();
+        }
+
+        const menuRef = ref(database, 'menu/menuOnline');
+        const categoriesRef = ref(database, 'menu/categories');
+        onValue(menuRef, (snapshot) => {
+            document.getElementById('menuLoading').style.display = 'none';
+            const data = snapshot.val();
+            if (!data || typeof data !== 'object') {
+                document.getElementById('menuEmpty').style.display = 'block';
+                return;
+            }
+            menuList = Object.entries(data)
+                .map(([id, item]) => ({ id, ...item }))
+                .filter(item => item.available !== false);
+            if (menuList.length === 0) {
+                document.getElementById('menuEmpty').style.display = 'block';
+                return;
+            }
+            initMenu();
+        }, (err) => {
+            document.getElementById('menuLoading').style.display = 'none';
+            document.getElementById('menuEmpty').style.display = 'block';
+            document.getElementById('menuEmpty').innerHTML = '<p>Không thể tải thực đơn. Vui lòng thử lại sau.</p>';
+            console.error(err);
+        });
+        onValue(categoriesRef, (snapshot) => {
+            const data = snapshot.val();
+            categoryList = data && typeof data === 'object' ? Object.keys(data).sort() : [];
+            const content = document.getElementById('menuContent');
+            if (content && content.style.display !== 'none') {
+                renderCategoryFilters();
+                updateView();
+            }
+        }, () => {
+            categoryList = [];
+        });
+    </script>
 </body>
 </html>
-
