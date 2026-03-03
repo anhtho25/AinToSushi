@@ -94,8 +94,9 @@
                 <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Hệ thống phục vụ</p>
             </div>
             <ul>
-                <li><a href="waiter.html" class="active">📋 Quản Lý Phục Vụ</a></li>
-                <li><a href="../index.html">🏠 Về Trang Chủ</a></li>
+                <li><a href="#orders-tab" class="active">📋 Đơn Hàng</a></li>
+                <li><a href="#tables-tab">🪑 Quản Lý Bàn</a></li>
+                <li><a href="#reservation-tab">📅 Đặt Bàn</a></li>
                 <li><a href="#" id="logoutBtn">🚪 Đăng Xuất</a></li>
             </ul>
         </aside>
@@ -113,6 +114,7 @@
                 <div class="tabs">
                     <button class="tab active" data-tab="orders-tab">📋 Đơn Hàng</button>
                     <button class="tab" data-tab="tables-tab">🪑 Bàn Ăn</button>
+                    <button class="tab" data-tab="reservation-tab">📅 Đặt Bàn</button>
                 </div>
 
                 <!-- Orders Tab Content -->
@@ -247,6 +249,18 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Reservation Tab Content -->
+                <div id="reservation-tab" class="tab-content">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h2 style="color: var(--primary-color);">Đặt Bàn</h2>
+                        <p style="color: var(--text-light);">Hỗ trợ khách tạo và quản lý yêu cầu đặt bàn.</p>
+                    </div>
+                    <div class="card">
+                        <p style="color: var(--text-light);">Tính năng đặt bàn chi tiết sẽ được kết nối với hệ thống đặt bàn của khách. Hiện tại, nhân viên có thể hướng dẫn khách đặt trực tiếp trên trang đặt bàn của website.</p>
+                        <a href="../reservation.html" class="btn" style="margin-top: 1rem;">Mở trang Đặt Bàn cho khách</a>
                     </div>
                 </div>
 

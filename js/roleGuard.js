@@ -21,8 +21,6 @@ const rolePermissions = {
         'orders.html',
         'tables.html',
         'menu-management.html',
-        'kitchen.html',
-        'payments.html',
         'staff.html',
         'reports.html',
         'inventory.html',
@@ -107,25 +105,16 @@ export function initRoleGuard() {
             return;
         }
         
-        // Nếu là Customer, không được vào admin
+        // Nếu là Customer, không được vào admin → yêu cầu đăng nhập tài khoản phù hợp
         if (role === 'Customer') {
-            window.location.href = '../menu.html';
+            window.location.href = '../auth/login.html';
             return;
         }
         
         // Kiểm tra quyền truy cập trang hiện tại
         if (!checkPermission(role, currentPage)) {
-            // Redirect về trang mặc định của role
-            const defaultPages = {
-                'Manager': '../admin/dashboard.html',
-                'Admin': '../manager/admin.html',
-                'Waiter': '../manager/waiter.html',
-                'Chef': '../manager/kitchen.html',
-                'Cashier': '../manager/payments.html'
-            };
-            
-            const defaultPage = defaultPages[role] || '../menu.html';
-            window.location.href = defaultPage;
+            // Sai role cho layout hiện tại → quay về trang đăng nhập
+            window.location.href = '../auth/login.html';
             return;
         }
         

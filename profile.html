@@ -404,12 +404,26 @@
             const avatarImg = document.getElementById('profileAvatar');
             const avatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
 
-            let userData = { name: null, phone: null, address: null, photoURL: null };
+            let userData = { name: null, phone: null, address: null, photoURL: null, role: null };
             try {
                 const userRef = ref(database, `users/${user.uid}`);
                 const snapshot = await get(userRef);
                 if (snapshot.exists()) userData = { ...userData, ...snapshot.val() };
             } catch (err) { console.error(err); }
+
+            const role = userData.role || 'Customer';
+            if (role && role !== 'Customer') {
+                // Tài khoản nội bộ (Admin, Waiter, Chef, Cashier) không dùng trang thông tin người dùng
+                const roleRedirects = {
+                    Admin: 'manager/admin.html',
+                    Waiter: 'manager/waiter.html',
+                    Chef: 'manager/kitchen.html',
+                    Cashier: 'manager/payments.html'
+                };
+                const dest = roleRedirects[role] || 'manager/admin.html';
+                window.location.replace(dest);
+                return;
+            }
 
             const photoURL = userData.photoURL || user.photoURL || null;
             const displayName = userData.name || user.displayName || user.email?.split('@')[0] || '—';
