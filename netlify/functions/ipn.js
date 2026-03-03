@@ -27,16 +27,16 @@ function verifySecureHash(params, secret) {
   delete filtered.vnp_SecureHashType;
 
   const sortedKeys = Object.keys(filtered).sort();
-  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(String(filtered[k] ?? '')).replace(/%20/g, '+'));
-  const queryString = queryParts.join('&');
+  // Dùng đúng giá trị VNPay gửi lại (không encode lại) để khớp cách họ ký
+  const hashData = sortedKeys.map((k) => k + '=' + (filtered[k] ?? '')).join('&');
 
   const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
   let expected;
   if (useLegacyHash) {
-    expected = crypto.createHash('sha512').update(secret + queryString, 'utf8').digest('hex');
+    expected = crypto.createHash('sha512').update(secret + hashData, 'utf8').digest('hex');
   } else {
     const hmac = crypto.createHmac('sha512', secret);
-    hmac.update(queryString, 'utf8');
+    hmac.update(hashData, 'utf8');
     expected = hmac.digest('hex');
   }
   return expected === secureHash;

@@ -82,19 +82,21 @@ exports.handler = async (event, context) => {
   };
 
   const sortedKeys = Object.keys(params).sort();
-  // Chuỗi dùng để ký: format giống PHP urlencode (dấu cách = '+')
-  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]).replace(/%20/g, '+'));
+  // Chuỗi dùng để ký: sử dụng giá trị gốc (không encode)
+  const hashData = sortedKeys.map((k) => k + '=' + params[k]).join('&');
+  // Chuỗi query gửi lên VNPay: encodeURIComponent từng value
+  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]));
   const queryString = queryParts.join('&');
 
   let vnp_SecureHash;
   const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
   if (useLegacyHash) {
-    // Một số merchant cũ: SHA512(secret + queryString)
-    vnp_SecureHash = crypto.createHash('sha512').update(secret + queryString, 'utf8').digest('hex');
+    // Một số merchant cũ: SHA512(secret + hashData)
+    vnp_SecureHash = crypto.createHash('sha512').update(secret + hashData, 'utf8').digest('hex');
   } else {
-    // VNPay 2.1.0 chuẩn: HMAC-SHA512(key=secret, data=queryString)
+    // VNPay 2.1.0 chuẩn: HMAC-SHA512(key=secret, data=hashData)
     const hmac = crypto.createHmac('sha512', secret);
-    hmac.update(queryString, 'utf8');
+    hmac.update(hashData, 'utf8');
     vnp_SecureHash = hmac.digest('hex');
   }
 
