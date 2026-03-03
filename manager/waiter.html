@@ -46,26 +46,55 @@
 <body class="theme-aintosushi">
     <script type="module">
         import { initRoleGuard } from '../js/roleGuard.js';
-        import { logout } from '../js/auth.js';
+        import { logout, database } from '../js/auth.js';
+        import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Initialize role guard
         initRoleGuard();
 
-        // Logout handler
-        document.addEventListener('DOMContentLoaded', () => {
-            const logoutLink = document.querySelector('a[href="../auth/admin.html"]');
-            if (logoutLink) {
-                logoutLink.href = '#';
-                logoutLink.id = 'logoutBtn';
-                logoutLink.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                        await logout();
-                    }
-                });
-            }
+        function orderCode4(id) {
+            if (!id) return '—';
+            const s = String(id);
+            const num = s.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            return String(Math.abs(num) % 10000).padStart(4, '0');
+        }
 
-            // Tab switching
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '—';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ';
+        }
+
+        function formatDateTime(ms) {
+            if (!ms) return '—';
+            const d = new Date(ms);
+            return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) +
+                   '<br><small style="color: var(--text-light);">' +
+                   d.toLocaleDateString('vi-VN') +
+                   '</small>';
+        }
+
+        async function markOrderCompleted(id) {
+            if (!id) return;
+            try {
+                await update(ref(database, 'orders/' + id), { status: 'completed' });
+            } catch (e) {
+                console.error('Cập nhật đơn thất bại', e);
+                alert('Không cập nhật được trạng thái đơn hàng. Vui lòng thử lại.');
+            }
+        }
+
+        function bindLogout() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (!logoutBtn) return;
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    await logout();
+                }
+            });
+        }
+
+        function setupTabs() {
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
 
@@ -73,14 +102,109 @@
                 tab.addEventListener('click', () => {
                     const targetTab = tab.dataset.tab;
                     
-                    // Remove active class from all tabs and contents
                     tabs.forEach(t => t.classList.remove('active'));
                     tabContents.forEach(c => c.classList.remove('active'));
                     
-                    // Add active class to clicked tab and corresponding content
                     tab.classList.add('active');
                     document.getElementById(targetTab).classList.add('active');
                 });
+            });
+        }
+
+        function renderOrders(data) {
+            const tbody = document.getElementById('waiterOrdersBody');
+            if (!tbody) return;
+            const list = !data ? [] : Object.entries(data).map(([id, o]) => ({ id, ...o }))
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            if (!list.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding:2rem; color: var(--text-light);">
+                            Chưa có đơn hàng nào.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = list.map(o => {
+                const code = orderCode4(o.id);
+                const info = o.customerInfo || {};
+                const name = info.name || 'Khách lẻ';
+                const phone = info.phone || '';
+                const items = (o.items || []).map(it => {
+                    const q = Math.max(1, Number(it.quantity) || 1);
+                    return `${it.name || 'Món'} (x${q})`;
+                }).join('<br>');
+                const statusMap = {
+                    pending: 'Chờ thanh toán',
+                    confirmed: 'Đang phục vụ',
+                    completed: 'Hoàn thành'
+                };
+                const statusLabel = statusMap[o.status] || o.status || 'Đang xử lý';
+                const canComplete = o.status === 'confirmed';
+
+                return `
+                    <tr data-id="${o.id}">
+                        <td><strong>${code}</strong></td>
+                        <td>${info.address ? 'Tại bàn / Giao hàng' : 'Online'}</td>
+                        <td>${name}${phone ? `<br><small style="color: var(--text-light);">${phone}</small>` : ''}</td>
+                        <td><small>${items || '-'}</small></td>
+                        <td>${formatPrice(o.totalAmount)}</td>
+                        <td><span class="badge ${o.status === 'completed' ? 'badge-success' : o.status === 'confirmed' ? 'badge-primary' : 'badge-warning'}">${statusLabel}</span></td>
+                        <td>${formatDateTime(o.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm btn-order-detail" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
+                            <button class="btn btn-success btn-sm btn-order-complete" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;" ${canComplete ? '' : 'disabled'}>Hoàn thành</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !data[id]) return;
+                    const o = data[id];
+                    const info = o.customerInfo || {};
+                    const lines = [
+                        `Mã đơn: ${orderCode4(id)}`,
+                        `Khách: ${info.name || 'Khách lẻ'}`,
+                        `SĐT: ${info.phone || '-'}`,
+                        `Địa chỉ: ${info.address || '-'}`,
+                        `Tổng tiền: ${formatPrice(o.totalAmount)}`,
+                        '',
+                        'Món:',
+                        ...(o.items || []).map(it => {
+                            const q = Math.max(1, Number(it.quantity) || 1);
+                            return `- ${it.name || 'Món'} (x${q})`;
+                        })
+                    ];
+                    alert(lines.join('\n'));
+                });
+            });
+
+            tbody.querySelectorAll('.btn-order-complete').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id) return;
+                    if (!confirm('Xác nhận đánh dấu đơn này đã hoàn thành?')) return;
+                    await markOrderCompleted(id);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindLogout();
+            setupTabs();
+
+            // Đồng bộ đơn hàng với Firebase
+            const ordersRef = ref(database, 'orders');
+            onValue(ordersRef, (snap) => {
+                renderOrders(snap.val());
             });
         });
     </script>
@@ -171,80 +295,10 @@
                                     <th>Thao Tác</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="waiterOrdersBody">
                                 <tr>
-                                    <td><strong>#ORD001</strong></td>
-                                    <td>Bàn 5</td>
-                                    <td>Nguyễn Văn A<br><small style="color: var(--text-light);">0123 456 789</small></td>
-                                    <td>
-                                        <small>Sushi Set (x1)<br>Ramen (x2)</small>
-                                    </td>
-                                    <td>690,000đ</td>
-                                    <td><span class="badge badge-success">Đã thanh toán</span></td>
-                                    <td>14:30<br><small style="color: var(--text-light);">Hôm nay</small></td>
-                                    <td>
-                                        <button class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
-                                        <button class="btn btn-success" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">In hóa đơn</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#ORD002</strong></td>
-                                    <td>Bàn 3</td>
-                                    <td>Trần Thị B<br><small style="color: var(--text-light);">0987 654 321</small></td>
-                                    <td>
-                                        <small>Sashimi Mix (x1)<br>Tempura (x1)<br>Trà xanh (x2)</small>
-                                    </td>
-                                    <td>680,000đ</td>
-                                    <td><span class="badge badge-warning">Đang phục vụ</span></td>
-                                    <td>15:15<br><small style="color: var(--text-light);">Hôm nay</small></td>
-                                    <td>
-                                        <button class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
-                                        <button class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Thanh toán</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#ORD003</strong></td>
-                                    <td>Bàn 8</td>
-                                    <td>Lê Văn C<br><small style="color: var(--text-light);">0912 345 678</small></td>
-                                    <td>
-                                        <small>Bento Box (x2)</small>
-                                    </td>
-                                    <td>400,000đ</td>
-                                    <td><span class="badge badge-primary">Chờ thanh toán</span></td>
-                                    <td>15:45<br><small style="color: var(--text-light);">Hôm nay</small></td>
-                                    <td>
-                                        <button class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
-                                        <button class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Thanh toán</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#ORD004</strong></td>
-                                    <td>Mang về</td>
-                                    <td>Phạm Thị D<br><small style="color: var(--text-light);">0901 234 567</small></td>
-                                    <td>
-                                        <small>Ramen (x1)<br>Tempura (x1)</small>
-                                    </td>
-                                    <td>300,000đ</td>
-                                    <td><span class="badge badge-info">Đang chuẩn bị</span></td>
-                                    <td>16:00<br><small style="color: var(--text-light);">Hôm nay</small></td>
-                                    <td>
-                                        <button class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
-                                        <button class="btn btn-success" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Hoàn thành</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#ORD005</strong></td>
-                                    <td>Bàn 12</td>
-                                    <td>Hoàng Văn E<br><small style="color: var(--text-light);">0923 456 789</small></td>
-                                    <td>
-                                        <small>Sushi Set Premium (x1)<br>Ramen Spicy (x1)</small>
-                                    </td>
-                                    <td>800,000đ</td>
-                                    <td><span class="badge badge-warning">Chờ xử lý</span></td>
-                                    <td>16:20<br><small style="color: var(--text-light);">Hôm nay</small></td>
-                                    <td>
-                                        <button class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
-                                        <button class="btn btn-success" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Xác nhận</button>
+                                    <td colspan="8" style="text-align:center; padding:2rem; color: var(--text-light);">
+                                        Đang tải đơn hàng...
                                     </td>
                                 </tr>
                             </tbody>

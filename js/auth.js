@@ -371,9 +371,10 @@ function redirectByRole(role, email = '') {
         if (returnUrl && returnUrl.length > 0) {
             try {
                 const u = new URL(returnUrl, window.location.origin);
-                if (u.origin === window.location.origin &&
-                    !u.pathname.includes('auth/login') &&
-                    !u.pathname.includes('auth/register')) {
+                const isSameOrigin = u.origin === window.location.origin;
+                const isAuthPage = u.pathname.includes('/auth/login') || u.pathname.includes('/auth/register');
+                const isAdminArea = u.pathname.includes('/admin/') || u.pathname.includes('/manager/');
+                if (isSameOrigin && !isAuthPage && !isAdminArea) {
                     setTimeout(() => { window.location.href = returnUrl; }, 300);
                     return;
                 }
