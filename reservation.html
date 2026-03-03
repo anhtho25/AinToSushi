@@ -125,6 +125,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
@@ -138,8 +139,9 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const database = getDatabase(app);
         let currentUser = null;
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             currentUser = user || null;
             const wrap = document.getElementById('navAuthWrap');
             if (wrap) {
@@ -162,7 +164,48 @@
                 }
                 wrap.style.visibility = 'visible';
             }
+
+            // Tự động điền thông tin đặt bàn từ hồ sơ người dùng (trừ địa chỉ)
+            if (user) {
+                try {
+                    const userRef = ref(database, `users/${user.uid}`);
+                    const snap = await get(userRef);
+                    const info = snap.exists() ? snap.val() || {} : {};
+                    const nameEl = document.getElementById('name');
+                    const phoneEl = document.getElementById('phone');
+                    const emailEl = document.getElementById('email');
+
+                    const nameVal = info.name || user.displayName || '';
+                    const phoneVal = info.phone || '';
+                    const emailVal = info.email || user.email || '';
+
+                    if (nameEl && !nameEl.value && nameVal) nameEl.value = nameVal;
+                    if (phoneEl && !phoneEl.value && phoneVal) phoneEl.value = phoneVal;
+                    if (emailEl && !emailEl.value && emailVal) emailEl.value = emailVal;
+                } catch (e) {
+                    console.error('Prefill reservation info failed', e);
+                }
+            }
         });
+
+        function prefillReservationFromCache() {
+            try {
+                const raw = localStorage.getItem('profileInfo');
+                if (!raw) return;
+                const info = JSON.parse(raw) || {};
+                const nameEl = document.getElementById('name');
+                const phoneEl = document.getElementById('phone');
+                const emailEl = document.getElementById('email');
+                if (nameEl && !nameEl.value && info.name) nameEl.value = info.name;
+                if (phoneEl && !phoneEl.value && info.phone) phoneEl.value = info.phone;
+                if (emailEl && !emailEl.value && info.email) emailEl.value = info.email;
+            } catch (e) {
+                console.error('Prefill reservation cache failed', e);
+            }
+        }
+
+        // Prefill ngay khi vào trang (nếu đã từng lưu profile)
+        prefillReservationFromCache();
 
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');

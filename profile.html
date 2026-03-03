@@ -275,9 +275,9 @@
                 <ul class="profile-list" id="reservationList"></ul>
             </div>
 
-            <!-- 3. Lịch sử đơn hàng -->
+            <!-- 3. Đơn hàng của tôi -->
             <div class="profile-card">
-                <h2>3. Lịch sử đơn hàng</h2>
+                <h2>3. Đơn hàng của tôi</h2>
                 <div class="order-history-wrap">
                     <ul class="profile-list" id="orderList"></ul>
                     <div class="order-history-nav" id="orderHistoryNav" style="display: none;">
@@ -368,6 +368,20 @@
             return new Intl.NumberFormat('vi-VN').format(n) + '₫';
         }
 
+        function cacheProfileInfo(info) {
+            try {
+                const safe = {
+                    name: info.name || '',
+                    email: info.email || '',
+                    phone: info.phone || '',
+                    address: info.address || ''
+                };
+                localStorage.setItem('profileInfo', JSON.stringify(safe));
+            } catch (e) {
+                console.error('Cache profileInfo failed', e);
+            }
+        }
+
         onAuthStateChanged(auth, async (user) => {
             updateHeader(user);
             if (!user) {
@@ -412,6 +426,13 @@
             inputEmail.value = email === '—' ? '' : email;
             inputPhone.value = phone === '—' ? '' : phone;
             inputAddress.value = address === '—' ? '' : address;
+
+            cacheProfileInfo({
+                name: displayName === '—' ? '' : displayName,
+                email: email === '—' ? '' : email,
+                phone: phone === '—' ? '' : phone,
+                address: address === '—' ? '' : address
+            });
 
             if (photoURL) {
                 avatarImg.src = photoURL;
@@ -466,6 +487,12 @@
                     profileName.textContent = name || '—';
                     profilePhone.textContent = phone || '—';
                     profileAddress.textContent = address || '—';
+                    cacheProfileInfo({
+                        name: name || '',
+                        email: user.email || '',
+                        phone: phone || '',
+                        address: address || ''
+                    });
                     card.classList.remove('profile-edit');
                     card.classList.add('profile-view');
                     showMessage('Đã cập nhật thông tin.', false);
@@ -509,7 +536,7 @@
                 reservationList.innerHTML = '<li class="profile-list-empty">Chưa có đặt bàn nào.</li>';
             }
 
-            // Lịch sử đơn hàng: chỉ hiển thị 2 đơn mới nhất, mũi tên chuyển trang
+            // Đơn hàng của tôi: chỉ đơn đã xác nhận (COD) hoặc thanh toán VNPay thành công
             const ORDER_PAGE_SIZE = 2;
             let orderListFull = [];
             let orderPage = 0;
@@ -519,6 +546,13 @@
             const orderNext = document.getElementById('orderNext');
             const orderNavInfo = document.getElementById('orderNavInfo');
 
+            function orderCode4(id) {
+                if (!id) return '—';
+                const s = String(id);
+                const num = s.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                return String(Math.abs(num) % 10000).padStart(4, '0');
+            }
+
             function renderOrderPage() {
                 const total = orderListFull.length;
                 const totalPages = Math.max(1, Math.ceil(total / ORDER_PAGE_SIZE));
@@ -526,17 +560,17 @@
                 if (orderPage < 0) orderPage = 0;
                 const start = orderPage * ORDER_PAGE_SIZE;
                 const pageItems = orderListFull.slice(start, start + ORDER_PAGE_SIZE);
-                const statusText = { pending: 'Đang xử lý', completed: 'Hoàn thành', cancelled: 'Đã huỷ' };
+                const statusText = { confirmed: 'Đã xác nhận', completed: 'Hoàn thành' };
                 orderList.innerHTML = pageItems.map(o => {
                     const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : (o.date || '—');
-                    const status = statusText[o.status] || o.status || 'Đang xử lý';
+                    const status = statusText[o.status] || o.status || 'Đã xác nhận';
+                    const code = orderCode4(o.id || o.key);
                     return `
                     <li>
-                        <div class="profile-list-row"><span>Mã đơn:</span><span>#${o.id || o.key || '—'}</span></div>
+                        <div class="profile-list-row"><span>Mã đơn:</span><span>${code}</span></div>
                         <div class="profile-list-row"><span>Ngày đặt:</span><span>${date}</span></div>
-                        <div class="profile-list-row"><span>Tổng tiền:</span><span>${formatPrice(o.total)}</span></div>
+                        <div class="profile-list-row"><span>Tổng tiền:</span><span>${formatPrice(o.totalAmount || o.total)}</span></div>
                         <div class="profile-list-row"><span>Trạng thái:</span><span>${status}</span></div>
-                        <a href="checkout.html?order=${o.id || o.key}" class="btn-detail">Xem chi tiết</a>
                     </li>
                 `;
                 }).join('');
@@ -552,7 +586,7 @@
                     orderListFull = !data ? [] : Object.entries(data)
                         .map(([id, o]) => ({ id, ...o }))
                         .filter(o => o.userId === user.uid)
-                        .filter(o => o.status === 'confirmed' || o.status === 'completed')
+                        .filter(o => o.status === 'confirmed' || o.status === 'completed') // COD đã xác nhận hoặc VNPay thanh toán thành công
                         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                     if (orderListFull.length === 0) {
                         orderList.innerHTML = '<li class="profile-list-empty">Chưa có đơn hàng nào.</li>';

@@ -21,6 +21,7 @@
         .vnpay-result.fail .icon { color: var(--danger, #EF4444); }
         .vnpay-result h1 { font-size: 1.35rem; color: var(--theme-white, #f8f6f2); margin-bottom: 0.5rem; }
         .vnpay-result p { color: var(--theme-white-muted, rgba(248,246,242,0.85)); margin-bottom: 1.5rem; }
+        .vnpay-result .btn-wrap { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
         .vnpay-result a {
             display: inline-block;
             padding: 0.75rem 1.5rem;
@@ -31,6 +32,12 @@
             font-weight: 600;
         }
         .vnpay-result a:hover { background: var(--gold-light); }
+        .vnpay-result a.secondary {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+        .vnpay-result a.secondary:hover { background: rgba(212,175,55,0.15); }
     </style>
 </head>
 <body class="vnpay-return theme-aintosushi">
@@ -38,22 +45,59 @@
         <div class="icon" id="icon">⏳</div>
         <h1 id="title">Đang xử lý...</h1>
         <p id="message"></p>
-        <a href="index.html">Về trang chủ</a>
+        <div class="btn-wrap" id="btnWrap">
+            <a href="index.html" id="linkPrimary">Về trang chủ</a>
+        </div>
     </div>
-    <script>
-        (function () {
-            const params = new URLSearchParams(window.location.search);
-            const responseCode = params.get('vnp_ResponseCode') || '';
-            const resultEl = document.getElementById('result');
-            const iconEl = document.getElementById('icon');
-            const titleEl = document.getElementById('title');
-            const msgEl = document.getElementById('message');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        const CART_KEY = 'cart';
+        const params = new URLSearchParams(window.location.search);
+        const responseCode = params.get('vnp_ResponseCode') || '';
+        const orderId = params.get('orderId') || '';
+
+        const resultEl = document.getElementById('result');
+        const iconEl = document.getElementById('icon');
+        const titleEl = document.getElementById('title');
+        const msgEl = document.getElementById('message');
+        const btnWrap = document.getElementById('btnWrap');
+        const linkPrimary = document.getElementById('linkPrimary');
+
+        (async function () {
             if (responseCode === '00') {
+                let orderUpdated = false;
+                if (orderId) {
+                    try {
+                        const firebaseConfig = {
+                            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+                            authDomain: "ain-to-sushi.firebaseapp.com",
+                            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+                            projectId: "ain-to-sushi",
+                            storageBucket: "ain-to-sushi.firebasestorage.app",
+                            messagingSenderId: "191817237919",
+                            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+                        };
+                        const app = initializeApp(firebaseConfig);
+                        const database = getDatabase(app);
+                        await update(ref(database, 'orders/' + orderId), { status: 'confirmed' });
+                        orderUpdated = true;
+                    } catch (e) { console.error(e); }
+                }
+                // Chỉ xóa giỏ hàng khi đã xác nhận đơn thành công (tránh xóa khi hủy/return nhầm)
+                if (orderUpdated) localStorage.setItem(CART_KEY, '[]');
                 resultEl.classList.add('success');
                 iconEl.textContent = '✓';
                 titleEl.textContent = 'Thanh toán thành công';
                 msgEl.textContent = 'Đơn hàng của bạn đã được thanh toán qua VNPay. Cảm ơn bạn đã sử dụng dịch vụ.';
+                linkPrimary.textContent = 'Đơn hàng của tôi';
+                linkPrimary.href = 'profile.html';
+                const a2 = document.createElement('a');
+                a2.href = 'index.html';
+                a2.className = 'secondary';
+                a2.textContent = 'Về trang chủ';
+                btnWrap.appendChild(a2);
             } else {
                 resultEl.classList.add('fail');
                 iconEl.textContent = '✕';
@@ -61,6 +105,13 @@
                 msgEl.textContent = responseCode
                     ? 'Giao dịch không thành công. Bạn có thể thử lại hoặc chọn phương thức thanh toán khác.'
                     : 'Không xác định được kết quả. Vui lòng kiểm tra lại.';
+                linkPrimary.textContent = 'Trở về giỏ hàng';
+                linkPrimary.href = 'cart.html';
+                const a2 = document.createElement('a');
+                a2.href = 'index.html';
+                a2.className = 'secondary';
+                a2.textContent = 'Về trang chủ';
+                btnWrap.appendChild(a2);
             }
         })();
     </script>

@@ -175,7 +175,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
@@ -192,7 +192,7 @@
         const database = getDatabase(app);
         let currentUser = null;
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             currentUser = user || null;
             const wrap = document.getElementById('navAuthWrap');
             if (wrap) {
@@ -215,9 +215,47 @@
                 }
                 wrap.style.visibility = 'visible';
             }
+
+            // Tự động điền thông tin thanh toán từ hồ sơ người dùng (trừ địa chỉ)
+            if (user) {
+                try {
+                    const userRef = ref(database, `users/${user.uid}`);
+                    const snap = await get(userRef);
+                    const info = snap.exists() ? snap.val() || {} : {};
+                    const nameEl = document.getElementById('customerName');
+                    const phoneEl = document.getElementById('customerPhone');
+                    const emailEl = document.getElementById('customerEmail');
+
+                    const nameVal = info.name || user.displayName || '';
+                    const phoneVal = info.phone || '';
+                    const emailVal = info.email || user.email || '';
+
+                    if (nameEl && !nameEl.value && nameVal) nameEl.value = nameVal;
+                    if (phoneEl && !phoneEl.value && phoneVal) phoneEl.value = phoneVal;
+                    if (emailEl && !emailEl.value && emailVal) emailEl.value = emailVal;
+                } catch (e) {
+                    console.error('Prefill checkout info failed', e);
+                }
+            }
         });
 
         const CART_KEY = 'cart';
+
+        function prefillFromCache() {
+            try {
+                const raw = localStorage.getItem('profileInfo');
+                if (!raw) return;
+                const info = JSON.parse(raw) || {};
+                const nameEl = document.getElementById('customerName');
+                const phoneEl = document.getElementById('customerPhone');
+                const emailEl = document.getElementById('customerEmail');
+                if (nameEl && !nameEl.value && info.name) nameEl.value = info.name;
+                if (phoneEl && !phoneEl.value && info.phone) phoneEl.value = info.phone;
+                if (emailEl && !emailEl.value && info.email) emailEl.value = info.email;
+            } catch (e) {
+                console.error('Prefill from cache failed', e);
+            }
+        }
 
         function getCart() {
             try {
@@ -248,6 +286,9 @@
             const total = subtotal + vat;
             return { subtotal, vat, total };
         }
+
+        // Prefill ngay khi script chạy (dùng cache local, không phụ thuộc đăng nhập)
+        prefillFromCache();
 
         document.querySelectorAll('.payment-option').forEach(el => {
             el.addEventListener('click', function() {
@@ -316,11 +357,13 @@
             btn.disabled = true;
             btn.textContent = 'Đang xử lý...';
 
+            let orderId = null;
             try {
                 const ordersRef = ref(database, 'orders');
                 const newRef = push(ordersRef);
+                orderId = newRef.key;
                 await set(newRef, orderData);
-                setCart([]);
+                if (paymentMethod === 'cod') setCart([]);
             } catch (err) {
                 console.error(err);
                 alert('Đặt hàng thất bại. Vui lòng thử lại.');
@@ -338,7 +381,7 @@
                     const res = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ amount: totalAmount })
+                        body: JSON.stringify({ amount: totalAmount, orderId: orderId })
                     });
                     const raw = await res.text();
                     let data = {};

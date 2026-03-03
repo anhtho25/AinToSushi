@@ -60,6 +60,9 @@ exports.handler = async (event, context) => {
     return jsonResponse(400, { error: 'Missing or invalid amount' });
   }
 
+  const orderId = body.orderId ? String(body.orderId).trim() : '';
+  const returnUrl = orderId ? VNP_RETURN_URL + '?orderId=' + encodeURIComponent(orderId) : VNP_RETURN_URL;
+
   const vnp_TxnRef = 'ORDER_' + Date.now();
   const vnp_CreateDate = buildCreateDate();
 
@@ -72,7 +75,7 @@ exports.handler = async (event, context) => {
     vnp_Locale: 'vn',
     vnp_OrderInfo: 'Thanh toan don hang ' + vnp_TxnRef,
     vnp_OrderType: 'other',
-    vnp_ReturnUrl: VNP_RETURN_URL,
+    vnp_ReturnUrl: returnUrl,
     vnp_TmnCode: tmnCode,
     vnp_TxnRef: vnp_TxnRef,
     vnp_Version: '2.1.0',
