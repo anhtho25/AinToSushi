@@ -113,8 +113,16 @@ export function initRoleGuard() {
         
         // Kiểm tra quyền truy cập trang hiện tại
         if (!checkPermission(role, currentPage)) {
-            // Sai role cho layout hiện tại → quay về trang đăng nhập
-            window.location.href = '../auth/login.html';
+            // Sai role cho layout hiện tại → đưa về layout đúng với role
+            const defaultPages = {
+                'Manager': '../admin/dashboard.html',
+                'Admin': '../manager/admin.html',
+                'Waiter': '../manager/waiter.html',
+                'Chef': '../manager/kitchen.html',
+                'Cashier': '../manager/payments.html'
+            };
+            const defaultPage = defaultPages[role] || '../auth/login.html';
+            window.location.href = defaultPage;
             return;
         }
         
