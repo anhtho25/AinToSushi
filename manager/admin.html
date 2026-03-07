@@ -5,31 +5,1204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Quản Lý Nhà Hàng</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <style>
+        /* Tiêu đề và mô tả các tab quản lý: chữ sáng trên nền tối */
+        .main-content section h1 { color: #f0f0f0 !important; }
+        .main-content section > p,
+        .main-content section > div > p,
+        .main-content section > div > div > p { color: rgba(255,255,255,0.88) !important; }
+        /* Bảng Quản lý thực đơn: chữ tối để đọc rõ trên nền sáng */
+        #adminMenuSection .card table td,
+        #adminMenuSection .card table th,
+        #adminMenuSection .card table td strong,
+        #adminMenuSection .card table td small {
+            color: #1a1a1a !important;
+        }
+        #adminMenuSection .card table th {
+            background: #f0f0f0 !important;
+        }
+        /* Quản lý bàn ăn - grid và thẻ bàn */
+        #adminTablesSection .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        #adminTablesSection .table-card {
+            background: #353535;
+            border: 2px solid #D4AF37;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        #adminTablesSection .table-card h3 { margin: 0 0 0.35rem 0; font-size: 1rem; color: #f5f5f5 !important; }
+        #adminTablesSection .table-card p { margin: 0; font-size: 0.9rem; color: #e0e0e0 !important; }
+        #adminTablesSection .table-status-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 999px; margin-top: 0.5rem; }
+        #adminTablesSection .table-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        #adminTablesSection .table-status-available { background: rgba(76,175,80,0.35); color: #a5d6a7; }
+        #adminTablesSection .table-status-reserved { background: rgba(255,152,0,0.35); color: #ffcc80; }
+        #adminTablesSection .table-status-occupied { background: rgba(244,67,54,0.35); color: #ef9a9a; }
+        #adminTablesSection .table-card-actions { margin-top: 0.75rem; display: flex; flex-wrap: nowrap; gap: 0.4rem; justify-content: center; align-items: center; }
+        #adminTablesSection .table-card-actions .btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; min-width: auto; }
+        #adminTablesSection .table-card-actions .btn.btn-secondary { background: linear-gradient(135deg, #D4AF37 0%, #b8941f 100%); color: #1a1a1a !important; border: 1px solid #c9a227; font-weight: 600; }
+        #adminTablesSection .table-card-actions .btn.btn-secondary:hover { background: linear-gradient(135deg, #e4bf47 0%, #D4AF37 100%); color: #1a1a1a !important; }
+        #adminTablesSection .table-card-delete { background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%); color: #fff !important; border: 1px solid #d32f2f; font-weight: 600; }
+        #adminTablesSection .table-card-delete:hover { background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%); color: #fff !important; }
+        #adminOrdersSection .card table thead th { background: #1a1a1a; color: #fff !important; }
+        #adminOrdersSection .card table td { color: #1a1a1a !important; }
+        #adminOrdersSection .card table .btn { color: #1a1a1a !important; }
+        #adminStaffSection .card table thead th { background: #1a1a1a; color: #fff !important; }
+        #adminStaffSection .card table td { color: #1a1a1a !important; }
+        #adminStaffSection .card table .btn { color: #1a1a1a !important; }
+        #adminNewsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
+        #adminNewsSection .card table td { color: #1a1a1a !important; }
+        #adminNewsSection .card table .btn { color: #1a1a1a !important; }
+        #adminNewsSection .ql-toolbar.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; }
+        #adminNewsSection .ql-container.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; min-height: 180px; }
+        #adminNewsSection .ql-editor { min-height: 160px; }
+        #adminNewsSection .ql-snow .ql-stroke { stroke: rgba(255,255,255,0.4); }
+        #adminNewsSection .ql-snow .ql-fill { fill: rgba(255,255,255,0.6); }
+        #adminNewsSection .ql-snow .ql-picker { color: rgba(255,255,255,0.9); }
+        #adminNewsSection .ql-snow .ql-picker-options { background: #2d2d2d !important; border-color: rgba(255,255,255,0.2) !important; }
+        #adminNewsSection .ql-snow .ql-picker-item { border-color: rgba(255,255,255,0.15); }
+        #adminNewsSection .ql-snow .ql-color .ql-picker-options .ql-picker-item,
+        #adminNewsSection .ql-snow .ql-background .ql-picker-options .ql-picker-item { border: 1px solid rgba(255,255,255,0.2); }
+        #adminNewsSection .ql-editor.ql-blank::before { color: rgba(255,255,255,0.4); }
+        #adminNewsSection .ql-font-notoserifjp { font-family: 'Noto Serif JP', serif; }
+        #adminNewsSection .ql-font-shipporimincho { font-family: 'Shippori Mincho', serif; }
+        #adminNewsSection .ql-font-sans-serif { font-family: sans-serif; }
+        #adminNewsSection .ql-font-serif { font-family: serif; }
+        #adminNewsSection .ql-font-monospace { font-family: monospace; }
+        /* Admin modals (thay alert/confirm/prompt) */
+        .admin-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .admin-modal-box { background: #1a1a1a; border-radius: 12px; border: 2px solid #D4AF37; box-shadow: 0 18px 45px rgba(0,0,0,0.5); max-width: 420px; width: 90%; display: flex; flex-direction: column; overflow: hidden; }
+        .admin-modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; }
+        .admin-modal-title { font-size: 1.1rem; font-weight: 600; color: #D4AF37; }
+        .admin-modal-close { background: transparent; border: none; color: rgba(255,255,255,0.8); font-size: 1.25rem; cursor: pointer; padding: 0 0.25rem; }
+        .admin-modal-body { padding: 1.25rem 1.25rem 1rem; color: rgba(255,255,255,0.9); font-size: 0.95rem; }
+        .admin-modal-actions { padding: 0.75rem 1.25rem 1rem; display: flex; justify-content: flex-end; gap: 0.75rem; }
+        .admin-modal-actions .btn { padding: 0.45rem 1rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
+        .admin-modal-input { width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; font-size: 0.95rem; margin-top: 0.5rem; box-sizing: border-box; }
+    </style>
 </head>
 <body class="theme-aintosushi">
     <script type="module">
         import { initRoleGuard } from '../js/roleGuard.js';
-        import { logout } from '../js/auth.js';
+        import { logout, database, createStaffAccount } from '../js/auth.js';
+        import { ref, onValue, set, push, remove, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-        // Initialize role guard
         initRoleGuard();
 
-        // Logout handler
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dghchzl3r/image/upload';
+        const UPLOAD_PRESET = 'obrs8sja';
+        const MENU_PATH = 'menu/menuOnline';
+        const CATEGORIES_PATH = 'menu/categories';
+        const NEWS_PATH = 'news';
+        const DEFAULT_CATEGORIES = ['SUSHI', 'SASHIMI', 'MAKI', 'TEMPURA', 'YAKIMONO', 'MỲ', 'CƠM', 'SALAD', 'ĐỒ UỐNG', 'SET'];
+        const MENU_ITEMS_PER_PAGE = 6;
+        let menuMode = 'ADD';
+        let menuEditingId = null;
+        let menuList = [];
+        let categoryList = [];
+        let menuCurrentPage = 1;
+        let menuFilterCategory = '';
+        let menuFilterStatus = '';
+        let menuSearchText = '';
+
+        async function uploadImageToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            const response = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error(await response.text() || 'Upload thất bại');
+            const data = await response.json();
+            return data.secure_url;
+        }
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ';
+        }
+        function orderCode4(id) {
+            if (!id) return '—';
+            const s = String(id);
+            const num = s.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            return String(Math.abs(num) % 10000).padStart(4, '0');
+        }
+        function normalizeStatus(raw) {
+            if (!raw) return '';
+            const up = String(raw).toUpperCase();
+            if (up === 'CONFIRMED') return 'APPROVED';
+            if (up === 'PAID') return 'COMPLETED';
+            return up;
+        }
+        const STATUS_LABELS = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', COOKING: 'Đang chuẩn bị', READY: 'Chờ thanh toán', COMPLETED: 'Đã thanh toán', CANCELLED: 'Đã hủy' };
+        const BADGE = { PENDING: 'badge-warning', APPROVED: 'badge-primary', COOKING: 'badge-info', READY: 'badge-primary', COMPLETED: 'badge-success', CANCELLED: 'badge-danger' };
+
+        // --- Quản lý bàn (Admin) ---
+        const TABLE_STATUS_LABELS = { AVAILABLE: 'Trống', RESERVED: 'Đã đặt trước', OCCUPIED: 'Đang phục vụ' };
+        const DEFAULT_TABLES = [
+            { id: 'counter1', name: 'Bàn Counter 1', label: 'Bàn Counter 1 (ghế lẻ)', capacity: 1, seats: 1, status: 'AVAILABLE', type: 'counter' },
+            { id: 'counter2', name: 'Bàn Counter 2', label: 'Bàn Counter 2 (ghế đôi)', capacity: 2, seats: 2, status: 'AVAILABLE', type: 'counter' },
+            { id: 'western', name: 'Bàn Western', label: 'Bàn Western (2,4,6 người)', capacity: 6, seats: 6, status: 'AVAILABLE', type: 'western' },
+            { id: 'private_room', name: 'Private Room', label: 'Bàn Private Room (4-8 người)', capacity: 8, seats: 8, status: 'AVAILABLE', type: 'private' },
+            { id: 'vip_room', name: 'Phòng riêng', label: 'Phòng riêng (2,4,6 người)', capacity: 6, seats: 6, status: 'AVAILABLE', type: 'vip' }
+        ];
+        const DEFAULT_TABLE_IDS = new Set(DEFAULT_TABLES.map(t => String(t.id)));
+        const TABLE_CATEGORY_ORDER = { counter: 0, western: 1, private: 2, vip: 3, other: 4 };
+        let adminTablesCache = {};
+        let adminDeletedDefaultsCache = {};
+
+        function getTableSortKey(t) {
+            const raw = String(t.name || t.label || t.id || '');
+            const name = raw.toLowerCase();
+            let cat = TABLE_CATEGORY_ORDER.other;
+            let num = 0;
+            if (/counter/.test(name)) { cat = TABLE_CATEGORY_ORDER.counter; const m = raw.match(/counter\s*(\d+)/i); num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0); }
+            else if (/western/.test(name)) { cat = TABLE_CATEGORY_ORDER.western; const m = raw.match(/western\s*(\d+)/i); num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0); }
+            else if (/private/.test(name)) { cat = TABLE_CATEGORY_ORDER.private; const m = raw.match(/private\s*(\d+)/i); num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0); }
+            else if (/vip|phòng riêng|phong rieng/.test(name)) { cat = TABLE_CATEGORY_ORDER.vip; const m = raw.match(/(?:vip|phòng riêng|phong rieng)\s*(\d+)/i); num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0); }
+            else { const numMatch = raw.match(/\d+/); num = numMatch ? parseInt(numMatch[0], 10) : 0; }
+            return [cat, num];
+        }
+        function sortTablesByCategoryAndNumber(tables) {
+            return [...tables].sort((a, b) => {
+                const [ca, na] = getTableSortKey(a);
+                const [cb, nb] = getTableSortKey(b);
+                if (ca !== cb) return ca - cb;
+                return na - nb;
+            });
+        }
+        function normalizeTableStatus(raw) {
+            if (!raw) return 'AVAILABLE';
+            return String(raw).toUpperCase();
+        }
+        function getAdminTablesWithStatus() {
+            const data = adminTablesCache || {};
+            const deleted = adminDeletedDefaultsCache || {};
+            let tables = Object.entries(data).filter(([id]) => !deleted[String(id)]).map(([id, t]) => ({ id, ...t }));
+            if (!tables.length) {
+                tables = DEFAULT_TABLES.filter(t => !deleted[String(t.id)]).map(t => ({ ...t }));
+            } else {
+                const existingIds = new Set(tables.map(t => String(t.id)));
+                DEFAULT_TABLES.forEach(def => {
+                    if (deleted[String(def.id)]) return;
+                    if (!existingIds.has(String(def.id))) tables.push({ ...def });
+                });
+            }
+            return sortTablesByCategoryAndNumber(
+                tables.filter(t => !deleted[String(t.id)]).map(t => ({ ...t, _status: normalizeTableStatus(t.status) }))
+            );
+        }
+
+        function showAdminMessage(title, message) {
+            const overlay = document.getElementById('adminMessageModal');
+            const titleEl = document.getElementById('adminMessageTitle');
+            const bodyEl = document.getElementById('adminMessageBody');
+            const closeBtn = document.getElementById('adminMessageClose');
+            const okBtn = document.getElementById('adminMessageOk');
+            if (!overlay || !titleEl || !bodyEl) return;
+            titleEl.textContent = title || 'Thông báo';
+            bodyEl.innerHTML = typeof message === 'string' ? message : (message && message.innerHTML ? message.innerHTML : String(message));
+            overlay.style.display = 'flex';
+            const cleanup = () => {
+                overlay.style.display = 'none';
+                okBtn.removeEventListener('click', onOk);
+                closeBtn.removeEventListener('click', cleanup);
+                overlay.removeEventListener('click', onOverlay);
+            };
+            const onOk = () => cleanup();
+            const onOverlay = (e) => { if (e.target === overlay) cleanup(); };
+            okBtn.addEventListener('click', onOk);
+            closeBtn.addEventListener('click', cleanup);
+            overlay.addEventListener('click', onOverlay);
+        }
+
+        function openAdminConfirm(options) {
+            const overlay = document.getElementById('adminConfirmModal');
+            const titleEl = document.getElementById('adminConfirmTitle');
+            const bodyEl = document.getElementById('adminConfirmBody');
+            const cancelBtn = document.getElementById('adminConfirmCancel');
+            const okBtn = document.getElementById('adminConfirmOk');
+            const closeBtn = document.getElementById('adminConfirmClose');
+            if (!overlay || !titleEl || !bodyEl || !cancelBtn || !okBtn) return Promise.resolve(false);
+            const title = options?.title || 'Xác nhận';
+            const message = options?.message || '';
+            const okText = options?.okText || 'Đồng ý';
+            const cancelText = options?.cancelText || 'Hủy';
+            titleEl.textContent = title;
+            bodyEl.innerHTML = message;
+            okBtn.textContent = okText;
+            cancelBtn.textContent = cancelText;
+            overlay.style.display = 'flex';
+            return new Promise((resolve) => {
+                function cleanup(result) {
+                    overlay.style.display = 'none';
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                    closeBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                function onCancel() { cleanup(false); }
+                function onOk() { cleanup(true); }
+                function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+                closeBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlay);
+            });
+        }
+
+        function openAdminInput(options) {
+            const overlay = document.getElementById('adminInputModal');
+            const titleEl = document.getElementById('adminInputTitle');
+            const messageEl = document.getElementById('adminInputMessage');
+            const inputEl = document.getElementById('adminInputField');
+            const cancelBtn = document.getElementById('adminInputCancel');
+            const okBtn = document.getElementById('adminInputOk');
+            const closeBtn = document.getElementById('adminInputClose');
+            if (!overlay || !titleEl || !messageEl || !inputEl || !cancelBtn || !okBtn) return Promise.resolve(null);
+            const title = options?.title || 'Nhập';
+            const message = options?.message || '';
+            const placeholder = options?.placeholder || '';
+            const defaultValue = options?.defaultValue != null ? String(options.defaultValue) : '';
+            titleEl.textContent = title;
+            messageEl.innerHTML = message;
+            inputEl.placeholder = placeholder;
+            inputEl.value = defaultValue;
+            overlay.style.display = 'flex';
+            setTimeout(() => inputEl.focus(), 100);
+            return new Promise((resolve) => {
+                function cleanup(result) {
+                    overlay.style.display = 'none';
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                    closeBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                function onCancel() { cleanup(null); }
+                function onOk() {
+                    const value = inputEl.value.trim();
+                    cleanup(value || null);
+                }
+                function onOverlay(e) { if (e.target === overlay) cleanup(null); }
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+                closeBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlay);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const logoutLink = document.querySelector('a[href="../auth/admin.html"]');
             if (logoutLink) {
                 logoutLink.href = '#';
                 logoutLink.id = 'logoutBtn';
-                logoutLink.addEventListener('click', async (e) => {
+                    logoutLink.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                        await logout();
+                    const ok = await openAdminConfirm({ title: 'Đăng xuất', message: 'Bạn có chắc chắn muốn đăng xuất?', okText: 'Đăng xuất', cancelText: 'Hủy' });
+                    if (ok) await logout();
+                });
+            }
+
+            // Chuyển tab giữa các khu vực trong admin (Dashboard / Đơn / Bàn / Thực đơn / ...)
+            const sectionMap = {
+                dashboard: document.getElementById('adminDashboardSection'),
+                orders: document.getElementById('adminOrdersSection'),
+                tables: document.getElementById('adminTablesSection'),
+                menu: document.getElementById('adminMenuSection'),
+                staff: document.getElementById('adminStaffSection'),
+                reports: document.getElementById('adminReportsSection'),
+                news: document.getElementById('adminNewsSection')
+            };
+            function showSection(key) {
+                Object.entries(sectionMap).forEach(([k, el]) => {
+                    if (!el) return;
+                    el.style.display = k === key ? 'block' : 'none';
+                });
+                const links = document.querySelectorAll('aside.sidebar ul li a[data-section]');
+                links.forEach(link => {
+                    if (link.dataset.section === key) link.classList.add('active');
+                    else link.classList.remove('active');
+                });
+            }
+            document.querySelectorAll('aside.sidebar ul li a[data-section]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const key = link.dataset.section;
+                    if (!key || !sectionMap[key]) return;
+                    showSection(key);
+                });
+            });
+            document.querySelectorAll('[data-section-switch]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const key = btn.getAttribute('data-section-switch');
+                    if (!key || !sectionMap[key]) return;
+                    showSection(key);
+                    const targetLink = document.querySelector('aside.sidebar ul li a[data-section="' + key + '"]');
+                    if (targetLink) targetLink.scrollIntoView({ block: 'nearest' });
+                });
+            });
+
+            // Xác định section khởi tạo từ query (?section=...) hoặc hash (#section)
+            let initialKey = 'dashboard';
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const fromQuery = params.get('section');
+                const fromHash = window.location.hash ? window.location.hash.replace('#', '') : '';
+                if (fromQuery && sectionMap[fromQuery]) initialKey = fromQuery;
+                else if (fromHash && sectionMap[fromHash]) initialKey = fromHash;
+            } catch (_) {
+                initialKey = 'dashboard';
+            }
+            showSection(initialKey);
+
+            function getTodayStartEnd() {
+                const d = new Date();
+                const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+                return { start: new Date(y, m, day).getTime(), end: new Date(y, m, day + 1).getTime() - 1 };
+            }
+
+            function updateDashboard(orders, tables) {
+                const { start, end } = getTodayStartEnd();
+                const orderList = orders ? Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) })) : [];
+                const completedToday = orderList.filter(o => o._s === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end);
+                const revenue = completedToday.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+                const tablesList = tables ? Object.values(tables) : [];
+                const occupied = tablesList.filter(t => String(t.status || '').toUpperCase() === 'OCCUPIED').length;
+                const totalTables = tablesList.length || 1;
+                const pendingOrders = orderList.filter(o => ['PENDING', 'APPROVED', 'COOKING', 'READY'].includes(o._s)).length;
+
+                const elRev = document.getElementById('adminStatRevenue');
+                const elOrders = document.getElementById('adminStatOrdersToday');
+                const elTables = document.getElementById('adminStatTables');
+                const elPending = document.getElementById('adminStatPending');
+                if (elRev) elRev.textContent = formatPrice(revenue);
+                if (elOrders) elOrders.textContent = String(completedToday.length);
+                if (elTables) elTables.textContent = occupied + '/' + totalTables;
+                if (elPending) elPending.textContent = String(pendingOrders);
+
+                const tbody = document.getElementById('adminOrdersBody');
+                if (!tbody) return;
+                const recent = orderList.filter(o => ['APPROVED', 'COOKING', 'READY', 'COMPLETED'].includes(o._s))
+                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
+                if (!recent.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đơn hàng nào.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = recent.map(o => {
+                    const info = o.customerInfo || {};
+                    const time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const label = STATUS_LABELS[o._s] || o._s;
+                    const badge = BADGE[o._s] || 'badge-secondary';
+                    return `<tr>
+                        <td>#${orderCode4(o.id)}</td>
+                        <td>${o.tableName || o.tableId || (info.address ? 'Mang về' : '—')}</td>
+                        <td>${info.name || 'Khách'}</td>
+                        <td>${formatPrice(o.totalAmount)}</td>
+                        <td><span class="badge ${badge}">${label}</span></td>
+                        <td>${time}</td>
+                        <td><a href="orders.html" class="btn btn-info" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Chi tiết</a></td>
+                    </tr>`;
+                }).join('');
+            }
+
+            let _orders = {}, _tables = {};
+            const ADMIN_ORDERS_PAGE_SIZE = 15;
+            let adminOrderPage = 0;
+
+            function renderAdminOrdersList() {
+                const tbody = document.getElementById('adminOrdersListBody');
+                if (!tbody) return;
+                const filterVal = (document.getElementById('adminOrderStatusFilter') || {}).value || '';
+                const orderList = _orders ? Object.entries(_orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) })) : [];
+                let filtered = filterVal ? orderList.filter(o => o._s === filterVal) : orderList;
+                filtered = filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                const total = filtered.length;
+                const totalPages = Math.max(1, Math.ceil(total / ADMIN_ORDERS_PAGE_SIZE));
+                if (adminOrderPage >= totalPages) adminOrderPage = Math.max(0, totalPages - 1);
+                const start = adminOrderPage * ADMIN_ORDERS_PAGE_SIZE;
+                const pageItems = filtered.slice(start, start + ADMIN_ORDERS_PAGE_SIZE);
+                if (!pageItems.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Không có đơn nào.</td></tr>';
+                } else {
+                    tbody.innerHTML = pageItems.map(o => {
+                        const info = o.customerInfo || {};
+                        const time = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
+                        const label = STATUS_LABELS[o._s] || o._s;
+                        const badge = BADGE[o._s] || 'badge-secondary';
+                        return `<tr data-order-id="${o.id}">
+                            <td>#${orderCode4(o.id)}</td>
+                            <td>${o.tableName || o.tableId || (info.address ? 'Mang về / Giao hàng' : '—')}</td>
+                            <td>${info.name || 'Khách'}</td>
+                            <td>${formatPrice(o.totalAmount)}</td>
+                            <td><span class="badge ${badge}">${label}</span></td>
+                            <td>${time}</td>
+                            <td><button type="button" class="btn btn-info admin-order-detail-btn" data-order-id="${o.id}" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Chi tiết</button></td>
+                        </tr>`;
+                    }).join('');
+                    tbody.querySelectorAll('.admin-order-detail-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-order-id');
+                            const o = _orders && _orders[id];
+                            if (!o) return;
+                            const info = o.customerInfo || {};
+                            const items = (o.items || []).map(i => `<li>${i.name || i.title || 'Món'} × ${i.quantity || 1} — ${formatPrice((i.price || 0) * (i.quantity || 1))}</li>`).join('') || '<li>Không có món.</li>';
+                            const bodyHtml = `
+                                <div class="admin-modal-body" style="color: rgba(255,255,255,0.9);">
+                                    <p><strong>Mã đơn:</strong> #${orderCode4(id)}</p>
+                                    <p><strong>Trạng thái:</strong> ${STATUS_LABELS[normalizeStatus(o.status)] || o.status}</p>
+                                    <p><strong>Bàn / Giao hàng:</strong> ${o.tableName || o.tableId || (info.address ? 'Mang về / Giao hàng' : '—')}</p>
+                                    <p><strong>Khách:</strong> ${info.name || 'Khách'} ${info.phone ? ' — ' + info.phone : ''}</p>
+                                    ${info.address ? '<p><strong>Địa chỉ:</strong> ' + (info.address || '') + '</p>' : ''}
+                                    <p><strong>Tổng tiền:</strong> ${formatPrice(o.totalAmount)}</p>
+                                    <p><strong>Thời gian tạo:</strong> ${o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—'}</p>
+                                    <p style="margin-top:0.5rem;"><strong>Món ăn:</strong></p>
+                                    <ul style="margin-left:1rem;">${items}</ul>
+                                </div>`;
+                            showAdminMessage('Chi tiết đơn #' + orderCode4(id), bodyHtml);
+                        });
+                    });
+                }
+                const pagEl = document.getElementById('adminOrdersPagination');
+                if (pagEl) {
+                    if (totalPages <= 1 || total === 0) { pagEl.innerHTML = ''; return; }
+                    const end = Math.min(start + ADMIN_ORDERS_PAGE_SIZE, total);
+                    pagEl.innerHTML = '<button type="button" id="adminOrdersPagePrev" class="btn btn-secondary" style="padding:0.35rem 0.75rem;">←</button><span style="color:var(--text-light);font-size:0.9rem;">' + (start + 1) + ' – ' + end + ' / ' + total + ' đơn</span><button type="button" id="adminOrdersPageNext" class="btn btn-secondary" style="padding:0.35rem 0.75rem;">→</button>';
+                    const prevBtn = document.getElementById('adminOrdersPagePrev');
+                    const nextBtn = document.getElementById('adminOrdersPageNext');
+                    if (prevBtn) prevBtn.onclick = () => { adminOrderPage = Math.max(0, adminOrderPage - 1); renderAdminOrdersList(); };
+                    if (nextBtn) nextBtn.onclick = () => { adminOrderPage = Math.min(totalPages - 1, adminOrderPage + 1); renderAdminOrdersList(); };
+                }
+            }
+
+            onValue(ref(database, 'orders'), (snap) => {
+                _orders = snap.val() || {};
+                updateDashboard(_orders, _tables);
+                renderAdminOrdersList();
+            });
+            const adminOrderStatusFilterEl = document.getElementById('adminOrderStatusFilter');
+            if (adminOrderStatusFilterEl) adminOrderStatusFilterEl.addEventListener('change', () => { adminOrderPage = 0; renderAdminOrdersList(); });
+
+            let _users = {};
+            function renderAdminStaffList() {
+                const tbody = document.getElementById('adminStaffListBody');
+                if (!tbody) return;
+                const list = _users ? Object.entries(_users)
+                    .map(([uid, u]) => ({ uid, ...u }))
+                    .filter(u => { const r = (u.role || '').toLowerCase(); return r === 'admin' || r === 'staff'; }) : [];
+                if (!list.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có tài khoản admin/nhân viên nào.</td></tr>';
+                    return;
+                }
+                list.sort((a, b) => {
+                    const t1 = typeof a.createdAt === 'number' ? a.createdAt : 0;
+                    const t2 = typeof b.createdAt === 'number' ? b.createdAt : 0;
+                    return t2 - t1;
+                });
+                const roleLabel = { admin: 'Admin', staff: 'Nhân viên' };
+                tbody.innerHTML = list.map(u => {
+                    const role = (u.role || 'staff').toLowerCase();
+                    const pos = u.position ? String(u.position) : '—';
+                    const disabled = u.disabled === true;
+                    const statusBadge = disabled ? '<span class="badge badge-danger">Đã khóa</span>' : '<span class="badge badge-success">Hoạt động</span>';
+                    const lockBtn = disabled
+                        ? `<button type="button" class="btn btn-info admin-staff-unlock-btn" data-uid="${u.uid}" style="padding:0.25rem 0.6rem; font-size:0.8rem;">Mở khóa</button>`
+                        : `<button type="button" class="btn table-card-delete admin-staff-lock-btn" data-uid="${u.uid}" style="padding:0.25rem 0.6rem; font-size:0.8rem;">Khóa</button>`;
+                    return `<tr data-uid="${u.uid}">
+                        <td>${u.email || '—'}</td>
+                        <td>${u.name || '—'}</td>
+                        <td><span class="badge ${role === 'admin' ? 'badge-danger' : 'badge-primary'}">${roleLabel[role] || role}</span></td>
+                        <td>${pos}</td>
+                        <td>${statusBadge}</td>
+                        <td>${lockBtn} <button type="button" class="btn btn-info admin-staff-edit-btn" data-uid="${u.uid}" style="padding:0.25rem 0.6rem; font-size:0.8rem;">Sửa</button></td>
+                    </tr>`;
+                }).join('');
+                tbody.querySelectorAll('.admin-staff-edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const uid = btn.getAttribute('data-uid');
+                        const u = _users && _users[uid];
+                        if (!u) return;
+                        document.getElementById('adminEditStaffUid').value = uid;
+                        document.getElementById('adminEditStaffTitle').textContent = 'Sửa quyền: ' + (u.email || uid);
+                        const roleSel = document.getElementById('adminEditStaffRole');
+                        const posSel = document.getElementById('adminEditStaffPosition');
+                        roleSel.value = (u.role || 'staff').toLowerCase();
+                        posSel.value = u.position || '';
+                        document.getElementById('adminEditStaffPositionWrap').style.display = roleSel.value === 'staff' ? 'block' : 'none';
+                        document.getElementById('adminEditStaffModal').style.display = 'flex';
+                    });
+                });
+                tbody.querySelectorAll('.admin-staff-lock-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const uid = btn.getAttribute('data-uid');
+                        const u = _users && _users[uid];
+                        if (!u) return;
+                        if (window.currentUser && window.currentUser.uid === uid) {
+                            showAdminMessage('Không thể khóa', 'Bạn không thể khóa chính tài khoản của mình.');
+                            return;
+                        }
+                        const ok = await openAdminConfirm({ title: 'Khóa tài khoản', message: 'Bạn có chắc muốn khóa tài khoản <strong>' + (u.email || uid) + '</strong>? Người này sẽ không đăng nhập được.', okText: 'Khóa', cancelText: 'Hủy' });
+                        if (!ok) return;
+                        try {
+                            await update(ref(database, 'users/' + uid), { disabled: true });
+                            showAdminMessage('Đã khóa', 'Tài khoản đã bị khóa.');
+                        } catch (e) {
+                            console.error(e);
+                            showAdminMessage('Lỗi', 'Không thể khóa tài khoản.');
+                        }
+                    });
+                });
+                tbody.querySelectorAll('.admin-staff-unlock-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const uid = btn.getAttribute('data-uid');
+                        const ok = await openAdminConfirm({ title: 'Mở khóa tài khoản', message: 'Bạn có chắc muốn mở khóa tài khoản này?', okText: 'Mở khóa', cancelText: 'Hủy' });
+                        if (!ok) return;
+                        try {
+                            await update(ref(database, 'users/' + uid), { disabled: false });
+                            showAdminMessage('Đã mở khóa', 'Tài khoản đã được mở khóa.');
+                        } catch (e) {
+                            console.error(e);
+                            showAdminMessage('Lỗi', 'Không thể mở khóa.');
+                        }
+                    });
+                });
+            }
+            onValue(ref(database, 'users'), (snap) => {
+                _users = snap.val() || {};
+                renderAdminStaffList();
+            });
+            const adminEditStaffModal = document.getElementById('adminEditStaffModal');
+            const adminEditStaffClose = document.getElementById('adminEditStaffClose');
+            const adminEditStaffCancel = document.getElementById('adminEditStaffCancel');
+            const adminEditStaffSave = document.getElementById('adminEditStaffSave');
+            const adminEditStaffRole = document.getElementById('adminEditStaffRole');
+            if (adminEditStaffRole) adminEditStaffRole.addEventListener('change', () => {
+                document.getElementById('adminEditStaffPositionWrap').style.display = adminEditStaffRole.value === 'staff' ? 'block' : 'none';
+            });
+            function closeEditStaffModal() {
+                if (adminEditStaffModal) adminEditStaffModal.style.display = 'none';
+            }
+            if (adminEditStaffClose) adminEditStaffClose.addEventListener('click', closeEditStaffModal);
+            if (adminEditStaffCancel) adminEditStaffCancel.addEventListener('click', closeEditStaffModal);
+            if (adminEditStaffModal) adminEditStaffModal.addEventListener('click', (e) => { if (e.target === adminEditStaffModal) closeEditStaffModal(); });
+            if (adminEditStaffSave) adminEditStaffSave.addEventListener('click', async () => {
+                const uid = document.getElementById('adminEditStaffUid').value;
+                const role = document.getElementById('adminEditStaffRole').value;
+                const position = document.getElementById('adminEditStaffPosition').value;
+                if (!uid) return;
+                try {
+                    await update(ref(database, 'users/' + uid), {
+                        role: role,
+                        position: role === 'staff' ? (position || null) : null
+                    });
+                    closeEditStaffModal();
+                    showAdminMessage('Đã lưu', 'Đã cập nhật quyền thành công.');
+                } catch (e) {
+                    console.error(e);
+                    showAdminMessage('Lỗi', 'Không thể cập nhật. Vui lòng thử lại.');
+                }
+            });
+
+            const adminCreateStaffBtn = document.getElementById('adminCreateStaffBtn');
+            const adminCreateStaffModalEl = document.getElementById('adminCreateStaffModal');
+            const adminCreateStaffCloseBtn = document.getElementById('adminCreateStaffClose');
+            const adminCreateStaffCancelBtn = document.getElementById('adminCreateStaffCancel');
+            const adminCreateStaffSubmitBtn = document.getElementById('adminCreateStaffSubmit');
+            const adminCreateStaffRoleEl = document.getElementById('adminCreateStaffRole');
+            if (adminCreateStaffRoleEl) adminCreateStaffRoleEl.addEventListener('change', () => {
+                document.getElementById('adminCreateStaffPositionWrap').style.display = adminCreateStaffRoleEl.value === 'staff' ? 'block' : 'none';
+            });
+            function closeCreateStaffModal() {
+                if (adminCreateStaffModalEl) adminCreateStaffModalEl.style.display = 'none';
+            }
+            if (adminCreateStaffBtn) adminCreateStaffBtn.addEventListener('click', () => {
+                document.getElementById('adminCreateStaffEmail').value = '';
+                document.getElementById('adminCreateStaffPassword').value = '';
+                document.getElementById('adminCreateStaffName').value = '';
+                document.getElementById('adminCreateStaffRole').value = 'staff';
+                document.getElementById('adminCreateStaffPosition').value = 'waiter';
+                document.getElementById('adminCreateStaffPositionWrap').style.display = 'block';
+                adminCreateStaffModalEl.style.display = 'flex';
+            });
+            if (adminCreateStaffCloseBtn) adminCreateStaffCloseBtn.addEventListener('click', closeCreateStaffModal);
+            if (adminCreateStaffCancelBtn) adminCreateStaffCancelBtn.addEventListener('click', closeCreateStaffModal);
+            if (adminCreateStaffModalEl) adminCreateStaffModalEl.addEventListener('click', (e) => { if (e.target === adminCreateStaffModalEl) closeCreateStaffModal(); });
+            if (adminCreateStaffSubmitBtn) adminCreateStaffSubmitBtn.addEventListener('click', async () => {
+                const email = (document.getElementById('adminCreateStaffEmail').value || '').trim();
+                const password = document.getElementById('adminCreateStaffPassword').value;
+                const name = (document.getElementById('adminCreateStaffName').value || '').trim();
+                const role = document.getElementById('adminCreateStaffRole').value;
+                const position = document.getElementById('adminCreateStaffPosition').value;
+                if (!email) { showAdminMessage('Thiếu thông tin', 'Vui lòng nhập email.'); return; }
+                if (!password || password.length < 6) { showAdminMessage('Mật khẩu không hợp lệ', 'Mật khẩu tối thiểu 6 ký tự.'); return; }
+                try {
+                    await createStaffAccount(email, password, name || null, role, role === 'staff' ? position : null);
+                    closeCreateStaffModal();
+                    showAdminMessage('Đã tạo tài khoản', 'Tài khoản đã được tạo. Bạn đã bị đăng xuất — vui lòng đăng nhập lại.');
+                    setTimeout(() => { window.location.href = '../auth/login.html'; }, 2500);
+                } catch (e) {
+                    console.error(e);
+                    const msg = (e && e.code === 'auth/email-already-in-use') ? 'Email này đã được sử dụng.' : (e && e.message ? e.message : 'Không thể tạo tài khoản.');
+                    showAdminMessage('Lỗi', msg);
+                }
+            });
+
+            onValue(ref(database, 'tables'), (snap) => {
+                _tables = snap.val() || {};
+                adminTablesCache = _tables;
+                updateDashboard(_orders, _tables);
+                renderAdminTables();
+            });
+            onValue(ref(database, 'settings/deletedDefaultTableIds'), (snap) => {
+                adminDeletedDefaultsCache = snap.val() || {};
+                renderAdminTables();
+            });
+
+            function renderAdminTables() {
+                const grid = document.getElementById('adminTablesGrid');
+                if (!grid) return;
+                const list = getAdminTablesWithStatus();
+                const statAv = document.getElementById('adminTablesStatAvailable');
+                const statOcc = document.getElementById('adminTablesStatOccupied');
+                const statRes = document.getElementById('adminTablesStatReserved');
+                const statTot = document.getElementById('adminTablesStatTotal');
+                if (statAv) statAv.textContent = String(list.filter(t => t._status === 'AVAILABLE').length);
+                if (statOcc) statOcc.textContent = String(list.filter(t => t._status === 'OCCUPIED').length);
+                if (statRes) statRes.textContent = String(list.filter(t => t._status === 'RESERVED').length);
+                if (statTot) statTot.textContent = String(list.length);
+                if (!list.length) {
+                    grid.innerHTML = '<div style="text-align:center; padding:2rem; color: var(--text-light); width:100%;">Chưa có bàn nào. Dùng form phía trên để thêm bàn.</div>';
+                    return;
+                }
+                const badgeByStatus = { AVAILABLE: 'table-status-available', RESERVED: 'table-status-reserved', OCCUPIED: 'table-status-occupied' };
+                grid.innerHTML = list.map(t => {
+                    const label = t.name || t.label || ('Bàn ' + t.id);
+                    const cap = t.capacity || t.seats || '—';
+                    const st = t._status;
+                    const statusLabel = TABLE_STATUS_LABELS[st] || st;
+                    const badgeClass = badgeByStatus[st] || 'table-status-available';
+                    return `<div class="table-card" data-id="${t.id}">
+                        <h3>${label}</h3>
+                        <p>${cap} khách</p>
+                        <span class="table-status-badge ${badgeClass}"><span class="table-status-dot"></span><span>${statusLabel}</span></span>
+                        <div class="table-card-actions">
+                            <button type="button" class="btn btn-secondary admin-table-edit" data-id="${t.id}">Sửa</button>
+                            <button type="button" class="btn table-card-delete admin-table-delete" data-id="${t.id}">Xóa</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                grid.querySelectorAll('.admin-table-edit').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const tableId = btn.getAttribute('data-id');
+                        const list = getAdminTablesWithStatus();
+                        const table = list.find(t => String(t.id) === String(tableId));
+                        if (!table) return;
+                        const currentCap = table.capacity || table.seats || '';
+                        const newCapStr = await openAdminInput({
+                            title: 'Sửa sức chứa bàn',
+                            message: 'Sức chứa mới (số khách) cho bàn <strong>' + (table.name || table.label || tableId) + '</strong>:',
+                            placeholder: 'Ví dụ: 4',
+                            defaultValue: String(currentCap || '4')
+                        });
+                        if (!newCapStr) return;
+                        const newCap = parseInt(newCapStr, 10);
+                        if (isNaN(newCap) || newCap <= 0) {
+                            showAdminMessage('Giá trị không hợp lệ', 'Sức chứa phải là số nguyên dương.');
+                            return;
+                        }
+                        try {
+                            const baseName = table.name || table.label || ('Bàn ' + tableId);
+                            const payload = {
+                                name: baseName,
+                                label: baseName + ' (' + newCap + ' khách)',
+                                capacity: newCap,
+                                seats: newCap,
+                                status: table._status || table.status || 'AVAILABLE',
+                                updatedAt: Date.now()
+                            };
+                            const existing = adminTablesCache && adminTablesCache[tableId];
+                            if (existing) {
+                                await update(ref(database, 'tables/' + tableId), payload);
+                            } else {
+                                await set(ref(database, 'tables/' + tableId), { ...payload, createdAt: Date.now() });
+                            }
+                            showAdminMessage('Đã cập nhật', 'Đã cập nhật sức chứa bàn.');
+                        } catch (e) {
+                            console.error(e);
+                            showAdminMessage('Lỗi', 'Không thể cập nhật bàn. Vui lòng thử lại.');
+                        }
+                    });
+                });
+                grid.querySelectorAll('.admin-table-delete').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const tableId = btn.getAttribute('data-id');
+                        const list = getAdminTablesWithStatus();
+                        const table = list.find(t => String(t.id) === String(tableId));
+                        if (!table) return;
+                        const name = table.name || table.label || ('Bàn ' + tableId);
+                        const ok = await openAdminConfirm({ title: 'Xóa bàn', message: 'Bạn có chắc muốn xóa bàn <strong>' + name + '</strong>?', okText: 'Xóa', cancelText: 'Hủy' });
+                        if (!ok) return;
+                        try {
+                            if (DEFAULT_TABLE_IDS.has(String(tableId))) {
+                                await update(ref(database, 'settings/deletedDefaultTableIds'), { [tableId]: true });
+                            } else {
+                                await remove(ref(database, 'tables/' + tableId));
+                            }
+                            showAdminMessage('Đã xóa', 'Đã xóa bàn.');
+                        } catch (e) {
+                            console.error(e);
+                            showAdminMessage('Lỗi', 'Không thể xóa bàn. Vui lòng thử lại.');
+                        }
+                    });
+                });
+            }
+
+            const adminAddTableBtn = document.getElementById('adminAddTableBtn');
+            if (adminAddTableBtn) {
+                adminAddTableBtn.addEventListener('click', async () => {
+                    const nameEl = document.getElementById('adminTableName');
+                    const capEl = document.getElementById('adminTableCapacity');
+                    const name = (nameEl && nameEl.value || '').trim();
+                    const capacity = parseInt(capEl && capEl.value, 10);
+                    if (!name) {
+                        showAdminMessage('Thiếu thông tin', 'Vui lòng nhập tên bàn.');
+                        return;
                     }
+                    if (isNaN(capacity) || capacity <= 0) {
+                        showAdminMessage('Giá trị không hợp lệ', 'Sức chứa phải là số nguyên dương.');
+                        return;
+                    }
+                    try {
+                        await push(ref(database, 'tables'), {
+                            name,
+                            label: name + ' (' + capacity + ' khách)',
+                            capacity,
+                            seats: capacity,
+                            status: 'AVAILABLE',
+                            createdAt: Date.now()
+                        });
+                        if (nameEl) nameEl.value = '';
+                        if (capEl) capEl.value = '4';
+                        showAdminMessage('Đã thêm bàn', 'Đã thêm bàn mới.');
+                    } catch (e) {
+                        console.error(e);
+                        showAdminMessage('Lỗi', 'Không thể thêm bàn. Vui lòng thử lại.');
+                    }
+                });
+            }
+            renderAdminTables();
+
+            // ========== Quản lý thực đơn (tab Menu) ==========
+            const menuFormCard = document.getElementById('menuFormCard');
+            const menuCategoryFormCard = document.getElementById('categoryFormCard');
+            const btnAddMenu = document.getElementById('btnAddMenu');
+            const btnAddCategory = document.getElementById('btnAddCategory');
+            const menuForm = document.getElementById('menuForm');
+            const categoryForm = document.getElementById('categoryForm');
+            const menuTableBody = document.getElementById('menuTableBody');
+            const filterCategoryEl = document.getElementById('filter-category');
+            const filterStatusEl = document.getElementById('filter-status');
+            const searchMenuEl = document.getElementById('search-menu');
+
+            if (menuFormCard && menuTableBody) {
+                menuFormCard.style.display = 'none';
+                if (menuCategoryFormCard) menuCategoryFormCard.style.display = 'none';
+
+                function fillCategoryDropdowns() {
+                    const opts = categoryList.length ? categoryList : DEFAULT_CATEGORIES;
+                    const optionsHtml = opts.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+                    const prevFilter = filterCategoryEl ? filterCategoryEl.value : '';
+                    if (filterCategoryEl) {
+                        filterCategoryEl.innerHTML = '<option value="">Tất cả</option>' + optionsHtml;
+                        filterCategoryEl.value = opts.includes(prevFilter) ? prevFilter : '';
+                    }
+                    const dishCat = document.getElementById('dish-category');
+                    if (dishCat) {
+                        const prevDish = dishCat.value;
+                        dishCat.innerHTML = optionsHtml;
+                        dishCat.value = opts.includes(prevDish) ? prevDish : (opts[0] || '');
+                    }
+                }
+
+                if (btnAddMenu) btnAddMenu.addEventListener('click', () => {
+                    menuMode = 'ADD';
+                    menuEditingId = null;
+                    menuResetForm();
+                    menuFormCard.style.display = 'block';
+                    menuFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => { const i = document.getElementById('dish-name'); if (i) i.focus(); }, 350);
+                });
+
+                if (menuForm) menuForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('dish-name').value.trim();
+                    const category = document.getElementById('dish-category').value;
+                    const price = Number(document.getElementById('dish-price').value) || 0;
+                    const description = document.getElementById('dish-description').value.trim();
+                    const fileInput = document.getElementById('dish-image-file');
+                    const available = document.getElementById('dish-status').value === 'available';
+                    let imageUrl = document.getElementById('dish-image-current').value.trim();
+                    const selectedFile = fileInput && fileInput.files && fileInput.files[0];
+                    if (selectedFile) {
+                        try { imageUrl = await uploadImageToCloudinary(selectedFile); }
+                        catch (err) { console.error(err); showAdminMessage('Lỗi', 'Tải ảnh lên Cloudinary thất bại.'); return; }
+                    }
+                    const now = Date.now();
+                    const defaultCat = (categoryList.length ? categoryList[0] : DEFAULT_CATEGORIES[0]) || 'SUSHI';
+                    const payload = { name, category: category || defaultCat, price, description, image: imageUrl, available, createdAt: menuMode === 'ADD' ? now : Number(document.getElementById('dish-createdAt').value) || now, updatedAt: now };
+                    try {
+                        if (menuMode === 'ADD') {
+                            const newRef = push(ref(database, MENU_PATH));
+                            await set(newRef, payload);
+                        } else {
+                            if (!menuEditingId) { showAdminMessage('Lỗi', 'Không xác định được món cần sửa.'); return; }
+                            await set(ref(database, MENU_PATH + '/' + menuEditingId), payload);
+                        }
+                        menuResetForm();
+                        menuFormCard.style.display = 'none';
+                    } catch (err) {
+                        console.error(err);
+                        showAdminMessage('Lưu thất bại', err && err.message ? err.message : 'Vui lòng thử lại.');
+                    }
+                });
+
+                if (menuForm && menuForm.querySelector('button[type="reset"]')) menuForm.querySelector('button[type="reset"]').addEventListener('click', () => { menuResetForm(); if (menuMode === 'ADD') menuFormCard.style.display = 'none'; });
+
+                if (btnAddCategory && menuCategoryFormCard) btnAddCategory.addEventListener('click', () => {
+                    menuCategoryFormCard.style.display = menuCategoryFormCard.style.display === 'none' ? 'block' : 'none';
+                    if (menuCategoryFormCard.style.display === 'block') {
+                        categoryForm.reset();
+                        menuCategoryFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const input = document.getElementById('category-name');
+                        if (input) setTimeout(() => input.focus(), 200);
+                    }
+                });
+
+                if (categoryForm) categoryForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('category-name').value.trim().toUpperCase();
+                    if (!name) { showAdminMessage('Thiếu thông tin', 'Vui lòng nhập tên danh mục.'); return; }
+                    if (categoryList.includes(name)) { showAdminMessage('Trùng danh mục', 'Danh mục này đã tồn tại.'); return; }
+                    try {
+                        await set(ref(database, CATEGORIES_PATH + '/' + name), true);
+                        categoryForm.reset();
+                        menuCategoryFormCard.style.display = 'none';
+                    } catch (err) { console.error(err); showAdminMessage('Lỗi', 'Lưu danh mục thất bại.'); }
+                });
+
+                function menuApplyFilters(list) {
+                    let out = list;
+                    if (menuFilterCategory) out = out.filter(item => (item.category || '') === menuFilterCategory);
+                    if (menuFilterStatus === 'available') out = out.filter(item => item.available !== false);
+                    if (menuFilterStatus === 'out-of-stock') out = out.filter(item => item.available === false);
+                    if (menuSearchText) {
+                        const q = menuSearchText.toLowerCase();
+                        out = out.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
+                    }
+                    return out;
+                }
+
+                if (filterCategoryEl) filterCategoryEl.addEventListener('change', () => { menuFilterCategory = filterCategoryEl.value; menuCurrentPage = 1; menuRenderTable(); });
+                if (filterStatusEl) filterStatusEl.addEventListener('change', () => { menuFilterStatus = filterStatusEl.value; menuCurrentPage = 1; menuRenderTable(); });
+                if (searchMenuEl) {
+                    const doSearch = () => { menuSearchText = searchMenuEl.value.trim(); menuCurrentPage = 1; menuRenderTable(); };
+                    searchMenuEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
+                    const searchBtn = document.querySelector('#adminMenuSection .card .btn[type="button"]');
+                    if (searchBtn) searchBtn.addEventListener('click', doSearch);
+                }
+
+                function menuResetForm() {
+                    if (!menuForm) return;
+                    menuForm.reset();
+                    document.getElementById('dish-status').value = 'available';
+                    const firstCat = (categoryList.length ? categoryList[0] : DEFAULT_CATEGORIES[0]) || 'SUSHI';
+                    document.getElementById('dish-category').value = firstCat;
+                    document.getElementById('dish-createdAt').value = '';
+                    document.getElementById('dish-image-current').value = '';
+                    const fileInput = document.getElementById('dish-image-file');
+                    if (fileInput) fileInput.value = '';
+                    menuEditingId = null;
+                    menuMode = 'ADD';
+                }
+
+                function menuOpenEdit(itemId, item) {
+                    menuEditingId = itemId;
+                    menuMode = 'EDIT';
+                    document.getElementById('dish-name').value = item.name || '';
+                    const cats = categoryList.length ? categoryList : DEFAULT_CATEGORIES;
+                    document.getElementById('dish-category').value = (item.category && cats.includes(item.category)) ? item.category : (cats[0] || 'SUSHI');
+                    document.getElementById('dish-price').value = item.price != null ? item.price : '';
+                    document.getElementById('dish-description').value = item.description || '';
+                    document.getElementById('dish-image-current').value = item.image || '';
+                    const fileInput = document.getElementById('dish-image-file');
+                    if (fileInput) fileInput.value = '';
+                    document.getElementById('dish-status').value = item.available !== false ? 'available' : 'out-of-stock';
+                    document.getElementById('dish-createdAt').value = item.createdAt != null ? item.createdAt : '';
+                    menuFormCard.style.display = 'block';
+                    menuFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                function menuFormatPrice(n) {
+                    if (n == null || isNaN(n)) return '—';
+                    return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+                }
+
+                function menuRenderTable() {
+                    const filtered = menuApplyFilters(menuList);
+                    const total = filtered.length;
+                    const totalPages = Math.max(1, Math.ceil(total / MENU_ITEMS_PER_PAGE));
+                    if (menuCurrentPage > totalPages) menuCurrentPage = totalPages;
+                    const start = (menuCurrentPage - 1) * MENU_ITEMS_PER_PAGE;
+                    const pageItems = filtered.slice(start, start + MENU_ITEMS_PER_PAGE);
+                    menuTableBody.innerHTML = '';
+                    pageItems.forEach((entry) => {
+                        const { id, name, category, price, description, image, available } = entry;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td><div class="menu-thumb" style="width:60px;height:60px;border-radius:5px;background:var(--light-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;">' + (image ? '<img src="' + image + '" alt="" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:1.5rem;">🍽️</span>') + '</div></td><td><strong>' + (name || '—') + '</strong></td><td>' + (category || '—') + '</td><td>' + menuFormatPrice(price) + '</td><td><small>' + (description || '').slice(0, 50) + (description && description.length > 50 ? '...' : '') + '</small></td><td><span class="badge ' + (available !== false ? 'badge-success' : 'badge-danger') + '">' + (available !== false ? 'Còn bán' : 'Hết món') + '</span></td><td><button type="button" class="btn btn-info btn-edit" style="padding:0.3rem 0.8rem;font-size:0.85rem;margin-bottom:0.3rem;width:100%;">Sửa</button><button type="button" class="btn btn-danger btn-delete" style="padding:0.3rem 0.8rem;font-size:0.85rem;width:100%;">Xóa</button></td>';
+                        tr.querySelector('.btn-edit').addEventListener('click', () => menuOpenEdit(id, entry));
+                        tr.querySelector('.btn-delete').addEventListener('click', async () => {
+                            const ok = await openAdminConfirm({ title: 'Xóa món', message: 'Bạn có chắc muốn xóa món này?', okText: 'Xóa', cancelText: 'Hủy' });
+                            if (!ok) return;
+                            try {
+                                await remove(ref(database, MENU_PATH + '/' + id));
+                                showAdminMessage('Đã xóa', 'Đã xóa món.');
+                            } catch (err) { console.error(err); showAdminMessage('Lỗi', 'Xóa thất bại.'); }
+                        });
+                        menuTableBody.appendChild(tr);
+                    });
+                    const pagEl = document.getElementById('menuTablePagination');
+                    if (!pagEl) return;
+                    if (totalPages <= 1 || total === 0) { pagEl.innerHTML = ''; return; }
+                    const end = Math.min(start + MENU_ITEMS_PER_PAGE, total);
+                    pagEl.innerHTML = '<button type="button" id="menuPagePrev" ' + (menuCurrentPage <= 1 ? 'disabled' : '') + ' style="padding:0.5rem 1rem;margin-right:0.5rem;border:2px solid var(--border-color);background:var(--white);border-radius:6px;cursor:pointer;" title="Trang trước">←</button><span style="color:var(--text-light);font-size:0.9rem;">' + (start + 1) + ' – ' + end + ' / ' + total + ' món</span><button type="button" id="menuPageNext" ' + (menuCurrentPage >= totalPages ? 'disabled' : '') + ' style="padding:0.5rem 1rem;margin-left:0.5rem;border:2px solid var(--border-color);background:var(--white);border-radius:6px;cursor:pointer;" title="Trang sau">→</button>';
+                    const prevBtn = pagEl.querySelector('#menuPagePrev');
+                    const nextBtn = pagEl.querySelector('#menuPageNext');
+                    if (prevBtn) prevBtn.onclick = () => { menuCurrentPage--; menuRenderTable(); };
+                    if (nextBtn) nextBtn.onclick = () => { menuCurrentPage++; menuRenderTable(); };
+                }
+
+                onValue(ref(database, MENU_PATH), (snapshot) => {
+                    const data = snapshot.val();
+                    menuList = !data ? [] : Object.entries(data).map(([id, item]) => ({ id, ...item }));
+                    menuCurrentPage = 1;
+                    menuRenderTable();
+                }, (err) => {
+                    console.error(err);
+                    menuList = [];
+                    menuTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light);">Không tải được danh sách.</td></tr>';
+                    const pagEl = document.getElementById('menuTablePagination');
+                    if (pagEl) pagEl.innerHTML = '';
+                });
+
+                onValue(ref(database, CATEGORIES_PATH), (snapshot) => {
+                    const data = snapshot.val();
+                    if (!data || Object.keys(data).length === 0) {
+                        const seed = {};
+                        DEFAULT_CATEGORIES.forEach(c => { seed[c] = true; });
+                        set(ref(database, CATEGORIES_PATH), seed).catch(() => {});
+                        categoryList = [...DEFAULT_CATEGORIES];
+                    } else {
+                        categoryList = Object.keys(data).sort();
+                    }
+                    fillCategoryDropdowns();
+                    menuRenderTable();
+                }, (err) => {
+                    console.error(err);
+                    categoryList = [...DEFAULT_CATEGORIES];
+                    fillCategoryDropdowns();
+                });
+            }
+
+            // --- Quản lý tin tức ---
+            let newsList = {};
+            let adminNewsQuill = null;
+            const adminNewsEditorEl = document.getElementById('adminNewsContentEditor');
+            if (adminNewsEditorEl && typeof Quill !== 'undefined') {
+                const Size = Quill.import('attributors/style/size');
+                Size.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px'];
+                Quill.register(Size, true);
+                const Font = Quill.import('formats/font');
+                Font.whitelist = ['sans-serif', 'serif', 'monospace', 'Noto Serif JP', 'Shippori Mincho'];
+                Quill.register(Font, true);
+                adminNewsQuill = new Quill('#adminNewsContentEditor', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: {
+                            container: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'size': ['14px', false, '18px', '20px', '24px'] }],
+                                [{ 'font': ['sans-serif', 'serif', 'monospace', 'Noto Serif JP', 'Shippori Mincho'] }],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                ['link', 'image', 'clean']
+                            ],
+                            handlers: {
+                                image: function imageHandler() {
+                                    const input = document.createElement('input');
+                                    input.setAttribute('type', 'file');
+                                    input.setAttribute('accept', 'image/*');
+                                    input.style.display = 'none';
+                                    document.body.appendChild(input);
+                                    input.click();
+                                    input.onchange = async () => {
+                                        const file = input.files && input.files[0];
+                                        document.body.removeChild(input);
+                                        if (!file) return;
+                                        try {
+                                            const url = await uploadImageToCloudinary(file);
+                                            const range = adminNewsQuill.getSelection(true);
+                                            if (range) adminNewsQuill.insertEmbed(range.index, 'image', url);
+                                            else adminNewsQuill.insertEmbed(0, 'image', url);
+                                        } catch (err) {
+                                            console.error(err);
+                                            showAdminMessage('Lỗi', 'Tải ảnh lên thất bại.');
+                                        }
+                                    };
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            function renderAdminNewsList() {
+                const tbody = document.getElementById('adminNewsListBody');
+                if (!tbody) return;
+                const list = Object.entries(newsList).map(([id, n]) => ({ id, ...n })).sort((a, b) => (b.createdAt || b.updatedAt || 0) - (a.createdAt || a.updatedAt || 0));
+                if (!list.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có tin nào.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(n => {
+                    const date = n.createdAt ? new Date(n.createdAt).toLocaleDateString('vi-VN') : (n.updatedAt ? new Date(n.updatedAt).toLocaleDateString('vi-VN') : '—');
+                    const status = n.published !== false ? 'Đã đăng' : 'Nháp';
+                    const titleShort = (n.title || '—').slice(0, 50);
+                    const summaryShort = (n.summary || '—').slice(0, 40);
+                    return `<tr>
+                        <td>${titleShort}${(n.title || '').length > 50 ? '...' : ''}</td>
+                        <td>${summaryShort}${(n.summary || '').length > 40 ? '...' : ''}</td>
+                        <td>${date}</td>
+                        <td>${status}</td>
+                        <td><button type="button" class="btn btn-info admin-news-edit" data-id="${n.id}" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Sửa</button> <button type="button" class="btn btn-danger admin-news-delete" data-id="${n.id}" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Xóa</button></td>
+                    </tr>`;
+                }).join('');
+                tbody.querySelectorAll('.admin-news-edit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        const n = newsList[id];
+                        if (!n) return;
+                        document.getElementById('adminNewsEditId').value = id;
+                        document.getElementById('adminNewsTitle').value = n.title || '';
+                        document.getElementById('adminNewsSummary').value = n.summary || '';
+                        if (adminNewsQuill) adminNewsQuill.clipboard.dangerouslyPasteHTML(n.content || '');
+                        const curImg = n.imageUrl || '';
+                        document.getElementById('adminNewsImageCurrent').value = curImg;
+                        const fileInput = document.getElementById('adminNewsImageFile');
+                        if (fileInput) fileInput.value = '';
+                        const preview = document.getElementById('adminNewsImagePreview');
+                        const previewImg = document.getElementById('adminNewsImagePreviewImg');
+                        if (preview && previewImg) {
+                            if (curImg) { previewImg.src = curImg; preview.style.display = 'block'; }
+                            else { previewImg.src = ''; preview.style.display = 'none'; }
+                        }
+                        document.getElementById('adminNewsPublished').checked = n.published !== false;
+                        document.getElementById('adminNewsSubmitBtn').textContent = 'Cập nhật';
+                        document.getElementById('adminNewsCancelEditBtn').style.display = 'inline-block';
+                    });
+                });
+                tbody.querySelectorAll('.admin-news-delete').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.getAttribute('data-id');
+                        const ok = await openAdminConfirm({ title: 'Xóa tin', message: 'Bạn có chắc muốn xóa tin này?', okText: 'Xóa', cancelText: 'Hủy' });
+                        if (!ok) return;
+                        try {
+                            await remove(ref(database, NEWS_PATH + '/' + id));
+                            showAdminMessage('Đã xóa', 'Đã xóa tin.');
+                        } catch (err) { console.error(err); showAdminMessage('Lỗi', 'Xóa thất bại.'); }
+                    });
+                });
+            }
+            onValue(ref(database, NEWS_PATH), (snap) => {
+                newsList = snap.val() || {};
+                renderAdminNewsList();
+            });
+            const adminNewsSubmitBtn = document.getElementById('adminNewsSubmitBtn');
+            const adminNewsCancelEditBtn = document.getElementById('adminNewsCancelEditBtn');
+            if (adminNewsSubmitBtn) {
+                adminNewsSubmitBtn.addEventListener('click', async () => {
+                    const editId = (document.getElementById('adminNewsEditId') || {}).value.trim();
+                    const title = (document.getElementById('adminNewsTitle') || {}).value.trim();
+                    const summary = (document.getElementById('adminNewsSummary') || {}).value.trim();
+                    const content = adminNewsQuill ? adminNewsQuill.root.innerHTML.trim() : '';
+                    const imageCurrentEl = document.getElementById('adminNewsImageCurrent');
+                    const fileInput = document.getElementById('adminNewsImageFile');
+                    let imageUrl = (imageCurrentEl && imageCurrentEl.value) ? imageCurrentEl.value.trim() : '';
+                    const selectedFile = fileInput && fileInput.files && fileInput.files[0];
+                    if (selectedFile) {
+                        try { imageUrl = await uploadImageToCloudinary(selectedFile); }
+                        catch (err) { console.error(err); showAdminMessage('Lỗi', 'Tải ảnh lên Cloudinary thất bại.'); return; }
+                    } else if (!editId) { imageUrl = imageUrl || null; }
+                    const published = (document.getElementById('adminNewsPublished') || {}).checked;
+                    if (!title) { showAdminMessage('Thiếu thông tin', 'Vui lòng nhập tiêu đề.'); return; }
+                    const payload = { title, summary, content, imageUrl: imageUrl || null, published, updatedAt: Date.now() };
+                    if (editId) {
+                        try {
+                            await update(ref(database, NEWS_PATH + '/' + editId), payload);
+                            showAdminMessage('Đã cập nhật', 'Đã cập nhật tin.');
+                        } catch (err) { console.error(err); showAdminMessage('Lỗi', 'Cập nhật thất bại.'); return; }
+                        document.getElementById('adminNewsEditId').value = '';
+                        document.getElementById('adminNewsSubmitBtn').textContent = 'Thêm tin';
+                        if (adminNewsCancelEditBtn) adminNewsCancelEditBtn.style.display = 'none';
+                        document.getElementById('adminNewsTitle').value = '';
+                        document.getElementById('adminNewsSummary').value = '';
+                        if (adminNewsQuill) adminNewsQuill.clipboard.dangerouslyPasteHTML('');
+                        if (imageCurrentEl) imageCurrentEl.value = '';
+                        if (fileInput) fileInput.value = '';
+                        const preview = document.getElementById('adminNewsImagePreview');
+                        if (preview) preview.style.display = 'none';
+                        document.getElementById('adminNewsPublished').checked = true;
+                    } else {
+                        payload.createdAt = Date.now();
+                        try {
+                            const newRef = push(ref(database, NEWS_PATH));
+                            await set(newRef, payload);
+                            showAdminMessage('Đã thêm', 'Đã thêm tin mới.');
+                        } catch (err) { console.error(err); showAdminMessage('Lỗi', 'Thêm tin thất bại.'); return; }
+                        document.getElementById('adminNewsTitle').value = '';
+                        document.getElementById('adminNewsSummary').value = '';
+                        if (adminNewsQuill) adminNewsQuill.clipboard.dangerouslyPasteHTML('');
+                        if (imageCurrentEl) imageCurrentEl.value = '';
+                        if (fileInput) fileInput.value = '';
+                        const preview = document.getElementById('adminNewsImagePreview');
+                        if (preview) preview.style.display = 'none';
+                        document.getElementById('adminNewsPublished').checked = true;
+                    }
+                });
+            }
+            if (adminNewsCancelEditBtn) {
+                adminNewsCancelEditBtn.addEventListener('click', () => {
+                    document.getElementById('adminNewsEditId').value = '';
+                    document.getElementById('adminNewsSubmitBtn').textContent = 'Thêm tin';
+                    adminNewsCancelEditBtn.style.display = 'none';
+                    document.getElementById('adminNewsTitle').value = '';
+                    document.getElementById('adminNewsSummary').value = '';
+                    if (adminNewsQuill) adminNewsQuill.clipboard.dangerouslyPasteHTML('');
+                    const imageCurrentEl = document.getElementById('adminNewsImageCurrent');
+                    if (imageCurrentEl) imageCurrentEl.value = '';
+                    const fileInput = document.getElementById('adminNewsImageFile');
+                    if (fileInput) fileInput.value = '';
+                    const preview = document.getElementById('adminNewsImagePreview');
+                    if (preview) preview.style.display = 'none';
+                    document.getElementById('adminNewsPublished').checked = true;
                 });
             }
         });
     </script>
-    <div style="display: flex;">
+    <div style="display: flex; width: 100%; min-height: 100vh;">
         <aside class="sidebar">
             <div style="padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
                 <h2 style="color: var(--gold); display: flex; align-items: center; gap: 0.75rem;">
@@ -39,136 +1212,516 @@
                 <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Hệ thống quản lý</p>
             </div>
             <ul>
-                <li><a href="dashboard.html" class="active">📊 Dashboard</a></li>
-                <li><a href="orders.html">📋 Quản Lý Đơn Hàng</a></li>
-                <li><a href="tables.html">🪑 Quản Lý Bàn Ăn</a></li>
-                <li><a href="menu-management.html">🍽️ Quản Lý Thực Đơn</a></li>
-                <li><a href="staff.html">👥 Quản Lý Nhân Viên</a></li>
-                <li><a href="reports.html">📈 Báo Cáo</a></li>
-                <li><a href="inventory.html">📦 Quản Lý Kho</a></li>
-                <li><a href="promotions.html">🎁 Khuyến Mãi</a></li>
-                <li><a href="../index.html">🏠 Về Trang Chủ</a></li>
+                <li><a href="#" data-section="dashboard" class="active">📊 Dashboard</a></li>
+                <li><a href="#" data-section="orders">📋 Quản Lý Đơn Hàng</a></li>
+                <li><a href="#" data-section="tables">🪑 Quản Lý Bàn Ăn</a></li>
+                <li><a href="#" data-section="menu">🍽️ Quản Lý Thực Đơn</a></li>
+                <li><a href="#" data-section="staff">👥 Quản Lý Nhân Viên</a></li>
+                <li><a href="#" data-section="reports">📈 Báo Cáo</a></li>
+                <li><a href="#" data-section="news">📰 Quản Lý Tin Tức</a></li>
                 <li><a href="../auth/admin.html">🚪 Đăng Xuất</a></li>
             </ul>
         </aside>
 
         <main class="main-content">
-            <div style="margin-bottom: 2rem;">
-                <h1 style="color: var(--primary-color);">Dashboard</h1>
-                <p style="color: var(--text-light);">Tổng quan hoạt động nhà hàng hôm nay</p>
-            </div>
+            <!-- DASHBOARD SECTION -->
+            <section id="adminDashboardSection">
+                <div style="margin-bottom: 2rem;">
+                    <h1 style="color: var(--primary-color);">Dashboard</h1>
+                    <p style="color: var(--text-light);">Tổng quan hoạt động nhà hàng hôm nay</p>
+                </div>
 
-            <!-- Stats Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>1,250,000đ</h3>
-                    <p>Doanh Thu Hôm Nay</p>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">
-                    <h3>24</h3>
-                    <p>Đơn Hàng Hôm Nay</p>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
-                    <h3>12/20</h3>
-                    <p>Bàn Đang Phục Vụ</p>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
-                    <h3>8</h3>
-                    <p>Đơn Hàng Đang Chờ</p>
-                </div>
-            </div>
-
-            <!-- Recent Orders -->
-            <div class="card">
-                <h2 class="card-header">Đơn Hàng Gần Đây</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mã Đơn</th>
-                            <th>Bàn</th>
-                            <th>Khách Hàng</th>
-                            <th>Tổng Tiền</th>
-                            <th>Trạng Thái</th>
-                            <th>Thời Gian</th>
-                            <th>Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD001</td>
-                            <td>Bàn 5</td>
-                            <td>Nguyễn Văn A</td>
-                            <td>450,000đ</td>
-                            <td><span class="badge badge-success">Đã thanh toán</span></td>
-                            <td>14:30</td>
-                            <td><a href="orders.html" class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Chi tiết</a></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD002</td>
-                            <td>Bàn 3</td>
-                            <td>Trần Thị B</td>
-                            <td>680,000đ</td>
-                            <td><span class="badge badge-warning">Đang phục vụ</span></td>
-                            <td>15:15</td>
-                            <td><a href="orders.html" class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Chi tiết</a></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD003</td>
-                            <td>Bàn 8</td>
-                            <td>Lê Văn C</td>
-                            <td>320,000đ</td>
-                            <td><span class="badge badge-primary">Chờ thanh toán</span></td>
-                            <td>15:45</td>
-                            <td><a href="orders.html" class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Chi tiết</a></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD004</td>
-                            <td>Mang về</td>
-                            <td>Phạm Thị D</td>
-                            <td>250,000đ</td>
-                            <td><span class="badge badge-info">Đang chuẩn bị</span></td>
-                            <td>16:00</td>
-                            <td><a href="orders.html" class="btn btn-info" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Chi tiết</a></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="grid-2">
-                <div class="card">
-                    <h2 class="card-header">Thao Tác Nhanh</h2>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <a href="tables.html" class="btn">Quản Lý Bàn Ăn</a>
-                        <a href="orders.html" class="btn btn-success">Tạo Đơn Hàng Mới</a>
-                        <a href="menu-management.html" class="btn btn-info">Thêm Món Mới</a>
-                        <a href="reports.html" class="btn btn-warning">Xem Báo Cáo</a>
+                <!-- Stats Cards (dữ liệu thật từ Firebase) -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="adminStatRevenue">0đ</h3>
+                        <p>Doanh Thu Hôm Nay</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">
+                        <h3 id="adminStatOrdersToday">0</h3>
+                        <p>Đơn Đã Thanh Toán Hôm Nay</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
+                        <h3 id="adminStatTables">0/0</h3>
+                        <p>Bàn Đang Phục Vụ</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        <h3 id="adminStatPending">0</h3>
+                        <p>Đơn Đang Chờ</p>
                     </div>
                 </div>
 
+                <!-- Recent Orders (dữ liệu thật từ Firebase) -->
                 <div class="card">
-                    <h2 class="card-header">Thống Kê Nhanh</h2>
-                    <div style="margin-top: 1rem;">
-                        <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--light-bg); border-radius: 5px; margin-bottom: 0.5rem;">
-                            <span>Món bán chạy nhất:</span>
-                            <strong>Sushi Set Deluxe</strong>
+                    <h2 class="card-header">Đơn Hàng Gần Đây</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Bàn</th>
+                                <th>Khách Hàng</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                                <th>Thời Gian</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersBody">
+                            <tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid-2">
+                    <div class="card">
+                        <h2 class="card-header">Thao Tác Nhanh</h2>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <button type="button" class="btn" data-section-switch="tables">Quản Lý Bàn Ăn</button>
+                            <button type="button" class="btn btn-success" data-section-switch="orders">Tạo Đơn Hàng Mới</button>
+                            <button type="button" class="btn btn-info" data-section-switch="menu">Thêm Món Mới</button>
+                            <button type="button" class="btn btn-warning" data-section-switch="reports">Xem Báo Cáo</button>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--light-bg); border-radius: 5px; margin-bottom: 0.5rem;">
-                            <span>Tổng khách hôm nay:</span>
-                            <strong>48 người</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--light-bg); border-radius: 5px; margin-bottom: 0.5rem;">
-                            <span>Đơn hàng trung bình:</span>
-                            <strong>520,000đ</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--light-bg); border-radius: 5px;">
-                            <span>Tỷ lệ bàn sử dụng:</span>
-                            <strong>60%</strong>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-header">Thống Kê Nhanh</h2>
+                        <div style="margin-top: 1rem;">
+                            <p style="color: var(--text-light); font-size: 0.9rem;">
+                                Xem báo cáo chi tiết tại tab <strong>Báo Cáo</strong>.
+                            </p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- ORDERS SECTION - Danh sách đơn từ Firebase -->
+            <section id="adminOrdersSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 0.5rem;">Quản Lý Đơn Hàng</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Xem toàn bộ đơn hàng, lọc theo trạng thái và xem chi tiết.</p>
+                <div class="card" style="margin-bottom: 1rem;">
+                    <div class="grid-2" style="gap: 1rem; align-items: flex-end;">
+                        <div class="form-group">
+                            <label for="adminOrderStatusFilter">Lọc theo trạng thái</label>
+                            <select id="adminOrderStatusFilter">
+                                <option value="">Tất cả</option>
+                                <option value="PENDING">Chờ duyệt</option>
+                                <option value="APPROVED">Đã duyệt</option>
+                                <option value="COOKING">Đang chế biến</option>
+                                <option value="READY">Sẵn sàng</option>
+                                <option value="COMPLETED">Đã thanh toán</option>
+                                <option value="CANCELLED">Đã hủy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2 class="card-header">Danh Sách Đơn Hàng</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Bàn / Giao hàng</th>
+                                <th>Khách Hàng</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                                <th>Thời Gian</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersListBody">
+                            <tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                    <div id="adminOrdersPagination" style="display:flex; align-items:center; justify-content:flex-end; margin-top:1rem; gap:0.5rem; flex-wrap:wrap;"></div>
+                </div>
+            </section>
+
+            <!-- TABLES SECTION (Admin cấu hình bàn - thêm / sửa / xóa) -->
+            <section id="adminTablesSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 0.5rem;">Quản Lý Bàn Ăn</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Thêm, sửa sức chứa và xóa bàn. Dữ liệu dùng chung với sơ đồ bàn tại khu vực nhân viên.</p>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 class="card-header">Thêm bàn mới</h2>
+                    <div style="padding: 1rem 1.25rem;">
+                        <div class="grid-2" style="gap: 1rem; align-items: flex-end;">
+                            <div class="form-group">
+                                <label for="adminTableName">Tên bàn</label>
+                                <input type="text" id="adminTableName" placeholder="Ví dụ: Bàn Western 1, Bàn Counter 3">
+                            </div>
+                            <div class="form-group">
+                                <label for="adminTableCapacity">Sức chứa (số khách)</label>
+                                <input type="number" id="adminTableCapacity" min="1" value="4" placeholder="4">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" id="adminAddTableBtn" class="btn btn-success">+ Thêm bàn</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
+                    <span style="color:var(--text-light); font-size:0.9rem;">Trạng thái:</span>
+                    <span class="table-status-badge table-status-available"><span class="table-status-dot"></span><span>Trống</span></span>
+                    <span class="table-status-badge table-status-reserved"><span class="table-status-dot"></span><span>Đã đặt trước</span></span>
+                    <span class="table-status-badge table-status-occupied"><span class="table-status-dot"></span><span>Đang phục vụ</span></span>
+                </div>
+                <div class="stats-grid" style="margin-bottom: 1.25rem;">
+                    <div class="stat-card"><h3 id="adminTablesStatAvailable">0</h3><p>Bàn Trống</p></div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);"><h3 id="adminTablesStatOccupied">0</h3><p>Đang Phục Vụ</p></div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);"><h3 id="adminTablesStatReserved">0</h3><p>Đã Đặt Trước</p></div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);"><h3 id="adminTablesStatTotal">0</h3><p>Tổng Bàn</p></div>
+                </div>
+                <div class="card">
+                    <h2 class="card-header">Sơ đồ bàn</h2>
+                    <div class="table-grid" id="adminTablesGrid"></div>
+                </div>
+            </section>
+
+            <!-- MENU SECTION (Quản lý thực đơn - gộp chung trong admin) -->
+            <section id="adminMenuSection" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h1 style="color: var(--primary-color);">Quản Lý Thực Đơn</h1>
+                        <p style="color: var(--text-light);">Thêm, sửa, xóa và quản lý các món ăn</p>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                        <button class="btn" id="btnAddMenu">+ Thêm Món Mới</button>
+                        <button class="btn btn-secondary" id="btnAddCategory" style="background: rgba(212, 175, 55, 0.15); color: var(--gold); border: 1px solid var(--gold);">+ Thêm Danh Mục</button>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="filter-category">Lọc theo danh mục</label>
+                            <select id="filter-category" name="filter-category">
+                                <option value="">Tất cả</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-status">Lọc theo trạng thái</label>
+                            <select id="filter-status" name="filter-status">
+                                <option value="">Tất cả</option>
+                                <option value="available">Còn bán</option>
+                                <option value="out-of-stock">Hết món</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                            <div style="flex: 1; min-width: 0;">
+                                <label for="search-menu">Tìm kiếm</label>
+                                <input type="text" id="search-menu" name="search-menu" placeholder="Tên món ăn..." style="width: 100%;">
+                            </div>
+                            <button class="btn" type="button" style="padding: 0.5rem 1rem; font-size: 0.9rem; white-space: nowrap;">Tìm Kiếm</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2 class="card-header">Danh Sách Món Ăn</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hình Ảnh</th>
+                                <th>Tên Món</th>
+                                <th>Danh Mục</th>
+                                <th>Giá</th>
+                                <th>Mô Tả</th>
+                                <th>Trạng Thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody">
+                            <tr><td colspan="7" style="text-align:center;color:var(--text-light);">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                    <div id="menuTablePagination" style="display:flex;align-items:center;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;gap:0.5rem;"></div>
+                </div>
+                <div class="card" id="menuFormCard" style="margin-top: 2rem; display: none;">
+                    <h2 class="card-header">Thêm/Sửa Món Ăn</h2>
+                    <form id="menuForm">
+                        <input type="hidden" id="dish-createdAt" name="dish-createdAt">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="dish-name">Tên Món *</label>
+                                <input type="text" id="dish-name" name="dish-name" required placeholder="Nhập tên món">
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-category">Danh Mục *</label>
+                                <select id="dish-category" name="dish-category" required>
+                                    <option value="SUSHI">SUSHI</option>
+                                    <option value="SASHIMI">SASHIMI</option>
+                                    <option value="MAKI">MAKI</option>
+                                    <option value="TEMPURA">TEMPURA</option>
+                                    <option value="YAKIMONO">YAKIMONO</option>
+                                    <option value="MỲ">MỲ</option>
+                                    <option value="CƠM">CƠM</option>
+                                    <option value="SALAD">SALAD</option>
+                                    <option value="ĐỒ UỐNG">ĐỒ UỐNG</option>
+                                    <option value="SET">SET</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-price">Giá *</label>
+                                <input type="number" id="dish-price" name="dish-price" required min="0" placeholder="VNĐ">
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-status">Trạng Thái *</label>
+                                <select id="dish-status" name="dish-status" required>
+                                    <option value="available">Còn bán</option>
+                                    <option value="out-of-stock">Hết món</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="dish-description">Mô Tả</label>
+                                <textarea id="dish-description" name="dish-description" placeholder="Mô tả món ăn"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="dish-image-file">Hình Ảnh (tải lên)</label>
+                                <input type="file" id="dish-image-file" name="dish-image" accept="image/*">
+                                <input type="hidden" id="dish-image-current" name="dish-image-current">
+                                <small style="color:var(--text-light);">Khi sửa: chọn file mới để đổi ảnh, không chọn thì giữ ảnh hiện tại.</small>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <button type="submit" class="btn">Lưu Món Ăn</button>
+                                <button type="reset" class="btn btn-secondary" style="margin-left: 1rem;">Đặt Lại</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card" id="categoryFormCard" style="margin-top: 1rem; display: none;">
+                    <h2 class="card-header">Thêm Danh Mục</h2>
+                    <form id="categoryForm">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="category-name">Tên danh mục *</label>
+                                <input type="text" id="category-name" name="category-name" required placeholder="VD: SUSHI, ĐỒ UỐNG..." maxlength="50">
+                                <small style="color: var(--text-light);">Danh mục sẽ được lưu in hoa, dùng cho lọc và chọn khi thêm/sửa món.</small>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn">Lưu Danh Mục</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- STAFF SECTION - Danh sách users, sửa role/position -->
+            <section id="adminStaffSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 0.5rem;">Quản Lý Nhân Viên</h1>
+                <p style="color: var(--text-light); margin-bottom: 1rem;">Tạo tài khoản, phân quyền (role, position) và khóa/mở khóa tài khoản. Chỉ hiển thị admin và nhân viên.</p>
+                <div style="margin-bottom: 1rem;">
+                    <button type="button" id="adminCreateStaffBtn" class="btn btn-success">+ Tạo tài khoản</button>
+                </div>
+                <div class="card">
+                    <h2 class="card-header">Danh Sách Tài Khoản</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Tên</th>
+                                <th>Role</th>
+                                <th>Position</th>
+                                <th>Trạng thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminStaffListBody">
+                            <tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Modal sửa quyền nhân viên -->
+                <div id="adminEditStaffModal" class="admin-modal-overlay">
+                    <div class="admin-modal-box">
+                        <div class="admin-modal-header">
+                            <div id="adminEditStaffTitle" class="admin-modal-title">Sửa quyền</div>
+                            <button type="button" class="admin-modal-close" id="adminEditStaffClose" aria-label="Đóng">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <input type="hidden" id="adminEditStaffUid" value="">
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <label for="adminEditStaffRole" style="color: rgba(255,255,255,0.9);">Role</label>
+                                <select id="adminEditStaffRole" class="admin-modal-input" style="margin-top:0.35rem;">
+                                    <option value="staff">staff</option>
+                                    <option value="admin">admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="adminEditStaffPositionWrap">
+                                <label for="adminEditStaffPosition" style="color: rgba(255,255,255,0.9);">Position (chỉ staff)</label>
+                                <select id="adminEditStaffPosition" class="admin-modal-input" style="margin-top:0.35rem;">
+                                    <option value="">—</option>
+                                    <option value="waiter">waiter</option>
+                                    <option value="chef">chef</option>
+                                    <option value="cashier">cashier</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-modal-actions">
+                            <button type="button" id="adminEditStaffCancel" class="btn btn-secondary">Hủy</button>
+                            <button type="button" id="adminEditStaffSave" class="btn">Lưu</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal tạo tài khoản -->
+                <div id="adminCreateStaffModal" class="admin-modal-overlay">
+                    <div class="admin-modal-box" style="max-width: 480px;">
+                        <div class="admin-modal-header">
+                            <div class="admin-modal-title">Tạo tài khoản</div>
+                            <button type="button" class="admin-modal-close" id="adminCreateStaffClose" aria-label="Đóng">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: rgba(255,255,255,0.8);">Sau khi tạo, bạn sẽ bị đăng xuất và cần đăng nhập lại.</p>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label style="color: rgba(255,255,255,0.9);">Email</label>
+                                <input type="email" id="adminCreateStaffEmail" class="admin-modal-input" placeholder="email@example.com">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label style="color: rgba(255,255,255,0.9);">Mật khẩu</label>
+                                <input type="password" id="adminCreateStaffPassword" class="admin-modal-input" placeholder="Mật khẩu tạm">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label style="color: rgba(255,255,255,0.9);">Tên</label>
+                                <input type="text" id="adminCreateStaffName" class="admin-modal-input" placeholder="Tên hiển thị">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label style="color: rgba(255,255,255,0.9);">Role</label>
+                                <select id="adminCreateStaffRole" class="admin-modal-input">
+                                    <option value="staff">staff</option>
+                                    <option value="admin">admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="adminCreateStaffPositionWrap">
+                                <label style="color: rgba(255,255,255,0.9);">Position (chỉ staff)</label>
+                                <select id="adminCreateStaffPosition" class="admin-modal-input">
+                                    <option value="waiter">waiter</option>
+                                    <option value="chef">chef</option>
+                                    <option value="cashier">cashier</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-modal-actions">
+                            <button type="button" id="adminCreateStaffCancel" class="btn btn-secondary">Hủy</button>
+                            <button type="button" id="adminCreateStaffSubmit" class="btn">Tạo tài khoản</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REPORTS SECTION (placeholder) -->
+            <section id="adminReportsSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Báo Cáo</h1>
+                <div class="card">
+                    <h2 class="card-header">Trạng Thái Chức Năng</h2>
+                    <div style="padding:1.25rem; color: var(--text-light);">
+                        Báo cáo chi tiết (doanh thu theo ngày/tháng, món bán chạy, v.v.) chưa được xây dựng.
+                        Bạn vẫn xem được số liệu tổng quan tại Dashboard; khi cần có thể thêm biểu đồ và bảng tại tab này.
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEWS SECTION -->
+            <section id="adminNewsSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Quản Lý Tin Tức</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Thêm, sửa hoặc xóa bài viết tin tức hiển thị trên trang Tin Tức.</p>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 class="card-header">Thêm / Sửa tin</h2>
+                    <div style="padding: 1.25rem;">
+                        <input type="hidden" id="adminNewsEditId" value="">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Tiêu đề</label>
+                            <input type="text" id="adminNewsTitle" class="admin-modal-input" placeholder="Tiêu đề bài viết">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Tóm tắt</label>
+                            <input type="text" id="adminNewsSummary" class="admin-modal-input" placeholder="Tóm tắt ngắn">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Nội dung</label>
+                            <div id="adminNewsContentEditorWrap" style="margin-top: 0.35rem;">
+                                <div id="adminNewsContentEditor"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Ảnh đại diện (tùy chọn)</label>
+                            <input type="file" id="adminNewsImageFile" accept="image/*">
+                            <input type="hidden" id="adminNewsImageCurrent" value="">
+                            <div id="adminNewsImagePreview" style="margin-top:0.5rem; display:none;"><img id="adminNewsImagePreviewImg" src="" alt="" style="max-width:200px; max-height:120px; border-radius:8px; object-fit:cover;"></div>
+                            <small style="color: rgba(255,255,255,0.6); display:block; margin-top:0.35rem;">Khi sửa: chọn file mới để đổi ảnh, không chọn thì giữ ảnh hiện tại.</small>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:flex; align-items:center; gap: 0.5rem; color: rgba(255,255,255,0.9); cursor:pointer;">
+                                <input type="checkbox" id="adminNewsPublished" checked>
+                                <span>Xuất bản (hiển thị trên trang Tin Tức)</span>
+                            </label>
+                        </div>
+                        <div style="display:flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <button type="button" id="adminNewsSubmitBtn" class="btn">Thêm tin</button>
+                            <button type="button" id="adminNewsCancelEditBtn" class="btn btn-secondary" style="display:none;">Hủy sửa</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2 class="card-header">Danh sách tin tức</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề</th>
+                                    <th>Tóm tắt</th>
+                                    <th>Ngày đăng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminNewsListBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Modal thông báo (thay alert) -->
+    <div id="adminMessageModal" class="admin-modal-overlay">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <div id="adminMessageTitle" class="admin-modal-title">Thông báo</div>
+                <button type="button" class="admin-modal-close" id="adminMessageClose" aria-label="Đóng">×</button>
+            </div>
+            <div id="adminMessageBody" class="admin-modal-body"></div>
+            <div class="admin-modal-actions">
+                <button type="button" id="adminMessageOk" class="btn">Đóng</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal xác nhận (thay confirm) -->
+    <div id="adminConfirmModal" class="admin-modal-overlay">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <div id="adminConfirmTitle" class="admin-modal-title">Xác nhận</div>
+                <button type="button" class="admin-modal-close" id="adminConfirmClose" aria-label="Đóng">×</button>
+            </div>
+            <div id="adminConfirmBody" class="admin-modal-body"></div>
+            <div class="admin-modal-actions">
+                <button type="button" id="adminConfirmCancel" class="btn btn-secondary">Hủy</button>
+                <button type="button" id="adminConfirmOk" class="btn">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal nhập (thay prompt) -->
+    <div id="adminInputModal" class="admin-modal-overlay">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <div id="adminInputTitle" class="admin-modal-title">Nhập</div>
+                <button type="button" class="admin-modal-close" id="adminInputClose" aria-label="Đóng">×</button>
+            </div>
+            <div class="admin-modal-body">
+                <div id="adminInputMessage" style="margin-bottom:0.5rem;"></div>
+                <input type="text" id="adminInputField" class="admin-modal-input" placeholder="">
+            </div>
+            <div class="admin-modal-actions">
+                <button type="button" id="adminInputCancel" class="btn btn-secondary">Hủy</button>
+                <button type="button" id="adminInputOk" class="btn">Xác nhận</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

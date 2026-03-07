@@ -211,12 +211,14 @@
                 <li><a href="index.html">Trang Chủ</a></li>
                 <li><a href="menu.html">Thực Đơn</a></li>
                 <li><a href="reservation.html">Đặt Bàn</a></li>
-                <li id="navAuthWrap" style="visibility: hidden;">
+                <li><a href="news.html">Tin Tức</a></li>
+                <li><a href="about.html">Về Chúng Tôi</a></li>
+                <li id="navAuthWrap" class="nav-right" style="visibility: hidden;">
                     <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
                     <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
                     <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
                 </li>
-                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng"><img src="images/icon.png" alt="Giỏ hàng" style="width:22px;height:22px;object-fit:contain;"></a></li>
             </ul>
         </nav>
     </header>
@@ -404,24 +406,19 @@
             const avatarImg = document.getElementById('profileAvatar');
             const avatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
 
-            let userData = { name: null, phone: null, address: null, photoURL: null, role: null };
+            let userData = { name: null, phone: null, address: null, photoURL: null, role: null, position: null };
             try {
                 const userRef = ref(database, `users/${user.uid}`);
                 const snapshot = await get(userRef);
                 if (snapshot.exists()) userData = { ...userData, ...snapshot.val() };
             } catch (err) { console.error(err); }
 
-            const role = userData.role || 'Customer';
-            if (role && role !== 'Customer') {
-                // Tài khoản nội bộ (Admin, Waiter, Chef, Cashier) không dùng trang thông tin người dùng
-                const roleRedirects = {
-                    Admin: 'manager/admin.html',
-                    Waiter: 'manager/waiter.html',
-                    Chef: 'manager/kitchen.html',
-                    Cashier: 'manager/payments.html'
-                };
-                const dest = roleRedirects[role] || 'manager/admin.html';
-                window.location.replace(dest);
+            const rawRole = userData.role;
+            const normalizedRole = rawRole ? String(rawRole).toLowerCase() : 'customer';
+            if (normalizedRole && normalizedRole !== 'customer') {
+                // Tài khoản nội bộ (admin/staff) không dùng trang thông tin người dùng
+                const redirectPath = normalizedRole === 'admin' ? 'manager/admin.html' : 'manager/staff.html';
+                window.location.replace(redirectPath);
                 return;
             }
 
@@ -538,13 +535,22 @@
                         reservationList.innerHTML = '<li class="profile-list-empty">Chưa có đặt bàn nào.</li>';
                         return;
                     }
-                    reservationList.innerHTML = list.map(r => `
+                    const statusText = {
+                        PENDING: 'Chờ xác nhận',
+                        CONFIRMED: 'Đã xác nhận',
+                        CANCELLED: 'Đã hủy'
+                    };
+                    reservationList.innerHTML = list.map(r => {
+                        const raw = (r.status || '').toUpperCase();
+                        const statusLabel = statusText[raw] || r.status || 'Đã đặt';
+                        return `
                         <li>
                             <div class="profile-list-row"><span>Thời gian:</span><span>${r.date || '—'} ${r.time || ''}</span></div>
                             <div class="profile-list-row"><span>Số người:</span><span>${r.guests || '—'}</span></div>
-                            <div class="profile-list-row"><span>Trạng thái:</span><span>${r.status || 'Đã đặt'}</span></div>
+                            <div class="profile-list-row"><span>Trạng thái:</span><span>${statusLabel}</span></div>
                         </li>
-                    `).join('');
+                    `;
+                    }).join('');
                 });
             } catch (err) {
                 reservationList.innerHTML = '<li class="profile-list-empty">Chưa có đặt bàn nào.</li>';

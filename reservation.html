@@ -16,13 +16,15 @@
             <ul>
                 <li><a href="index.html">Trang Chủ</a></li>
                 <li><a href="menu.html">Thực Đơn</a></li>
-                <li><a href="reservation.html">Đặt Bàn</a></li>
-                <li id="navAuthWrap" style="visibility: hidden;">
+                <li><a href="reservation.html" class="active">Đặt Bàn</a></li>
+                <li><a href="news.html">Tin Tức</a></li>
+                <li><a href="about.html">Về Chúng Tôi</a></li>
+                <li id="navAuthWrap" class="nav-right" style="visibility: hidden;">
                     <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
                     <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
                     <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
                 </li>
-                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng">🛒</a></li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng"><img src="images/icon.png" alt="Giỏ hàng" style="width:22px;height:22px;object-fit:contain;"></a></li>
             </ul>
         </nav>
     </header>
@@ -72,13 +74,11 @@
                             <label for="table">Chọn Bàn (Tùy chọn)</label>
                             <select id="table" name="table">
                                 <option value="">Để nhà hàng sắp xếp</option>
-                                <option value="1">Bàn 1 (2 người)</option>
-                                <option value="2">Bàn 2 (2 người)</option>
-                                <option value="3">Bàn 3 (4 người)</option>
-                                <option value="4">Bàn 4 (4 người)</option>
-                                <option value="5">Bàn 5 (6 người)</option>
-                                <option value="6">Bàn 6 (6 người)</option>
-                                <option value="7">Bàn VIP (8 người)</option>
+                                <option value="1">Bàn Counter 1 (ghế lẻ)</option>
+                                <option value="2">Bàn Counter 2 (ghế đôi)</option>
+                                <option value="3">Bàn Western (2,4,6 người)</option>
+                                <option value="4">Bàn Private Room (4-8 người)</option>
+                                <option value="5">Phòng riêng (2,4,6 người)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -87,30 +87,34 @@
                         </div>
                         <button type="submit" class="btn" style="width: 100%;">Xác Nhận Đặt Bàn</button>
                     </form>
+                    <div id="reservationMessage" style="display:none; margin-top:1rem; padding:0.75rem 1rem; border-radius:8px; border:1px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.08); color:#ecfdf5; font-size:0.9rem;">
+                        Đặt bàn thành công! Chúng tôi sẽ sớm liên hệ để xác nhận.
+                    </div>
                 </div>
 
                 <div class="card">
                     <h2 class="card-header">Thông Tin Nhà Hàng</h2>
                     <div style="margin-bottom: 2rem;">
                         <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📍 Địa Chỉ</h3>
-                        <p>123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+                        <p>124A, Đường Trưng Nữ Vương, Phường 1, TP. Vĩnh Long</p>
                     </div>
                     <div style="margin-bottom: 2rem;">
                         <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🕐 Giờ Mở Cửa</h3>
-                        <p><strong>Thứ 2 - Chủ Nhật:</strong> 11:00 - 22:00</p>
+                        <p><strong>Thứ 2 - Thứ 7:</strong> 8:00 - 21:00</p>
+                        <p><strong>Chủ Nhật:</strong> 8:00 - 22:00</p>
                     </div>
                     <div style="margin-bottom: 2rem;">
                         <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📞 Liên Hệ</h3>
-                        <p>Điện thoại: 0123 456 789</p>
-                        <p>Email: info@sakurarestaurant.com</p>
+                        <p>Điện thoại: 082 826 7101</p>
+                        <p>Email: aintosushi@gmail.com</p>
                     </div>
                     <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 10px;">
                         <h3 style="margin-bottom: 1rem; color: var(--primary-color);">💡 Lưu Ý</h3>
                         <ul style="list-style: none; padding-left: 0;">
-                            <li style="margin-bottom: 0.5rem;">✓ Vui lòng đến đúng giờ đã đặt</li>
-                            <li style="margin-bottom: 0.5rem;">✓ Đặt bàn trước ít nhất 2 giờ</li>
-                            <li style="margin-bottom: 0.5rem;">✓ Có thể hủy đặt bàn trước 1 giờ</li>
-                            <li style="margin-bottom: 0.5rem;">✓ Chúng tôi sẽ gọi điện xác nhận</li>
+                            <li style="margin-bottom: 0.5rem; color:#222; font-weight:500;">✓ Vui lòng đến đúng giờ đã đặt</li>
+                            <li style="margin-bottom: 0.5rem; color:#222; font-weight:500;">✓ Đặt bàn trước ít nhất 2 giờ</li>
+                            <li style="margin-bottom: 0.5rem; color:#222; font-weight:500;">✓ Có thể hủy đặt bàn trước 1 giờ</li>
+                            <li style="margin-bottom: 0.5rem; color:#222; font-weight:500;">✓ Chúng tôi sẽ gọi điện xác nhận</li>
                         </ul>
                     </div>
                 </div>
@@ -125,7 +129,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
@@ -209,16 +213,61 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');
+            const msgBox = document.getElementById('reservationMessage');
             if (!form) return;
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
                 if (!currentUser) {
-                    e.preventDefault();
+                    // Lưu lại URL để quay về sau khi đăng nhập
+                    try {
+                        sessionStorage.setItem('returnUrl', window.location.href);
+                    } catch (err) {}
                     window.location.href = 'auth/login.html';
                     return;
                 }
-                e.preventDefault();
-                alert('Đặt bàn thành công! (demo, chưa lưu vào hệ thống)');
-                form.reset();
+
+                const nameEl = document.getElementById('name');
+                const phoneEl = document.getElementById('phone');
+                const emailEl = document.getElementById('email');
+                const dateEl = document.getElementById('date');
+                const timeEl = document.getElementById('time');
+                const guestsEl = document.getElementById('guests');
+                const tableEl = document.getElementById('table');
+                const notesEl = document.getElementById('notes');
+
+                const payload = {
+                    userId: currentUser.uid,
+                    name: nameEl?.value.trim() || '',
+                    phone: phoneEl?.value.trim() || '',
+                    email: emailEl?.value.trim() || '',
+                    date: dateEl?.value || '',
+                    time: timeEl?.value || '',
+                    guests: guestsEl?.value || '',
+                    requestedTable: tableEl?.value || '',
+                    note: notesEl?.value.trim() || '',
+                    status: 'PENDING',
+                    createdAt: Date.now()
+                };
+
+                try {
+                    const reservationsRef = ref(database, 'reservations');
+                    await push(reservationsRef, payload);
+
+                    if (msgBox) {
+                        msgBox.style.display = 'block';
+                        msgBox.textContent = 'Đặt bàn thành công! Chúng tôi sẽ sớm liên hệ để xác nhận.';
+                    }
+                    form.reset();
+                } catch (err) {
+                    console.error('Create reservation failed', err);
+                    if (msgBox) {
+                        msgBox.style.display = 'block';
+                        msgBox.style.borderColor = 'rgba(239,68,68,0.6)';
+                        msgBox.style.background = 'rgba(239,68,68,0.08)';
+                        msgBox.textContent = 'Đặt bàn thất bại, vui lòng thử lại sau.';
+                    }
+                }
             });
         });
     </script>

@@ -1,0 +1,2587 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhân Viên - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body.theme-aintosushi {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, Poppins, sans-serif;
+        }
+
+        /* Tiêu đề & mô tả trang staff: vàng gold / trắng rõ ràng */
+        #staffMainTitle {
+            color: var(--gold) !important;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+        }
+        #staffMainSubtitle {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 1rem;
+        }
+        /* Tiêu đề từng khu vực (Quản Lý Đơn Hàng, Xác Nhận Đặt Bàn, Sơ Đồ Bàn Ăn...) */
+        #waiterSection h2,
+        #chefSection h2,
+        #cashierSection h2 {
+            color: var(--gold) !important;
+            font-weight: 600;
+        }
+        #waiterSection h2 + p,
+        #waiterSection .tab-content p:first-of-type,
+        #chefSection h2 + p,
+        #cashierSection h2 + p {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+        /* Tab Đơn Hàng / Bàn Ăn / Đặt Bàn: nền tối, chữ sáng, tab active vàng */
+        .tab-container .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .tab-container .tab {
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            background: rgba(26, 26, 26, 0.9);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .tab-container .tab:hover {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+        .tab-container .tab.active {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #0f0f0f;
+            border-color: var(--gold);
+            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+        }
+        /* Ẩn/hiện nội dung tab theo .active */
+        #waiterSection .tab-content {
+            display: none;
+        }
+        #waiterSection .tab-content.active {
+            display: block;
+        }
+        /* Card header trong main-content staff */
+        .main-content .card-header {
+            color: var(--gold) !important;
+            font-weight: 600;
+            border-bottom-color: rgba(212, 175, 55, 0.3) !important;
+        }
+
+        /* Tăng độ tương phản chữ trong bảng waiter */
+        #waiterOrdersBody tr td {
+            color: #111;
+        }
+        #waiterOrdersBody tr td small {
+            color: rgba(0, 0, 0, 0.7);
+        }
+        #waiterReservationsBody tr td {
+            color: #111;
+        }
+        #waiterReservationsBody tr td small {
+            color: rgba(0, 0, 0, 0.7);
+        }
+        /* Chữ trong bảng khu vực Cashier và các bảng trong main-content */
+        #cashierSection .card table td,
+        #cashierSection .card table td small,
+        .main-content .card table td,
+        .main-content .card table td small {
+            color: #1a1a1a !important;
+        }
+        .main-content .card table td small {
+            color: #333 !important;
+        }
+        /* Đảm bảo badge vẫn nổi bật */
+        .badge {
+            font-weight: 600;
+        }
+        /* Modal chi tiết / thông báo theo style hiện tại */
+        .staff-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .staff-modal {
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.7);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+            max-width: 620px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .staff-modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .staff-modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        .staff-modal-close {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .staff-modal-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+            overflow-y: auto;
+        }
+        .staff-modal-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .staff-modal-label {
+            color: rgba(255, 255, 255, 0.7);
+            min-width: 120px;
+        }
+        .staff-modal-value {
+            color: #fff;
+            text-align: right;
+        }
+        .staff-modal-section-title {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gold);
+            font-size: 0.95rem;
+        }
+        .staff-modal-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .staff-modal-list li {
+            padding: 0.25rem 0;
+            color: #fff;
+            font-size: 0.92rem;
+        }
+
+        /* Modal xác nhận */
+        .staff-confirm-modal {
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.7);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .staff-confirm-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .staff-confirm-actions {
+            padding: 0.75rem 1.5rem 1.25rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        .staff-btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.45rem 1rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .staff-btn-primary {
+            background: var(--gold);
+            border: none;
+            color: #111;
+            padding: 0.45rem 1.1rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Tăng tương phản chữ trong sơ đồ bàn ăn */
+        #tablesGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+        #tablesGrid .table-card {
+            background: #131313;
+            border-radius: 18px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55);
+            padding: 1.2rem 1.1rem;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        #tablesGrid .table-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+            border-color: rgba(212, 175, 55, 0.6);
+        }
+        #tablesGrid .table-card h3 {
+            color: #f9fafb;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        #tablesGrid .table-card p {
+            color: rgba(249, 250, 251, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 0.35rem;
+        }
+        .table-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.22rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #111;
+        }
+        .table-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .table-status-available {
+            background: rgba(16, 185, 129, 0.15);
+            color: #22c55e;
+        }
+        .table-status-reserved {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+        .table-status-occupied {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f97373;
+        }
+        .table-card-actions {
+            margin-top: 0.7rem;
+        }
+        .table-card-actions .btn {
+            width: 100%;
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.88rem;
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+        }
+        .table-card-actions .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+        }
+        .table-card-actions .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .table-card-delete {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            background: transparent;
+            border: none;
+            color: rgba(248, 250, 252, 0.55);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.1rem;
+        }
+        .table-card-delete:hover {
+            color: #f97373;
+        }
+
+        /* Chọn bàn trống: chữ trắng, nền đen (ô chọn + bảng xổ xuống) */
+        #walkinTable {
+            background: #111 !important;
+            color: #fff !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        #walkinTable option {
+            background: #111;
+            color: #fff;
+        }
+
+        /* Modal Thêm món (waiter) */
+        .staff-add-menu-modal .staff-modal-body { max-height: 60vh; overflow-y: auto; }
+        .staff-add-menu-list { list-style: none; padding: 0; margin: 0; }
+        .staff-add-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .staff-add-menu-item:last-child { border-bottom: none; }
+        .staff-add-menu-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
+        .staff-add-menu-item .thumb-placeholder { width: 48px; height: 48px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .staff-add-menu-item .info { flex: 1; min-width: 0; }
+        .staff-add-menu-item .name { color: #fff; font-weight: 600; font-size: 0.95rem; }
+        .staff-add-menu-item .price { color: var(--gold); font-size: 0.85rem; }
+        .staff-add-menu-qty {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .staff-add-menu-qty button {
+            width: 32px; height: 32px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .staff-add-menu-qty button:hover { background: var(--gold); color: #111; }
+        .staff-add-menu-qty span { min-width: 28px; text-align: center; color: #fff; font-weight: 600; font-size: 0.9rem; }
+    </style>
+</head>
+<body class="theme-aintosushi">
+    <script type="module">
+        import { initRoleGuard } from '../js/roleGuard.js';
+        import { logout, database } from '../js/auth.js';
+        import { ref, onValue, update, push, remove, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Khởi tạo bảo vệ role (chỉ staff mới vào được)
+        initRoleGuard();
+
+        // ===== Helpers chung =====
+        const ORDER_STATUS_LABELS = {
+            PENDING: 'Chờ duyệt',
+            APPROVED: 'Đã duyệt',
+            COOKING: 'Đang chế biến',
+            READY: 'Sẵn sàng phục vụ',
+            COMPLETED: 'Hoàn thành',
+            CANCELLED: 'Đã hủy'
+        };
+
+        const ORDER_STATUS_BADGES = {
+            PENDING: 'badge-warning',
+            APPROVED: 'badge-primary',
+            COOKING: 'badge-info',
+            READY: 'badge-success',
+            COMPLETED: 'badge-success',
+            CANCELLED: 'badge-danger'
+        };
+
+        const RESERVATION_STATUS_LABELS = {
+            PENDING: 'Chờ duyệt',
+            CONFIRMED: 'Đã duyệt',
+            CANCELLED: 'Đã hủy'
+        };
+
+        const RESERVATION_STATUS_BADGES = {
+            PENDING: 'badge-warning',
+            CONFIRMED: 'badge-success',
+            CANCELLED: 'badge-danger'
+        };
+
+        const TABLE_STATUS_LABELS = {
+            AVAILABLE: 'Trống',
+            RESERVED: 'Đã đặt trước',
+            OCCUPIED: 'Đang phục vụ'
+        };
+
+        const TABLE_STATUS_BADGES = {
+            AVAILABLE: 'table-status-available',
+            RESERVED: 'table-status-reserved',
+            OCCUPIED: 'table-status-occupied'
+        };
+
+        // Cấu hình sơ đồ bàn mặc định
+        const DEFAULT_TABLES = [
+            {
+                id: 'counter1',
+                name: 'Bàn Counter 1',
+                label: 'Bàn Counter 1 (ghế lẻ)',
+                capacity: 1,
+                seats: 1,
+                status: 'AVAILABLE',
+                type: 'counter'
+            },
+            {
+                id: 'counter2',
+                name: 'Bàn Counter 2',
+                label: 'Bàn Counter 2 (ghế đôi)',
+                capacity: 2,
+                seats: 2,
+                status: 'AVAILABLE',
+                type: 'counter'
+            },
+            {
+                id: 'western',
+                name: 'Bàn Western',
+                label: 'Bàn Western (2,4,6 người)',
+                capacity: 6,
+                seats: 6,
+                status: 'AVAILABLE',
+                type: 'western'
+            },
+            {
+                id: 'private_room',
+                name: 'Private Room',
+                label: 'Bàn Private Room (4-8 người)',
+                capacity: 8,
+                seats: 8,
+                status: 'AVAILABLE',
+                type: 'private'
+            },
+            {
+                id: 'vip_room',
+                name: 'Phòng riêng',
+                label: 'Phòng riêng (2,4,6 người)',
+                capacity: 6,
+                seats: 6,
+                status: 'AVAILABLE',
+                type: 'vip'
+            }
+        ];
+        const DEFAULT_TABLE_IDS = new Set(DEFAULT_TABLES.map(t => String(t.id)));
+
+        const MENU_PATH = 'menu/menuOnline';
+        let ordersCache = {};
+        let reservationsCache = {};
+        let tablesCache = {};
+        let menuCache = {}; // Menu chung (chỉ món available)
+        let deletedDefaultTableIdsCache = {}; // Bàn mặc định đã bị xóa (ẩn khỏi sơ đồ)
+
+        // Thứ tự nhóm bàn: Counter → Western → Private Room → Phòng riêng → Khác
+        const TABLE_CATEGORY_ORDER = { counter: 0, western: 1, private: 2, vip: 3, other: 4 };
+        function getTableSortKey(t) {
+            const raw = String(t.name || t.label || t.id || '');
+            const name = raw.toLowerCase();
+            let cat = TABLE_CATEGORY_ORDER.other;
+            let num = 0;
+            if (/counter/.test(name)) {
+                cat = TABLE_CATEGORY_ORDER.counter;
+                const m = raw.match(/counter\s*(\d+)/i);
+                num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0);
+            } else if (/western/.test(name)) {
+                cat = TABLE_CATEGORY_ORDER.western;
+                const m = raw.match(/western\s*(\d+)/i);
+                num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0);
+            } else if (/private/.test(name)) {
+                cat = TABLE_CATEGORY_ORDER.private;
+                const m = raw.match(/private\s*(\d+)/i);
+                num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0);
+            } else if (/vip|phòng riêng|phong rieng/.test(name)) {
+                cat = TABLE_CATEGORY_ORDER.vip;
+                const m = raw.match(/(?:vip|phòng riêng|phong rieng)\s*(\d+)/i);
+                num = m ? parseInt(m[1], 10) : (raw.match(/\d+/) ? parseInt(raw.match(/\d+/)[0], 10) : 0);
+            } else {
+                const numMatch = raw.match(/\d+/);
+                num = numMatch ? parseInt(numMatch[0], 10) : 0;
+            }
+            return [cat, num];
+        }
+        function sortTablesByCategoryAndNumber(tables) {
+            return [...tables].sort((a, b) => {
+                const [ca, na] = getTableSortKey(a);
+                const [cb, nb] = getTableSortKey(b);
+                if (ca !== cb) return ca - cb;
+                return na - nb;
+            });
+        }
+
+        // Trả về danh sách bàn đã merge (DB + mặc định) kèm _status; bỏ qua bàn mặc định đã xóa; sắp xếp Counter → Western → Private → Phòng riêng
+        function getTablesWithStatus() {
+            const data = tablesCache || {};
+            const deleted = deletedDefaultTableIdsCache || {};
+            let tables = Object.entries(data)
+                .filter(([id]) => !deleted[String(id)])
+                .map(([id, t]) => ({ id, ...t }));
+            if (!tables.length) {
+                tables = DEFAULT_TABLES.filter(t => !deleted[String(t.id)]).map(t => ({ ...t }));
+            } else {
+                const existingIds = new Set(tables.map(t => String(t.id)));
+                DEFAULT_TABLES.forEach(def => {
+                    if (deleted[String(def.id)]) return;
+                    if (!existingIds.has(String(def.id))) tables.push({ ...def });
+                });
+            }
+            const filtered = tables.filter(t => !deleted[String(t.id)]).map(t => ({ ...t, _status: normalizeTableStatus(t.status) }));
+            return sortTablesByCategoryAndNumber(filtered);
+        }
+
+        const ORDER_PAGE_SIZE = 8;
+        let orderPage = 0;
+
+        // ===== Modal chi tiết / thông báo / xác nhận =====
+        function openDetailModal(title, bodyHtml) {
+            const overlay = document.getElementById('staffDetailModal');
+            const titleEl = document.getElementById('staffDetailModalTitle');
+            const bodyEl = document.getElementById('staffDetailModalBody');
+            if (!overlay || !titleEl || !bodyEl) return;
+            titleEl.textContent = title || 'Chi tiết';
+            bodyEl.innerHTML = bodyHtml || '';
+            overlay.style.display = 'flex';
+        }
+
+        function closeDetailModal() {
+            const overlay = document.getElementById('staffDetailModal');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function showMessageModal(title, messageHtml) {
+            openDetailModal(title || 'Thông báo', `<p>${messageHtml}</p>`);
+        }
+
+        function openConfirmModal(options) {
+            const overlay = document.getElementById('staffConfirmModal');
+            const titleEl = document.getElementById('staffConfirmTitle');
+            const bodyEl = document.getElementById('staffConfirmBody');
+            const cancelBtn = document.getElementById('staffConfirmCancel');
+            const okBtn = document.getElementById('staffConfirmOk');
+            if (!overlay || !titleEl || !bodyEl || !cancelBtn || !okBtn) {
+                return Promise.resolve(false);
+            }
+            const title = options?.title || 'Xác nhận';
+            const message = options?.message || '';
+            const okText = options?.okText || 'Đồng ý';
+            const cancelText = options?.cancelText || 'Hủy';
+
+            titleEl.textContent = title;
+            bodyEl.innerHTML = message;
+            okBtn.textContent = okText;
+            cancelBtn.textContent = cancelText;
+
+            overlay.style.display = 'flex';
+
+            return new Promise((resolve) => {
+                function cleanup(result) {
+                    overlay.style.display = 'none';
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                function onCancel() { cleanup(false); }
+                function onOk() { cleanup(true); }
+                function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+                overlay.addEventListener('click', onOverlay);
+            });
+        }
+
+        function openInputModal(options) {
+            const overlay = document.getElementById('staffInputModal');
+            const titleEl = document.getElementById('staffInputTitle');
+            const bodyEl = document.getElementById('staffInputBody');
+            const textarea = document.getElementById('staffInputTextarea');
+            const cancelBtn = document.getElementById('staffInputCancel');
+            const okBtn = document.getElementById('staffInputOk');
+            if (!overlay || !titleEl || !bodyEl || !textarea || !cancelBtn || !okBtn) {
+                return Promise.resolve(null);
+            }
+
+            const title = options?.title || 'Nhập lý do';
+            const message = options?.message || '';
+            const placeholder = options?.placeholder || '';
+
+            titleEl.textContent = title;
+            bodyEl.innerHTML = message;
+            textarea.value = '';
+            textarea.placeholder = placeholder;
+
+            overlay.style.display = 'flex';
+            textarea.focus();
+
+            return new Promise((resolve) => {
+                function cleanup(result) {
+                    overlay.style.display = 'none';
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                function onCancel() { cleanup(null); }
+                function onOk() {
+                    const value = textarea.value.trim();
+                    if (!value) return;
+                    cleanup(value);
+                }
+                function onOverlay(e) { if (e.target === overlay) cleanup(null); }
+
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+                overlay.addEventListener('click', onOverlay);
+            });
+        }
+
+        function orderCode4(id) {
+            if (!id) return '—';
+            const s = String(id);
+            const num = s.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            return String(Math.abs(num) % 10000).padStart(4, '0');
+        }
+
+        function formatPrice(n) {
+            if (n == null || isNaN(n)) return '—';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ';
+        }
+
+        function formatDateTime(ms) {
+            if (!ms) return '—';
+            const d = new Date(ms);
+            return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) +
+                   '<br><small style="color: var(--text-light);">' +
+                   d.toLocaleDateString('vi-VN') +
+                   '</small>';
+        }
+
+        function normalizeStatus(raw, type) {
+            if (!raw) return type === 'reservation' ? 'PENDING' : 'PENDING';
+            const up = String(raw).toUpperCase();
+            if (type === 'order') {
+                if (up === 'CONFIRMED') return 'APPROVED';
+                if (up === 'PAID') return 'COMPLETED';
+            }
+            return up;
+        }
+
+        function normalizeTableStatus(raw) {
+            if (!raw) return 'AVAILABLE';
+            return String(raw).toUpperCase();
+        }
+
+        function ensureWaiterPermission() {
+            const cu = window.currentUser;
+            if (!cu || cu.role !== 'staff' || cu.position !== 'waiter') {
+                return false;
+            }
+            return true;
+        }
+        function ensureChefPermission() {
+            const cu = window.currentUser;
+            if (!cu || cu.role !== 'staff' || cu.position !== 'chef') {
+                return false;
+            }
+            return true;
+        }
+
+        const CHEF_TAB_STATUS = { pending: 'APPROVED', preparing: 'COOKING', ready: 'READY', completed: 'COMPLETED' };
+        let chefTabStatus = 'pending';
+
+        let addMenuCurrentOrderId = null;
+        function openAddMenuModal(orderId) {
+            if (!orderId || !ensureWaiterPermission()) return;
+            const order = ordersCache[orderId];
+            if (!order) {
+                showMessageModal('Lỗi', 'Không tìm thấy đơn hàng.');
+                return;
+            }
+            addMenuCurrentOrderId = orderId;
+            const listEl = document.getElementById('staffAddMenuList');
+            if (!listEl) return;
+            const menuList = Object.values(menuCache || {}).filter(m => m.available !== false);
+            if (!menuList.length) {
+                listEl.innerHTML = '<li style="color: rgba(255,255,255,0.6); padding: 1rem;">Chưa có món nào (hoặc tất cả đã hết món).</li>';
+            } else {
+                listEl.innerHTML = menuList.map(m => {
+                    const name = m.name || m.nameEn || 'Món';
+                    const price = Number(m.price) || 0;
+                    const img = (m.image && m.image.trim()) ? m.image.trim() : '';
+                    const thumb = img ? `<img src="${img}" alt="">` : '<div class="thumb-placeholder">🍽️</div>';
+                    return `
+                        <li class="staff-add-menu-item" data-item-id="${m.id}">
+                            ${thumb}
+                            <div class="info">
+                                <div class="name">${name}</div>
+                                <div class="price">${formatPrice(price)}</div>
+                            </div>
+                            <div class="staff-add-menu-qty">
+                                <button type="button" class="btn-add-menu-minus" aria-label="Giảm">−</button>
+                                <span class="qty-value">0</span>
+                                <button type="button" class="btn-add-menu-plus" aria-label="Tăng">+</button>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+                listEl.querySelectorAll('.btn-add-menu-plus').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const span = btn.closest('.staff-add-menu-item').querySelector('.qty-value');
+                        const v = Math.max(0, parseInt(span.textContent, 10) + 1);
+                        span.textContent = v;
+                    });
+                });
+                listEl.querySelectorAll('.btn-add-menu-minus').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const span = btn.closest('.staff-add-menu-item').querySelector('.qty-value');
+                        const v = Math.max(0, parseInt(span.textContent, 10) - 1);
+                        span.textContent = v;
+                    });
+                });
+            }
+            document.getElementById('staffAddMenuModal').style.display = 'flex';
+        }
+        function closeAddMenuModal() {
+            document.getElementById('staffAddMenuModal').style.display = 'none';
+            addMenuCurrentOrderId = null;
+        }
+        async function submitAddMenuToOrder() {
+            const orderId = addMenuCurrentOrderId;
+            if (!orderId) return;
+            const order = ordersCache[orderId];
+            if (!order) {
+                showMessageModal('Lỗi', 'Đơn hàng không còn tồn tại.');
+                closeAddMenuModal();
+                return;
+            }
+            const listEl = document.getElementById('staffAddMenuList');
+            const selected = [];
+            listEl.querySelectorAll('.staff-add-menu-item[data-item-id]').forEach(row => {
+                const id = row.getAttribute('data-item-id');
+                const qty = parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0;
+                if (qty > 0 && menuCache[id]) {
+                    const m = menuCache[id];
+                    selected.push({
+                        id: m.id,
+                        name: m.name || m.nameEn || 'Món',
+                        image: (m.image && m.image.trim()) ? m.image.trim() : '',
+                        price: Number(m.price) || 0,
+                        quantity: qty
+                    });
+                }
+            });
+            if (!selected.length) {
+                showMessageModal('Chưa chọn món', 'Vui lòng chọn ít nhất một món với số lượng > 0.');
+                return;
+            }
+            const currentItems = Array.isArray(order.items) ? [...order.items] : [];
+            const byId = {};
+            currentItems.forEach(it => {
+                const id = String(it.id || it.itemId || '');
+                if (!byId[id]) byId[id] = { ...it, quantity: Number(it.quantity) || 0 };
+                else byId[id].quantity += Number(it.quantity) || 0;
+            });
+            selected.forEach(it => {
+                const id = String(it.id);
+                if (!byId[id]) byId[id] = { id: it.id, name: it.name, image: it.image || '', price: it.price, quantity: it.quantity };
+                else byId[id].quantity += it.quantity;
+            });
+            const newItems = Object.values(byId);
+            let totalAmount = 0;
+            newItems.forEach(it => { totalAmount += (Number(it.price) || 0) * (Number(it.quantity) || 0); });
+            try {
+                await update(ref(database, 'orders/' + orderId), {
+                    items: newItems,
+                    totalAmount: Math.round(totalAmount)
+                });
+                showMessageModal('Đã thêm món', 'Đã cập nhật đơn hàng.');
+                closeAddMenuModal();
+            } catch (e) {
+                console.error('Thêm món thất bại', e);
+                showMessageModal('Lỗi', 'Không thể cập nhật đơn. Vui lòng thử lại.');
+            }
+        }
+
+        function bindLogout() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (!logoutBtn) return;
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const ok = await openConfirmModal({
+                    title: 'Đăng xuất',
+                    message: 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản nhân viên?',
+                    okText: 'Đăng xuất',
+                    cancelText: 'Hủy'
+                });
+                if (!ok) return;
+                await logout();
+            });
+        }
+
+        function setupSidebarByPosition() {
+            const sidebarTitle = document.getElementById('staffSidebarTitle');
+            const sidebarSubtitle = document.getElementById('staffSidebarSubtitle');
+            const waiterItems = document.querySelectorAll('.sidebar-item-waiter');
+            const chefItems = document.querySelectorAll('.sidebar-item-chef');
+            const cashierItems = document.querySelectorAll('.sidebar-item-cashier');
+
+            const mainTitle = document.getElementById('staffMainTitle');
+            const mainSubtitle = document.getElementById('staffMainSubtitle');
+
+            const pos = window.currentUser?.position || null;
+
+            // Ẩn tất cả, sau đó hiển thị theo position
+            [...waiterItems, ...chefItems, ...cashierItems].forEach(el => el.style.display = 'none');
+
+            if (pos === 'chef') {
+                chefItems.forEach(el => el.style.display = 'block');
+                if (sidebarTitle) sidebarTitle.textContent = 'Ain Tō Sushi';
+                if (sidebarSubtitle) sidebarSubtitle.textContent = 'Nhân viên bếp';
+                if (mainTitle) mainTitle.textContent = 'Quản Lý Đơn Bếp';
+                if (mainSubtitle) mainSubtitle.textContent = 'Theo dõi và chuẩn bị các món ăn';
+                showSection('chef');
+            } else if (pos === 'cashier') {
+                cashierItems.forEach(el => el.style.display = 'block');
+                if (sidebarTitle) sidebarTitle.textContent = 'Ain Tō Sushi';
+                if (sidebarSubtitle) sidebarSubtitle.textContent = 'Thu ngân';
+                if (mainTitle) mainTitle.textContent = 'Thanh Toán & Lịch Sử';
+                if (mainSubtitle) mainSubtitle.textContent = 'Quản lý thanh toán và lịch sử đơn hàng';
+                showSection('cashier');
+            } else {
+                // Mặc định waiter
+                waiterItems.forEach(el => el.style.display = 'block');
+                if (sidebarTitle) sidebarTitle.textContent = 'Ain Tō Sushi';
+                if (sidebarSubtitle) sidebarSubtitle.textContent = 'Nhân viên phục vụ';
+                if (mainTitle) mainTitle.textContent = 'Quản Lý Phục Vụ';
+                if (mainSubtitle) mainSubtitle.textContent = 'Quản lý bàn, đặt bàn và đơn khách vừa đặt';
+                showSection('waiter');
+            }
+        }
+
+        function showSection(section) {
+            const waiterSection = document.getElementById('waiterSection');
+            const chefSection = document.getElementById('chefSection');
+            const cashierSection = document.getElementById('cashierSection');
+            if (waiterSection) waiterSection.style.display = section === 'waiter' ? 'block' : 'none';
+            if (chefSection) chefSection.style.display = section === 'chef' ? 'block' : 'none';
+            if (cashierSection) cashierSection.style.display = section === 'cashier' ? 'block' : 'none';
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('#waiterSection .tab-container .tab');
+            const tabContents = document.querySelectorAll('#waiterSection .tab-content');
+
+            function activateTab(targetId) {
+                const targetEl = document.getElementById(targetId);
+                if (!targetEl) return;
+                tabs.forEach(t => {
+                    t.classList.toggle('active', t.getAttribute('data-tab') === targetId);
+                });
+                tabContents.forEach(c => {
+                    c.classList.toggle('active', c.id === targetId);
+                });
+                document.querySelectorAll('.sidebar-item-waiter a[href^="#waiter-"]').forEach(a => {
+                    a.classList.toggle('active', a.getAttribute('href') === '#' + targetId);
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    if (targetTab) activateTab(targetTab);
+                });
+            });
+
+            document.querySelectorAll('.sidebar-item-waiter a[href^="#waiter-"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#waiter-') && href.length > 1) {
+                        const id = href.slice(1);
+                        if (document.getElementById(id)) {
+                            e.preventDefault();
+                            activateTab(id);
+                        }
+                    }
+                });
+            });
+        }
+
+        // ===== ĐƠN HÀNG - ORDERS =====
+        function renderWaiterOrders() {
+            const tbody = document.getElementById('waiterOrdersBody');
+            if (!tbody) return;
+            const filterEl = document.getElementById('orderStatusFilter');
+            const filterStatus = filterEl?.value || '';
+
+            const data = ordersCache || {};
+            const fullList = !data ? [] : Object.entries(data)
+                .map(([id, o]) => {
+                    const status = normalizeStatus(o.status, 'order');
+                    return { id, ...o, _status: status };
+                })
+                .filter(o => {
+                    if (!o._status) return false;
+                    // Waiter chỉ quan tâm các trạng thái chính
+                    if (!['PENDING', 'APPROVED', 'COOKING', 'READY', 'COMPLETED', 'CANCELLED'].includes(o._status)) {
+                        return false;
+                    }
+                    if (filterStatus && o._status !== filterStatus) return false;
+                    return true;
+                })
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            if (!fullList.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding:2rem; color: var(--text-light);">
+                            Chưa có đơn hàng nào.
+                        </td>
+                    </tr>
+                `;
+
+                const pageInfo = document.getElementById('orderPageInfo');
+                const prevBtn = document.getElementById('orderPagePrev');
+                const nextBtn = document.getElementById('orderPageNext');
+                if (pageInfo) pageInfo.textContent = '';
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(fullList.length / ORDER_PAGE_SIZE));
+            if (orderPage >= totalPages) orderPage = totalPages - 1;
+            if (orderPage < 0) orderPage = 0;
+            const start = orderPage * ORDER_PAGE_SIZE;
+            const list = fullList.slice(start, start + ORDER_PAGE_SIZE);
+
+            tbody.innerHTML = list.map(o => {
+                const code = orderCode4(o.id);
+                const info = o.customerInfo || {};
+                const name = info.name || 'Khách lẻ';
+                const phone = info.phone || '';
+                const note = o.note || o.customerNote || o.specialRequest || '';
+                const items = (o.items || []).map(it => {
+                    const q = Math.max(1, Number(it.quantity) || 1);
+                    return `${it.name || 'Món'} (x${q})`;
+                }).join('<br>');
+                const status = o._status;
+                const statusLabel = ORDER_STATUS_LABELS[status] || status || 'Đang xử lý';
+                const badgeClass = ORDER_STATUS_BADGES[status] || 'badge-warning';
+
+                const canApprove = status === 'PENDING';
+                const canReject = status === 'PENDING';
+                const isDelivery = !!info.address || !!o.deliveryAddress || !!o.isDelivery || !!o.isTakeAway;
+                const hasTable = o.tableId || o.tableName || o.tableNumber;
+                // Hoàn thành:
+                // - Đơn giao hàng / mang về (isDelivery): waiter được bấm Hoàn thành (READY → COMPLETED).
+                // - Đơn tại quán (có bàn): chỉ thu ngân thanh toán, waiter không có nút Hoàn thành.
+                const canComplete = status === 'READY' && isDelivery;
+
+                return `
+                    <tr data-id="${o.id}">
+                        <td><strong>${code}</strong></td>
+                        <td>
+                            ${o.tableName || o.tableNumber || o.tableId ? `Bàn: ${o.tableName || o.tableNumber || o.tableId}` : 'Chưa gán bàn'}
+                            ${info.address ? `<br><small style="color: var(--text-light);">Giao hàng / mang về</small>` : ''}
+                        </td>
+                        <td>${name}${phone ? `<br><small style="color: var(--text-light);">${phone}</small>` : ''}</td>
+                        <td><small>${items || '-'}</small></td>
+                        <td>${formatPrice(o.totalAmount)}</td>
+                        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+                        <td>${formatDateTime(o.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm btn-order-detail" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Chi tiết</button>
+                            ${canApprove ? `<button class="btn btn-success btn-sm btn-order-approve" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%; margin-bottom: 0.3rem;">Duyệt đơn</button>` : ''}
+                            ${canReject ? `<button class="btn btn-danger btn-sm btn-order-reject" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%; margin-bottom: 0.3rem;">Từ chối</button>` : ''}
+                            ${canComplete ? `<button class="btn btn-success btn-sm btn-order-complete" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Hoàn thành</button>` : ''}
+                            ${note ? `<br><small style="color: var(--text-light); display:block; margin-top:0.25rem;">Có ghi chú</small>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const pageInfo = document.getElementById('orderPageInfo');
+            const prevBtn = document.getElementById('orderPagePrev');
+            const nextBtn = document.getElementById('orderPageNext');
+            if (pageInfo) {
+                pageInfo.textContent = totalPages > 1 ? `${orderPage + 1} / ${totalPages}` : '';
+            }
+            if (prevBtn) prevBtn.disabled = orderPage <= 0 || totalPages <= 1;
+            if (nextBtn) nextBtn.disabled = orderPage >= totalPages - 1 || totalPages <= 1;
+
+            tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !data[id]) return;
+                    const o = data[id];
+                    const info = o.customerInfo || {};
+                    const status = normalizeStatus(o.status, 'order');
+                    const statusLabel = ORDER_STATUS_LABELS[status] || status;
+                    const note = o.note || o.customerNote || o.specialRequest || '';
+                    const tableInfo = o.tableName || o.tableNumber || o.tableId || 'Chưa gán bàn';
+                    const items = (o.items || []).map(it => {
+                        const q = Math.max(1, Number(it.quantity) || 1);
+                        return `<li>- ${it.name || 'Món'} (x${q})</li>`;
+                    }).join('');
+                    const bodyHtml = `
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Mã đơn</div>
+                            <div class="staff-modal-value"><strong>${orderCode4(id)}</strong></div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Trạng thái</div>
+                            <div class="staff-modal-value">${statusLabel}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Bàn</div>
+                            <div class="staff-modal-value">${tableInfo}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Khách hàng</div>
+                            <div class="staff-modal-value">${info.name || 'Khách lẻ'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Số điện thoại</div>
+                            <div class="staff-modal-value">${info.phone || '-'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Địa chỉ</div>
+                            <div class="staff-modal-value">${info.address || '-'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Tổng tiền</div>
+                            <div class="staff-modal-value">${formatPrice(o.totalAmount)}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Ghi chú</div>
+                            <div class="staff-modal-value">${note || '-'}</div>
+                        </div>
+                        <div class="staff-modal-section-title">Món ăn</div>
+                        <ul class="staff-modal-list">
+                            ${items || '<li>Không có món nào.</li>'}
+                        </ul>
+                    `;
+                    openDetailModal(`Chi tiết đơn ${orderCode4(id)}`, bodyHtml);
+                });
+            });
+
+            tbody.querySelectorAll('.btn-order-approve').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !ordersCache[id]) return;
+                    const o = ordersCache[id];
+                    const status = normalizeStatus(o.status, 'order');
+                    if (status !== 'PENDING') return;
+
+                    if (!ensureWaiterPermission()) return;
+
+                    const info = o.customerInfo || {};
+                    const isDelivery = !!info.address || !!o.deliveryAddress || !!o.isDelivery || !!o.isTakeAway;
+                    const hasTable = o.tableId || o.tableName || o.tableNumber;
+                    // Chỉ bắt buộc gán bàn với đơn tại chỗ, không phải giao hàng / mang về
+                    if (!isDelivery && !hasTable) {
+                        showMessageModal('Không thể duyệt đơn', 'Đơn tại chỗ chưa được gán bàn. Vui lòng gán bàn trước khi duyệt đơn.');
+                        return;
+                    }
+
+                    const ok = await openConfirmModal({
+                        title: 'Duyệt đơn',
+                        message: 'Bạn có chắc chắn muốn <strong>DUYỆT</strong> đơn này?',
+                        okText: 'Duyệt đơn',
+                        cancelText: 'Hủy'
+                    });
+                    if (!ok) return;
+
+                    try {
+                        await update(ref(database, 'orders/' + id), {
+                            status: 'APPROVED',
+                            approvedBy: window.currentUser.email || window.currentUser.uid,
+                            approvedAt: Date.now()
+                        });
+                    } catch (e) {
+                        console.error('Duyệt đơn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể duyệt đơn. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            tbody.querySelectorAll('.btn-order-reject').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !ordersCache[id]) return;
+                    const o = ordersCache[id];
+                    const status = normalizeStatus(o.status, 'order');
+                    if (status !== 'PENDING') return;
+
+                    if (!ensureWaiterPermission()) return;
+
+                    const reason = await openInputModal({
+                        title: 'Từ chối đơn hàng',
+                        message: 'Nhập lý do từ chối đơn này:',
+                        placeholder: 'Ví dụ: Khách yêu cầu hủy, thông tin không hợp lệ...'
+                    });
+                    if (!reason) return;
+
+                    try {
+                        await update(ref(database, 'orders/' + id), {
+                            status: 'CANCELLED',
+                            rejectReason: reason,
+                            rejectedBy: window.currentUser.email || window.currentUser.uid,
+                            rejectedAt: Date.now()
+                        });
+                    } catch (e) {
+                        console.error('Từ chối đơn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể từ chối đơn. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            tbody.querySelectorAll('.btn-order-complete').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !ordersCache[id]) return;
+                    const o = ordersCache[id];
+                    const status = normalizeStatus(o.status, 'order');
+                    if (status !== 'READY') return;
+
+                    if (!ensureWaiterPermission()) return;
+
+                    const ok = await openConfirmModal({
+                        title: 'Hoàn thành đơn',
+                        message: 'Xác nhận đơn đã thanh toán/phục vụ xong và chuyển sang <strong>Hoàn thành</strong>? Bàn (nếu có) sẽ được trả về trống.',
+                        okText: 'Hoàn thành',
+                        cancelText: 'Hủy'
+                    });
+                    if (!ok) return;
+
+                    try {
+                        await update(ref(database, 'orders/' + id), {
+                            status: 'COMPLETED',
+                            completedAt: Date.now()
+                        });
+                        showMessageModal('Đã hoàn thành', 'Đơn đã được đánh dấu hoàn thành. Bàn (nếu có) đã trả về trống.');
+                    } catch (e) {
+                        console.error('Hoàn thành đơn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể cập nhật đơn. Vui lòng thử lại.');
+                    }
+                });
+            });
+        }
+
+        // ===== ĐẶT BÀN - RESERVATIONS =====
+        function renderReservations() {
+            const tbody = document.getElementById('waiterReservationsBody');
+            if (!tbody) return;
+            const filterEl = document.getElementById('reservationStatusFilter');
+            const filterStatus = filterEl?.value || '';
+
+            const data = reservationsCache || {};
+            const list = !data ? [] : Object.entries(data)
+                .map(([id, r]) => {
+                    const status = normalizeStatus(r.status, 'reservation');
+                    return { id, ...r, _status: status };
+                })
+                .filter(r => {
+                    if (!r._status) return false;
+                    if (!['PENDING', 'CONFIRMED', 'CANCELLED'].includes(r._status)) return false;
+                    if (filterStatus && r._status !== filterStatus) return false;
+                    return true;
+                })
+                .sort((a, b) => {
+                    const aTime = a.datetime || (a.date || '') + ' ' + (a.time || '');
+                    const bTime = b.datetime || (b.date || '') + ' ' + (b.time || '');
+                    return bTime.localeCompare(aTime);
+                });
+
+            if (!list.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:2rem; color: var(--text-light);">
+                            Chưa có yêu cầu đặt bàn nào.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = list.map(r => {
+                const status = r._status;
+                const statusLabel = RESERVATION_STATUS_LABELS[status] || status;
+                const badgeClass = RESERVATION_STATUS_BADGES[status] || 'badge-warning';
+                const canConfirm = status === 'PENDING';
+                const canReject = status === 'PENDING';
+                const guests = r.guests || r.partySize || '-';
+                const tableInfo = r.tableName || r.tableId || '-';
+                const note = r.note || r.specialRequest || '';
+
+                const dateText = r.datetime
+                    ? new Date(r.datetime).toLocaleString('vi-VN')
+                    : `${r.date || '—'} ${r.time || ''}`;
+
+                return `
+                    <tr data-id="${r.id}">
+                        <td>${r.name || r.customerName || 'Khách'}</td>
+                        <td>${r.phone || '-'}</td>
+                        <td>${guests}</td>
+                        <td>${dateText}</td>
+                        <td>${tableInfo}</td>
+                        <td>
+                            <span class="badge ${badgeClass}">${statusLabel}</span>
+                            ${note ? `<br><small style="color: var(--text-light);">Có ghi chú</small>` : ''}
+                        </td>
+                        <td>
+                            ${canConfirm ? `<button class="btn btn-success btn-sm btn-reservation-confirm" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Xác nhận</button>` : ''}
+                            ${canReject ? `<button class="btn btn-danger btn-sm btn-reservation-reject" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Từ chối</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.querySelectorAll('.btn-reservation-confirm').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !reservationsCache[id]) return;
+                    const r = reservationsCache[id];
+                    const status = normalizeStatus(r.status, 'reservation');
+                    if (status !== 'PENDING') return;
+
+                    if (!ensureWaiterPermission()) return;
+
+                    const guests = Number(r.guests || r.partySize || 0);
+                    const allTables = getTablesWithStatus();
+                    const availableTables = allTables.filter(t => {
+                        if (t._status !== 'AVAILABLE') return false;
+                        const cap = Number(t.capacity || t.seats || 0);
+                        if (!guests || !cap) return true;
+                        return cap >= guests;
+                    });
+
+                    if (!availableTables.length) {
+                        showMessageModal('Không thể xác nhận', 'Không còn bàn trống phù hợp với số khách. Vui lòng thêm bàn hoặc từ chối đặt bàn.');
+                        return;
+                    }
+
+                    const optionsText = availableTables.map((t, idx) => {
+                        const cap = t.capacity || t.seats || '?';
+                        return `${idx + 1}. ${t.name || t.label || ('Bàn ' + t.id)} (tối đa ${cap} khách)`;
+                    }).join('<br>');
+                    const choiceStr = await openInputModal({
+                        title: 'Chọn bàn cho đặt bàn',
+                        message: `Nhập số thứ tự bàn muốn gán (sức chứa ≥ ${guests} khách):<br><small>${optionsText}</small>`,
+                        placeholder: 'Ví dụ: 1'
+                    });
+                    if (!choiceStr) return;
+                    const index = parseInt(choiceStr, 10) - 1;
+                    if (isNaN(index) || index < 0 || index >= availableTables.length) {
+                        showMessageModal('Lựa chọn không hợp lệ', 'Vui lòng chọn số thứ tự trong danh sách.');
+                        return;
+                    }
+                    const selected = availableTables[index];
+
+                    const ok = await openConfirmModal({
+                        title: 'Xác nhận đặt bàn',
+                        message: `Gán bàn <strong>${selected.name || selected.label || ('Bàn ' + selected.id)}</strong> cho đặt bàn này?`,
+                        okText: 'Xác nhận',
+                        cancelText: 'Hủy'
+                    });
+                    if (!ok) return;
+
+                    try {
+                        await update(ref(database, 'reservations/' + id), {
+                            status: 'CONFIRMED',
+                            tableId: selected.id,
+                            tableName: selected.name || selected.label || null,
+                            confirmedBy: window.currentUser.email || window.currentUser.uid,
+                            confirmedAt: Date.now()
+                        });
+                        await update(ref(database, 'tables/' + selected.id), {
+                            ...(tablesCache[selected.id] || { name: selected.name, label: selected.label, capacity: selected.capacity, seats: selected.seats }),
+                            status: 'RESERVED'
+                        });
+                    } catch (e) {
+                        console.error('Xác nhận đặt bàn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể xác nhận đặt bàn. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            tbody.querySelectorAll('.btn-reservation-reject').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tr = btn.closest('tr');
+                    const id = tr?.dataset.id;
+                    if (!id || !reservationsCache[id]) return;
+                    const r = reservationsCache[id];
+                    const status = normalizeStatus(r.status, 'reservation');
+                    if (status !== 'PENDING') return;
+
+                    if (!ensureWaiterPermission()) return;
+
+                    const reason = await openInputModal({
+                        title: 'Từ chối đặt bàn',
+                        message: 'Nhập lý do từ chối đặt bàn:',
+                        placeholder: 'Ví dụ: Không còn bàn trống trong khung giờ này...'
+                    });
+                    if (!reason) return;
+
+                    try {
+                        await update(ref(database, 'reservations/' + id), {
+                            status: 'CANCELLED',
+                            rejectReason: reason,
+                            rejectedBy: window.currentUser.email || window.currentUser.uid,
+                            rejectedAt: Date.now()
+                        });
+                    } catch (e) {
+                        console.error('Từ chối đặt bàn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể từ chối đặt bàn. Vui lòng thử lại.');
+                    }
+                });
+            });
+        }
+
+        function fillWalkinTableSelect() {
+            const sel = document.getElementById('walkinTable');
+            if (!sel) return;
+            const available = getTablesWithStatus().filter(t => t._status === 'AVAILABLE');
+            sel.innerHTML = '<option value="">-- Chọn bàn --</option>' +
+                available.map(t => {
+                    const label = t.name || t.label || ('Bàn ' + t.id);
+                    const cap = t.capacity || t.seats || '?';
+                    return `<option value="${t.id}">${label} (${cap} khách)</option>`;
+                }).join('');
+        }
+
+        // ===== BÀN - TABLES =====
+        function renderTables() {
+            const grid = document.getElementById('tablesGrid');
+            if (!grid) return;
+
+            const withStatus = getTablesWithStatus();
+
+            const statAvailableEl = document.getElementById('tablesStatAvailable');
+            const statReservedEl = document.getElementById('tablesStatReserved');
+            const statOccupiedEl = document.getElementById('tablesStatOccupied');
+            const statTotalEl = document.getElementById('tablesStatTotal');
+
+            if (!withStatus.length) {
+                grid.innerHTML = `
+                    <div style="text-align:center; padding:2rem; color: var(--text-light); width:100%;">
+                        Chưa có dữ liệu bàn. Bạn có thể thêm bàn hoặc cấu hình trong hệ thống.
+                    </div>
+                `;
+                if (statAvailableEl) statAvailableEl.textContent = '0';
+                if (statReservedEl) statReservedEl.textContent = '0';
+                if (statOccupiedEl) statOccupiedEl.textContent = '0';
+                if (statTotalEl) statTotalEl.textContent = '0';
+                return;
+            }
+
+            const availableCount = withStatus.filter(t => t._status === 'AVAILABLE').length;
+            const reservedCount = withStatus.filter(t => t._status === 'RESERVED').length;
+            const occupiedCount = withStatus.filter(t => t._status === 'OCCUPIED').length;
+
+            if (statAvailableEl) statAvailableEl.textContent = String(availableCount);
+            if (statReservedEl) statReservedEl.textContent = String(reservedCount);
+            if (statOccupiedEl) statOccupiedEl.textContent = String(occupiedCount);
+            if (statTotalEl) statTotalEl.textContent = String(withStatus.length);
+
+            const activeOrdersByTable = {};
+            Object.entries(ordersCache || {}).forEach(([oid, o]) => {
+                const status = normalizeStatus(o.status, 'order');
+                if (status === 'COMPLETED' || status === 'CANCELLED') return;
+                const tableId = o.tableId || o.table || o.tableNumber;
+                if (!tableId) return;
+                activeOrdersByTable[tableId] = activeOrdersByTable[tableId] || [];
+                activeOrdersByTable[tableId].push({ id: oid, ...o, _status: status });
+            });
+
+            const reservationByTableId = {};
+            Object.entries(reservationsCache || {}).forEach(([rid, r]) => {
+                const st = normalizeStatus(r.status, 'reservation');
+                if (st !== 'CONFIRMED') return;
+                const tid = r.tableId;
+                if (!tid) return;
+                reservationByTableId[tid] = { id: rid, ...r };
+            });
+
+            grid.innerHTML = withStatus.map(t => {
+                const label = t.name || t.label || ('Bàn ' + t.id);
+                const cap = t.capacity || t.seats || '—';
+                const st = t._status;
+                const statusLabel = TABLE_STATUS_LABELS[st] || st;
+                const badgeClass = TABLE_STATUS_BADGES[st] || 'badge-success';
+
+                const orders = activeOrdersByTable[t.id] || [];
+                const mainOrder = orders[0];
+                const orderCode = mainOrder ? orderCode4(mainOrder.id) : null;
+                const res = reservationByTableId[t.id];
+                const reservedGuestName = res ? (res.name || res.customerName || 'Khách') : '';
+                const reservedTime = res ? `${res.date || '—'} ${res.time || ''}` : '';
+
+                const canAssign = st === 'AVAILABLE';
+                const showOpenTable = st === 'RESERVED' || (st === 'OCCUPIED' && !orderCode);
+                const showViewOrder = st === 'OCCUPIED' && orderCode;
+
+                return `
+                    <div class="table-card" data-id="${t.id}">
+                        <h3>${label}</h3>
+                        <p>${cap} khách</p>
+                        <div style="margin-top:0.4rem;">
+                            <span class="table-status-badge ${badgeClass}">
+                                <span class="table-status-dot"></span>
+                                <span>${statusLabel}</span>
+                            </span>
+                        </div>
+                        ${st === 'RESERVED' && reservedGuestName ? `<p style="font-size:0.85rem; margin-top:0.6rem;">Khách: <strong>${reservedGuestName}</strong><br>Giờ đặt: ${reservedTime}</p>` : ''}
+                        ${orderCode ? `<p style="font-size:0.85rem; margin-top:0.6rem;">Đơn hiện tại: <strong>${orderCode}</strong></p>` : ''}
+                        <div class="table-card-actions">
+                            ${showOpenTable ? `<button class="btn btn-success btn-sm btn-table-open" data-id="${t.id}">Mở bàn</button>` : ''}
+                            ${showViewOrder ? `<button class="btn btn-info btn-sm btn-table-view-order" data-id="${t.id}">Xem đơn ${orderCode}</button>` : ''}
+                            ${showViewOrder ? `<button class="btn btn-success btn-sm btn-table-add-dish" data-order-id="${mainOrder.id}" data-id="${t.id}">Thêm món</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.querySelectorAll('.btn-table-assign').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tableId = btn.getAttribute('data-id');
+                    if (!tableId) return;
+                    if (!ensureWaiterPermission()) return;
+
+                    const orders = Object.entries(ordersCache || {}).map(([id, o]) => ({ id, ...o, _status: normalizeStatus(o.status, 'order') }))
+                        .filter(o => !['COMPLETED', 'CANCELLED'].includes(o._status));
+                    if (!orders.length) {
+                        showMessageModal('Không có đơn phù hợp', 'Hiện không có đơn hàng nào để gán bàn.');
+                        return;
+                    }
+
+                    const optionsText = orders.map((o, idx) => `${idx + 1}. ${orderCode4(o.id)} - ${ORDER_STATUS_LABELS[o._status] || o._status}`).join('<br>');
+                    const choiceStr = await openInputModal({
+                        title: 'Chọn đơn để gán bàn',
+                        message: `Nhập số thứ tự đơn muốn gán cho ${tablesCache[tableId]?.name || ('bàn ' + tableId)}:<br><small>${optionsText}</small>`,
+                        placeholder: 'Ví dụ: 1'
+                    });
+                    if (!choiceStr) return;
+                    const index = parseInt(choiceStr, 10) - 1;
+                    if (isNaN(index) || index < 0 || index >= orders.length) {
+                        showMessageModal('Lựa chọn không hợp lệ', 'Vui lòng chọn số thứ tự đơn trong danh sách.');
+                        return;
+                    }
+                    const selected = orders[index];
+
+                    const ok = await openConfirmModal({
+                        title: 'Gán bàn cho đơn',
+                        message: `Gán đơn <strong>${orderCode4(selected.id)}</strong> cho ${tablesCache[tableId]?.name || ('bàn ' + tableId)}?`,
+                        okText: 'Gán bàn',
+                        cancelText: 'Hủy'
+                    });
+                    if (!ok) return;
+
+                    try {
+                        const updates = {};
+                        updates['orders/' + selected.id + '/tableId'] = tableId;
+                        updates['tables/' + tableId + '/status'] = 'OCCUPIED';
+                        await update(ref(database), updates);
+                    } catch (e) {
+                        console.error('Gán bàn cho đơn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể gán bàn. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            grid.querySelectorAll('.btn-table-open').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tableId = btn.getAttribute('data-id');
+                    if (!tableId) return;
+                    if (!ensureWaiterPermission()) return;
+
+                    const table = (getTablesWithStatus().find(t => String(t.id) === String(tableId))) || {};
+                    const tableName = table.name || table.label || ('Bàn ' + tableId);
+
+                    const ok = await openConfirmModal({
+                        title: 'Mở bàn',
+                        message: `Tạo đơn hàng cho <strong>${tableName}</strong> và chuyển bàn sang Đang phục vụ?`,
+                        okText: 'Mở bàn',
+                        cancelText: 'Hủy'
+                    });
+                    if (!ok) return;
+
+                    try {
+                        const orderRef = ref(database, 'orders');
+                        const newOrder = await push(orderRef, {
+                            tableId,
+                            tableName,
+                            table: tableId,
+                            items: [],
+                            totalAmount: 0,
+                            status: 'APPROVED',
+                            customerInfo: { name: 'Khách tại bàn', type: 'dine-in' },
+                            createdAt: Date.now(),
+                            approvedBy: window.currentUser?.email || window.currentUser?.uid
+                        });
+                        await update(ref(database, 'tables/' + tableId), {
+                            ...(tablesCache[tableId] || { name: table.name, label: table.label, capacity: table.capacity, seats: table.seats }),
+                            status: 'OCCUPIED'
+                        });
+                        showMessageModal('Thành công', `Đã mở bàn và tạo đơn ${orderCode4(newOrder.key)}.`);
+                    } catch (e) {
+                        console.error('Mở bàn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể mở bàn. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            grid.querySelectorAll('.btn-table-add-dish').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const orderId = btn.getAttribute('data-order-id');
+                    if (orderId) openAddMenuModal(orderId);
+                });
+            });
+
+            grid.querySelectorAll('.btn-table-view-order').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tableId = btn.getAttribute('data-id');
+                    if (!tableId) return;
+                    const orders = Object.entries(ordersCache || {}).map(([id, o]) => ({ id, ...o, _status: normalizeStatus(o.status, 'order') }))
+                        .filter(o => {
+                            const tid = o.tableId || o.table || o.tableNumber;
+                            if (String(tid) !== String(tableId)) return false;
+                            return !['COMPLETED', 'CANCELLED'].includes(o._status);
+                        });
+                    if (!orders.length) {
+                        return;
+                    }
+                    const o = orders[0];
+                    const info = o.customerInfo || {};
+                    const items = (o.items || []).map(it => {
+                        const q = Math.max(1, Number(it.quantity) || 1);
+                        return `<li>- ${it.name || 'Món'} (x${q})</li>`;
+                    }).join('');
+                    const bodyHtml = `
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Bàn</div>
+                            <div class="staff-modal-value">${tablesCache[tableId]?.name || ('Bàn ' + tableId)}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Mã đơn</div>
+                            <div class="staff-modal-value"><strong>${orderCode4(o.id)}</strong></div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Trạng thái</div>
+                            <div class="staff-modal-value">${ORDER_STATUS_LABELS[o._status] || o._status}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Khách hàng</div>
+                            <div class="staff-modal-value">${info.name || 'Khách lẻ'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Tổng tiền</div>
+                            <div class="staff-modal-value">${formatPrice(o.totalAmount)}</div>
+                        </div>
+                        <div class="staff-modal-section-title">Món ăn</div>
+                        <ul class="staff-modal-list">
+                            ${items || '<li>Không có món nào.</li>'}
+                        </ul>
+                        <div style="margin-top:1rem;">
+                            <button type="button" class="btn btn-success btn-add-menu-in-detail" data-order-id="${o.id}" style="padding:0.5rem 1rem; border-radius:999px;">Thêm món</button>
+                        </div>
+                    `;
+                    openDetailModal(`Đơn tại ${tablesCache[tableId]?.name || ('bàn ' + tableId)}`, bodyHtml);
+                });
+            });
+
+            fillWalkinTableSelect();
+        }
+
+        // ===== BẾP - CHEF =====
+        function renderChefOrders() {
+            const listEl = document.getElementById('chefOrdersList');
+            if (!listEl) return;
+            const statusFilter = CHEF_TAB_STATUS[chefTabStatus];
+            if (!statusFilter) return;
+
+            const orders = Object.entries(ordersCache || {})
+                .map(([id, o]) => ({ id, ...o, _status: normalizeStatus(o.status, 'order') }))
+                .filter(o => o._status === statusFilter)
+                .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+            const cardTitle = document.querySelector('#chefSection .card-header');
+            if (cardTitle) {
+                const titles = { pending: 'Đơn Chờ Chuẩn Bị', preparing: 'Đơn Đang Chuẩn Bị', ready: 'Đơn Sẵn Sàng', completed: 'Đơn Hoàn Thành' };
+                cardTitle.textContent = titles[chefTabStatus] || 'Đơn Hàng Cần Chuẩn Bị';
+            }
+
+            if (!orders.length) {
+                listEl.innerHTML = `<div style="text-align: center; padding: 2.5rem; color: rgba(255,255,255,0.7);">Chưa có đơn nào ở trạng thái này.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = orders.map(o => {
+                const items = (o.items || []).map(it => `<li>${it.name || 'Món'} x${Math.max(1, Number(it.quantity) || 1)}</li>`).join('');
+                const info = o.customerInfo || {};
+                const canStart = o._status === 'APPROVED';
+                const canMarkReady = o._status === 'COOKING';
+                return `
+                    <div class="chef-order-card" data-order-id="${o.id}" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; border: 1px solid rgba(212,175,55,0.25);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;">
+                            <div>
+                                <strong style="color: var(--gold); font-size: 1.05rem;">#${orderCode4(o.id)}</strong>
+                                <span style="color: rgba(255,255,255,0.7); margin-left: 0.5rem;">${o.tableName || o.tableId || info.name || 'Khách'}</span>
+                            </div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">${formatPrice(o.totalAmount)}</div>
+                        </div>
+                        <ul style="margin: 0.75rem 0 0 1rem; padding: 0; color: rgba(255,255,255,0.9); font-size: 0.9rem;">${items || '<li>Chưa có món</li>'}</ul>
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            ${canStart ? `<button type="button" class="btn btn-success btn-sm btn-chef-start" data-id="${o.id}">Bắt đầu chế biến</button>` : ''}
+                            ${canMarkReady ? `<button type="button" class="btn btn-info btn-sm btn-chef-ready" data-id="${o.id}">Đã xong</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.querySelectorAll('.btn-chef-start').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id || !ensureChefPermission()) return;
+                    const ok = await openConfirmModal({ title: 'Bắt đầu chế biến', message: 'Chuyển đơn sang trạng thái Đang chuẩn bị?', okText: 'Bắt đầu', cancelText: 'Hủy' });
+                    if (!ok) return;
+                    try {
+                        await update(ref(database, 'orders/' + id), { status: 'COOKING', cookingStartedAt: Date.now() });
+                        showMessageModal('Đã cập nhật', 'Đơn đang được chế biến.');
+                    } catch (e) {
+                        console.error(e);
+                        showMessageModal('Lỗi', 'Không thể cập nhật đơn.');
+                    }
+                });
+            });
+            listEl.querySelectorAll('.btn-chef-ready').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id || !ensureChefPermission()) return;
+                    const ok = await openConfirmModal({ title: 'Đã xong', message: 'Chuyển đơn sang Sẵn sàng phục vụ?', okText: 'Xác nhận', cancelText: 'Hủy' });
+                    if (!ok) return;
+                    try {
+                        await update(ref(database, 'orders/' + id), { status: 'READY', readyAt: Date.now() });
+                        showMessageModal('Đã cập nhật', 'Đơn sẵn sàng phục vụ.');
+                    } catch (e) {
+                        console.error(e);
+                        showMessageModal('Lỗi', 'Không thể cập nhật đơn.');
+                    }
+                });
+            });
+        }
+
+        // ===== THU NGÂN - CASHIER (dữ liệu thật) =====
+        function getTodayStartEnd() {
+            const d = new Date();
+            const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+            return { start: new Date(y, m, day).getTime(), end: new Date(y, m, day + 1).getTime() - 1 };
+        }
+        function updateCashierStats() {
+            const { start, end } = getTodayStartEnd();
+            const orders = Object.values(ordersCache || {}).map(o => ({ ...o, _status: normalizeStatus(o.status, 'order') }));
+            const completedToday = orders.filter(o => o._status === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end);
+            const readyOrders = orders.filter(o => {
+                if (o._status !== 'READY') return false;
+                const info = o.customerInfo || {};
+                const isDelivery = !!info.address || !!o.deliveryAddress || !!o.isDelivery || !!o.isTakeAway;
+                const hasTable = o.tableId || o.tableName || o.tableNumber;
+                // Thu ngân chỉ xử lý đơn tại quán có bàn
+                return !isDelivery && !!hasTable;
+            });
+            const revenue = completedToday.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+            const pendingSum = readyOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+            const elRev = document.getElementById('cashierStatRevenue');
+            const elPaid = document.getElementById('cashierStatPaidCount');
+            const elPendingCount = document.getElementById('cashierStatPendingCount');
+            const elPendingAmt = document.getElementById('cashierStatPendingAmount');
+            if (elRev) elRev.textContent = formatPrice(revenue).replace('—', '0');
+            if (elPaid) elPaid.textContent = String(completedToday.length);
+            if (elPendingCount) elPendingCount.textContent = String(readyOrders.length);
+            if (elPendingAmt) elPendingAmt.textContent = formatPrice(pendingSum).replace('—', '0');
+        }
+        function renderCashierPending() {
+            const tbody = document.getElementById('cashierPendingBody');
+            if (!tbody) return;
+            const orders = Object.entries(ordersCache || {})
+                .map(([id, o]) => ({ id, ...o, _status: normalizeStatus(o.status, 'order') }))
+                .filter(o => {
+                    if (o._status !== 'READY') return false;
+                    const info = o.customerInfo || {};
+                    const isDelivery = !!info.address || !!o.deliveryAddress || !!o.isDelivery || !!o.isTakeAway;
+                    const hasTable = o.tableId || o.tableName || o.tableNumber;
+                    // Chỉ hiện đơn ăn tại quán có bàn, không hiện đơn giao hàng / mang về
+                    return !isDelivery && !!hasTable;
+                })
+                .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            if (!orders.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Không có đơn nào chờ thanh toán.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = orders.map(o => {
+                const info = o.customerInfo || {};
+                const name = info.name || 'Khách';
+                const phone = info.phone || '';
+                const timeStr = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : '';
+                return `
+                    <tr data-id="${o.id}">
+                        <td><strong>#${orderCode4(o.id)}</strong></td>
+                        <td>${o.tableName || o.tableId || (info.address ? 'Mang về/Giao' : '—')}</td>
+                        <td>${name}${phone ? `<br><small>${phone}</small>` : ''}</td>
+                        <td>${formatPrice(o.totalAmount)}</td>
+                        <td>${timeStr}<br><small>${dateStr}</small></td>
+                        <td><button type="button" class="btn btn-success btn-cashier-complete" data-id="${o.id}" style="padding:0.5rem 1rem; font-size:0.9rem;">Thanh Toán</button></td>
+                    </tr>
+                `;
+            }).join('');
+            tbody.querySelectorAll('.btn-cashier-complete').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id || !ordersCache[id]) return;
+                    const o = ordersCache[id];
+                    if (normalizeStatus(o.status, 'order') !== 'READY') return;
+                    const info = o.customerInfo || {};
+                    const tableInfo = o.tableName || o.tableId || (info.address ? 'Mang về/Giao' : '—');
+                    const itemsHtml = (o.items || []).map(it => {
+                        const q = Math.max(1, Number(it.quantity) || 1);
+                        const price = Number(it.price) || 0;
+                        const lineTotal = q * price;
+                        return `
+                            <tr>
+                                <td style="text-align:left; padding:0.45rem 0.5rem; color:#111;">${it.name || 'Món'}</td>
+                                <td style="text-align:center; padding:0.45rem 0.5rem; color:#111;">${q}</td>
+                                <td style="text-align:right; padding:0.45rem 0.5rem; color:#111;">${formatPrice(price)}</td>
+                                <td style="text-align:right; padding:0.45rem 0.5rem; color:#111;">${formatPrice(lineTotal)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    const createdTime = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—';
+                    const total = formatPrice(o.totalAmount);
+                    const bodyHtml = `
+                        <div class="invoice-header">
+                            <h3 style="margin:0 0 0.25rem 0;">Hóa đơn Ain Tō Sushi</h3>
+                            <p style="margin:0; color:rgba(255,255,255,0.7); font-size:0.85rem;">Mã đơn #${orderCode4(id)}</p>
+                        </div>
+                        <div class="staff-modal-row" style="margin-top:1rem;">
+                            <div class="staff-modal-label">Bàn / Khách</div>
+                            <div class="staff-modal-value">${tableInfo}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Khách hàng</div>
+                            <div class="staff-modal-value">${info.name || 'Khách'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Số điện thoại</div>
+                            <div class="staff-modal-value">${info.phone || '-'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Thời gian tạo</div>
+                            <div class="staff-modal-value">${createdTime}</div>
+                        </div>
+                        <div class="staff-modal-section-title" style="margin-top:1rem;">Chi tiết món</div>
+                        <div style="max-height:260px; overflow:auto; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#ffffff;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.9rem; color:#111;">
+                                <thead>
+                                    <tr style="background:#f5f5f5;">
+                                        <th style="text-align:left; padding:0.5rem; color:#111 !important;">Món</th>
+                                        <th style="text-align:center; padding:0.5rem; color:#111 !important;">SL</th>
+                                        <th style="text-align:right; padding:0.5rem; color:#111 !important;">Đơn giá</th>
+                                        <th style="text-align:right; padding:0.5rem; color:#111 !important;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHtml || `<tr><td colspan="4" style="padding:0.75rem; text-align:center; color:#333;">Không có món nào.</td></tr>`}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="staff-modal-row" style="margin-top:1rem; font-size:1rem;">
+                            <div class="staff-modal-label">Tổng cộng</div>
+                            <div class="staff-modal-value"><strong>${total}</strong></div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                            <button type="button" class="staff-btn-secondary" onclick="document.getElementById('staffDetailModal').style.display='none'">Đóng</button>
+                            <button type="button" class="staff-btn-secondary" onclick="window.print()" style="min-width:120px;">In hóa đơn</button>
+                            <button type="button" class="staff-btn-primary btn-invoice-confirm" data-order-id="${id}">Xác nhận thanh toán</button>
+                        </div>
+                    `;
+                    openDetailModal('Hóa đơn #' + orderCode4(id), bodyHtml);
+                });
+            });
+        }
+        function renderCashierHistory() {
+            const tbody = document.getElementById('cashierHistoryBody');
+            if (!tbody) return;
+            const { start, end } = getTodayStartEnd();
+            const orders = Object.entries(ordersCache || {})
+                .map(([id, o]) => ({ id, ...o, _status: normalizeStatus(o.status, 'order') }))
+                .filter(o => o._status === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end)
+                .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+            if (!orders.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đơn thanh toán nào hôm nay.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = orders.map(o => {
+                const info = o.customerInfo || {};
+                const timeStr = o.completedAt ? new Date(o.completedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : (o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—');
+                return `
+                    <tr>
+                        <td><strong>#${orderCode4(o.id)}</strong></td>
+                        <td>${o.tableName || o.tableId || (info.address ? 'Mang về/Giao' : '—')}</td>
+                        <td>${info.name || 'Khách'}</td>
+                        <td>${formatPrice(o.totalAmount)}</td>
+                        <td>${timeStr}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Tự động giải phóng bàn khi đơn COMPLETED
+        async function syncTablesFromOrders() {
+            try {
+                const updates = {};
+                Object.entries(ordersCache || {}).forEach(([id, o]) => {
+                    const status = normalizeStatus(o.status, 'order');
+                    if (status !== 'COMPLETED') return;
+                    const tableId = o.tableId || o.table || o.tableNumber;
+                    if (!tableId) return;
+                    const table = tablesCache[tableId];
+                    const currentStatus = normalizeTableStatus(table?.status);
+                    if (currentStatus !== 'AVAILABLE') {
+                        updates['tables/' + tableId + '/status'] = 'AVAILABLE';
+                    }
+                });
+                if (Object.keys(updates).length) {
+                    await update(ref(database), updates);
+                }
+            } catch (e) {
+                console.error('Đồng bộ bàn từ đơn thất bại', e);
+            }
+        }
+
+        function initWaiterRealtime() {
+            const ordersRef = ref(database, 'orders');
+            onValue(ordersRef, async (snap) => {
+                ordersCache = snap.val() || {};
+                await syncTablesFromOrders();
+                renderWaiterOrders();
+                renderTables();
+                renderChefOrders();
+                updateCashierStats();
+                renderCashierPending();
+                renderCashierHistory();
+            });
+
+            const reservationsRef = ref(database, 'reservations');
+            onValue(reservationsRef, (snap) => {
+                reservationsCache = snap.val() || {};
+                renderReservations();
+                renderTables();
+            });
+
+            const tablesRef = ref(database, 'tables');
+            onValue(tablesRef, (snap) => {
+                tablesCache = snap.val() || {};
+                renderTables();
+            });
+
+            const deletedDefaultsRef = ref(database, 'settings/deletedDefaultTableIds');
+            onValue(deletedDefaultsRef, (snap) => {
+                deletedDefaultTableIdsCache = snap.val() || {};
+                renderTables();
+            });
+
+            const menuRef = ref(database, MENU_PATH);
+            onValue(menuRef, (snap) => {
+                const data = snap.val() || {};
+                const list = Object.entries(data).map(([id, item]) => ({ id, ...item })).filter(item => item.available !== false);
+                menuCache = {};
+                list.forEach(item => { menuCache[item.id] = item; });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindLogout();
+            setupTabs();
+
+            // Đợi roleGuard đặt window.currentUser rồi mới setup sidebar
+            const interval = setInterval(() => {
+                if (window.currentUser) {
+                    clearInterval(interval);
+                    setupSidebarByPosition();
+                    if (window.currentUser.role === 'staff' && (window.currentUser.position === 'waiter' || window.currentUser.position === 'chef' || window.currentUser.position === 'cashier')) {
+                        initWaiterRealtime();
+                    }
+                }
+            }, 100);
+            setTimeout(() => clearInterval(interval), 5000);
+
+            const orderFilter = document.getElementById('orderStatusFilter');
+            if (orderFilter) {
+                orderFilter.addEventListener('change', renderWaiterOrders);
+            }
+            const reservationFilter = document.getElementById('reservationStatusFilter');
+            if (reservationFilter) {
+                reservationFilter.addEventListener('change', renderReservations);
+            }
+
+            const prevBtn = document.getElementById('orderPagePrev');
+            const nextBtn = document.getElementById('orderPageNext');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (orderPage > 0) {
+                        orderPage--;
+                        renderWaiterOrders();
+                    }
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    orderPage++;
+                    renderWaiterOrders();
+                });
+            }
+
+            const walkinSubmitBtn = document.getElementById('walkinSubmitBtn');
+            if (walkinSubmitBtn) {
+                walkinSubmitBtn.addEventListener('click', async () => {
+                    if (!ensureWaiterPermission()) return;
+                    const nameEl = document.getElementById('walkinName');
+                    const guestsEl = document.getElementById('walkinGuests');
+                    const tableSel = document.getElementById('walkinTable');
+                    const msgEl = document.getElementById('walkinMessage');
+                    const name = (nameEl?.value || '').trim() || 'Khách lẻ';
+                    const guests = parseInt(guestsEl?.value, 10) || 1;
+                    const tableId = tableSel?.value;
+                    if (!tableId) {
+                        if (msgEl) {
+                            msgEl.style.display = 'block';
+                            msgEl.style.background = 'rgba(248,113,113,0.15)';
+                            msgEl.style.border = '1px solid rgba(248,113,113,0.4)';
+                            msgEl.style.color = '#fca5a5';
+                            msgEl.textContent = 'Vui lòng chọn bàn trống.';
+                        }
+                        return;
+                    }
+                    const tables = getTablesWithStatus();
+                    const table = tables.find(t => String(t.id) === String(tableId));
+                    if (!table || table._status !== 'AVAILABLE') {
+                        if (msgEl) {
+                            msgEl.style.display = 'block';
+                            msgEl.style.background = 'rgba(248,113,113,0.15)';
+                            msgEl.style.border = '1px solid rgba(248,113,113,0.4)';
+                            msgEl.style.color = '#fca5a5';
+                            msgEl.textContent = 'Bàn đã không còn trống. Vui lòng chọn bàn khác.';
+                        }
+                        return;
+                    }
+                    const tableName = table.name || table.label || ('Bàn ' + tableId);
+                    try {
+                        const resRef = ref(database, 'reservations');
+                        await push(resRef, {
+                            name,
+                            customerName: name,
+                            guests,
+                            partySize: guests,
+                            tableId,
+                            tableName,
+                            status: 'CONFIRMED',
+                            walkIn: true,
+                            date: new Date().toISOString().slice(0, 10),
+                            time: new Date().toTimeString().slice(0, 5),
+                            createdAt: Date.now(),
+                            confirmedBy: window.currentUser?.email || window.currentUser?.uid
+                        });
+                        await update(ref(database, 'tables/' + tableId), {
+                            ...(tablesCache[tableId] || { name: table.name, label: table.label, capacity: table.capacity, seats: table.seats }),
+                            status: 'OCCUPIED'
+                        });
+                        if (nameEl) nameEl.value = '';
+                        if (guestsEl) guestsEl.value = '1';
+                        if (tableSel) tableSel.value = '';
+                        if (msgEl) {
+                            msgEl.style.display = 'block';
+                            msgEl.style.background = 'rgba(16,185,129,0.15)';
+                            msgEl.style.border = '1px solid rgba(16,185,129,0.4)';
+                            msgEl.style.color = '#6ee7b7';
+                            msgEl.textContent = 'Đã tạo đặt bàn cho khách đến trực tiếp. Bàn đang phục vụ. Dùng "Mở bàn" để tạo đơn gọi món.';
+                        }
+                    } catch (e) {
+                        console.error('Tạo đặt bàn walk-in thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể tạo đặt bàn. Vui lòng thử lại.');
+                    }
+                });
+            }
+
+            const addTableBtn = document.getElementById('addTableBtn');
+            if (addTableBtn) {
+                addTableBtn.addEventListener('click', async () => {
+                    if (!ensureWaiterPermission()) return;
+                    const name = await openInputModal({
+                        title: 'Thêm bàn mới',
+                        message: 'Nhập tên bàn (ví dụ: Bàn Terrace 1):',
+                        placeholder: 'Tên bàn'
+                    });
+                    if (!name) return;
+                    const capacityStr = await openInputModal({
+                        title: 'Sức chứa bàn',
+                        message: 'Nhập sức chứa tối đa (số khách):',
+                        placeholder: 'Ví dụ: 4'
+                    });
+                    if (!capacityStr) return;
+                    const capacity = parseInt(capacityStr, 10);
+                    if (isNaN(capacity) || capacity <= 0) {
+                        showMessageModal('Giá trị không hợp lệ', 'Sức chứa phải là một số nguyên dương.');
+                        return;
+                    }
+
+                    try {
+                        const tablesRef = ref(database, 'tables');
+                        await push(tablesRef, {
+                            name,
+                            label: `${name} (${capacity} khách)`,
+                            capacity,
+                            seats: capacity,
+                            status: 'AVAILABLE',
+                            createdAt: Date.now()
+                        });
+                    } catch (e) {
+                        console.error('Thêm bàn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể thêm bàn mới. Vui lòng thử lại.');
+                    }
+                });
+            }
+
+            const editTableBtn = document.getElementById('editTableBtn');
+            if (editTableBtn) {
+                editTableBtn.addEventListener('click', async () => {
+                    if (!ensureWaiterPermission()) return;
+                    const list = getTablesWithStatus();
+                    if (!list.length) {
+                        showMessageModal('Không có bàn', 'Chưa có bàn nào để sửa.');
+                        return;
+                    }
+                    const optionsText = list.map((t, idx) => {
+                        const cap = t.capacity || t.seats || '?';
+                        const status = (t._status || 'AVAILABLE').toLowerCase();
+                        return (idx + 1) + '. ' + (t.name || t.label || ('Bàn ' + t.id)) + ' - ' + cap + ' khách (' + status + ')';
+                    }).join('<br>');
+                    const choice = await openInputModal({
+                        title: 'Chọn bàn cần sửa',
+                        message: ''
+                            + 'Nhập số thứ tự bàn muốn sửa sức chứa:'
+                            + '<div style="max-height:180px; overflow-y:auto; margin-top:0.5rem; padding-right:4px;">'
+                            + '<small>' + optionsText + '</small>'
+                            + '</div>',
+                        placeholder: 'Ví dụ: 2'
+                    });
+                    if (!choice) return;
+                    const index = parseInt(choice, 10) - 1;
+                    if (isNaN(index) || index < 0 || index >= list.length) {
+                        showMessageModal('Lựa chọn không hợp lệ', 'Vui lòng nhập số thứ tự trong danh sách.');
+                        return;
+                    }
+                    const selected = list[index];
+                    const currentCap = selected.capacity || selected.seats || '';
+                    const newCapStr = await openInputModal({
+                        title: 'Sửa sức chứa bàn',
+                        message: 'Nhập sức chứa tối đa (số khách) mới cho bàn <strong>' + (selected.name || selected.label || ('Bàn ' + selected.id)) + '</strong>:',
+                        placeholder: String(currentCap || '4')
+                    });
+                    if (!newCapStr) return;
+                    const newCap = parseInt(newCapStr, 10);
+                    if (isNaN(newCap) || newCap <= 0) {
+                        showMessageModal('Giá trị không hợp lệ', 'Sức chứa phải là một số nguyên dương.');
+                        return;
+                    }
+                    const tableId = selected.id;
+                    if (!tableId) {
+                        showMessageModal('Lỗi', 'Không xác định được ID bàn.');
+                        return;
+                    }
+                    try {
+                        const existing = tablesCache && tablesCache[tableId];
+                        const baseName = selected.name || selected.label || ('Bàn ' + tableId);
+                        const payload = {
+                            name: baseName,
+                            label: baseName + ' (' + newCap + ' khách)',
+                            capacity: newCap,
+                            seats: newCap,
+                            status: selected._status || existing?.status || 'AVAILABLE',
+                            updatedAt: Date.now()
+                        };
+                        if (existing) {
+                            await update(ref(database, 'tables/' + tableId), payload);
+                        } else {
+                            await set(ref(database, 'tables/' + tableId), {
+                                ...payload,
+                                createdAt: Date.now()
+                            });
+                        }
+                        showMessageModal('Đã cập nhật', 'Đã sửa sức chứa bàn thành công.');
+                    } catch (e) {
+                        console.error('Sửa bàn thất bại', e);
+                        showMessageModal('Lỗi', 'Không thể cập nhật bàn. Vui lòng thử lại.');
+                    }
+                });
+            }
+
+            const detailBody = document.getElementById('staffDetailModalBody');
+            if (detailBody) {
+                detailBody.addEventListener('click', async (e) => {
+                    const addBtn = e.target.closest('.btn-add-menu-in-detail');
+                    if (addBtn && addBtn.dataset.orderId) {
+                        closeDetailModal();
+                        openAddMenuModal(addBtn.dataset.orderId);
+                        return;
+                    }
+
+                    // Nút In hóa đơn hiện đang dùng window.print() trực tiếp trong HTML button, không xử lý thêm ở đây.
+
+                    const payBtn = e.target.closest('.btn-invoice-confirm');
+                    if (payBtn && payBtn.dataset.orderId) {
+                        const id = payBtn.dataset.orderId;
+                        if (!id || !ordersCache[id]) return;
+                        const o = ordersCache[id];
+                        if (normalizeStatus(o.status, 'order') !== 'READY') return;
+                        try {
+                            await update(ref(database, 'orders/' + id), {
+                                status: 'COMPLETED',
+                                completedAt: Date.now()
+                            });
+                            closeDetailModal();
+                            showMessageModal('Đã thanh toán', 'Đơn đã được đánh dấu hoàn thành và lưu vào lịch sử thanh toán.');
+                        } catch (err) {
+                            console.error('Thanh toán đơn thất bại', err);
+                            showMessageModal('Lỗi', 'Không thể cập nhật đơn. Vui lòng thử lại.');
+                        }
+                    }
+                });
+            }
+            const addMenuOverlay = document.getElementById('staffAddMenuModal');
+            const addMenuClose = document.getElementById('staffAddMenuModalClose');
+            const addMenuCancel = document.getElementById('staffAddMenuCancel');
+            const addMenuSubmit = document.getElementById('staffAddMenuSubmit');
+            if (addMenuClose) addMenuClose.addEventListener('click', closeAddMenuModal);
+            if (addMenuCancel) addMenuCancel.addEventListener('click', closeAddMenuModal);
+            if (addMenuSubmit) addMenuSubmit.addEventListener('click', submitAddMenuToOrder);
+            if (addMenuOverlay) addMenuOverlay.addEventListener('click', (e) => { if (e.target === addMenuOverlay) closeAddMenuModal(); });
+
+            document.querySelectorAll('#chefSection .tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const status = btn.getAttribute('data-status');
+                    if (!status || !CHEF_TAB_STATUS[status]) return;
+                    chefTabStatus = status;
+                    document.querySelectorAll('#chefSection .tab-btn').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderChefOrders();
+                });
+            });
+        });
+    </script>
+
+    <div style="display: flex;">
+        <aside class="sidebar">
+            <div style="padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h2 style="color: var(--gold); display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="../images/logo3.png" alt="Ain Tō Sushi Logo" style="height: 50px; width: auto; filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.4));">
+                    <span id="staffSidebarTitle">Ain Tō Sushi</span>
+                </h2>
+                <p id="staffSidebarSubtitle" style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Khu vực nhân viên</p>
+            </div>
+            <ul>
+                <li class="sidebar-item-waiter"><a href="#waiter-orders-tab" class="active">📋 Đơn Hàng</a></li>
+                <li class="sidebar-item-waiter"><a href="#waiter-tables-tab">🪑 Bàn Ăn</a></li>
+
+                <li class="sidebar-item-chef"><a href="#chef-section-link">👨‍🍳 Quản Lý Đơn Bếp</a></li>
+
+                <li class="sidebar-item-cashier"><a href="#cashier-payments">💳 Thanh Toán</a></li>
+                <li class="sidebar-item-cashier"><a href="#cashier-history">📜 Lịch Sử</a></li>
+
+                <li><a href="#" id="logoutBtn">🚪 Đăng Xuất</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h1 id="staffMainTitle" style="color: var(--primary-color);">Khu Vực Nhân Viên</h1>
+                    <p id="staffMainSubtitle" style="color: var(--text-light);">Quản lý các nghiệp vụ phục vụ, bếp, thanh toán</p>
+                </div>
+            </div>
+
+            <!-- WAITER SECTION -->
+            <section id="waiterSection">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="waiter-orders-tab">📋 Đơn Hàng</button>
+                        <button class="tab" data-tab="waiter-tables-tab">🪑 Bàn Ăn</button>
+                    </div>
+
+                    <!-- Orders Tab Content -->
+                    <div id="waiter-orders-tab" class="tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <div>
+                                <h2 style="color: var(--primary-color);">Quản Lý Đơn Hàng</h2>
+                                <p style="color: var(--text-light);">Xem, duyệt và theo dõi đơn khách vừa đặt</p>
+                            </div>
+                            <button class="btn">+ Tạo Đơn Hàng Mới</button>
+                        </div>
+
+                        <!-- Filter Orders -->
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label for="orderStatusFilter">Lọc theo trạng thái</label>
+                                    <select id="orderStatusFilter" name="orderStatusFilter">
+                                        <option value="">Tất cả</option>
+                                        <option value="PENDING">PENDING - Chờ duyệt</option>
+                                        <option value="APPROVED">APPROVED - Đã duyệt</option>
+                                        <option value="COOKING">COOKING - Đang chế biến</option>
+                                        <option value="READY">READY - Sẵn sàng</option>
+                                        <option value="COMPLETED">COMPLETED - Hoàn thành</option>
+                                        <option value="CANCELLED">CANCELLED - Đã hủy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-header">Danh Sách Đơn Hàng</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Mã Đơn</th>
+                                        <th>Bàn/Khách</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Món Ăn</th>
+                                        <th>Tổng Tiền</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Thời Gian</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="waiterOrdersBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align:center; padding:2rem; color: var(--text-light);">
+                                            Đang tải đơn hàng...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; padding:0.75rem 1rem 0 1rem;">
+                                <button id="orderPagePrev" class="btn btn-secondary" style="padding:0.25rem 0.6rem; min-width:32px;">‹</button>
+                                <span id="orderPageInfo" style="color:var(--text-light); font-size:0.9rem; min-width:60px; text-align:center;"></span>
+                                <button id="orderPageNext" class="btn btn-secondary" style="padding:0.25rem 0.6rem; min-width:32px;">›</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tables Tab Content (Sơ đồ bàn + Walk-in + Xác nhận đặt bàn) -->
+                    <div id="waiter-tables-tab" class="tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                            <div>
+                                <h2 style="color: var(--primary-color); font-size:1.4rem;">Sơ Đồ Bàn Ăn</h2>
+                                <p style="color: var(--text-light); font-size:0.9rem; margin-top:0.25rem;">Quản lý trạng thái và phân bổ bàn</p>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button id="addTableBtn" class="btn" style="border-radius:999px; padding:0.45rem 1.1rem;">+ Thêm bàn</button>
+                                <button id="editTableBtn" class="btn btn-secondary" style="border-radius:999px; padding:0.45rem 1.1rem;">✏️ Sửa bàn</button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+                            <span style="color:var(--text-light); font-size:0.9rem;">Trạng thái:</span>
+                            <span class="table-status-badge table-status-available">
+                                <span class="table-status-dot"></span>
+                                <span>Trống</span>
+                            </span>
+                            <span class="table-status-badge table-status-reserved">
+                                <span class="table-status-dot"></span>
+                                <span>Đã đặt trước</span>
+                            </span>
+                            <span class="table-status-badge table-status-occupied">
+                                <span class="table-status-dot"></span>
+                                <span>Đang phục vụ</span>
+                            </span>
+                        </div>
+
+                        <div class="stats-grid" style="margin-bottom: 1.75rem;">
+                            <div class="stat-card">
+                                <h3 id="tablesStatAvailable">0</h3>
+                                <p>Bàn Trống</p>
+                            </div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);">
+                                <h3 id="tablesStatOccupied">0</h3>
+                                <p>Bàn Đang Phục Vụ</p>
+                            </div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                                <h3 id="tablesStatReserved">0</h3>
+                                <p>Bàn Đã Đặt Trước</p>
+                            </div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">
+                                <h3 id="tablesStatTotal">0</h3>
+                                <p>Tổng Số Bàn</p>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h2 class="card-header">Khách Đến Trực Tiếp (Walk-in)</h2>
+                            <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 1rem;">Tạo đặt bàn nhanh: nhập tên khách, số người và chọn bàn trống. Bàn sẽ chuyển sang <strong>Đang phục vụ</strong>. Sau đó dùng <strong>Mở bàn</strong> để tạo đơn gọi món.</p>
+                            <div class="form-inline-walkin" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                                <div class="form-group" style="flex: 1; min-width: 140px;">
+                                    <label for="walkinName" style="display: block; margin-bottom: 0.35rem; font-size: 0.9rem;">Tên khách</label>
+                                    <input type="text" id="walkinName" placeholder="Khách lẻ" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: #fff;">
+                                </div>
+                                <div class="form-group" style="width: 100px;">
+                                    <label for="walkinGuests" style="display: block; margin-bottom: 0.35rem; font-size: 0.9rem;">Số khách</label>
+                                    <input type="number" id="walkinGuests" min="1" value="1" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: #fff;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 180px;">
+                                    <label for="walkinTable" style="display: block; margin-bottom: 0.35rem; font-size: 0.9rem;">Chọn bàn trống</label>
+                                    <select id="walkinTable" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: #fff;">
+                                        <option value="">-- Chọn bàn --</option>
+                                    </select>
+                                </div>
+                                <button type="button" id="walkinSubmitBtn" class="btn btn-success" style="padding: 0.5rem 1.25rem; border-radius: 999px;">Tạo đặt bàn</button>
+                            </div>
+                            <div id="walkinMessage" style="display:none; margin-top:0.75rem; padding:0.5rem 0.75rem; border-radius:8px; font-size:0.9rem;"></div>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-header">Sơ Đồ Bàn Ăn</h2>
+                            <div class="table-grid" id="tablesGrid"></div>
+                        </div>
+
+                        <!-- Xác nhận đặt bàn (thuộc tab Bàn) -->
+                        <div style="margin-top: 2rem;">
+                            <h2 style="color: var(--primary-color);">Xác Nhận Đặt Bàn</h2>
+                            <p style="color: var(--text-light);">Xem và xử lý các yêu cầu đặt bàn (Reservations).</p>
+                        </div>
+                        <div class="card" style="margin-bottom: 1.5rem; margin-top: 1rem;">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label for="reservationStatusFilter">Lọc theo trạng thái</label>
+                                    <select id="reservationStatusFilter" name="reservationStatusFilter">
+                                        <option value="">Tất cả</option>
+                                        <option value="PENDING">PENDING - Chờ xác nhận</option>
+                                        <option value="CONFIRMED">CONFIRMED - Đã xác nhận</option>
+                                        <option value="CANCELLED">CANCELLED - Đã hủy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-header">Danh Sách Đặt Bàn</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Khách Hàng</th>
+                                        <th>Số Điện Thoại</th>
+                                        <th>Số Người</th>
+                                        <th>Ngày Giờ</th>
+                                        <th>Bàn</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="waiterReservationsBody">
+                                    <tr>
+                                        <td colspan="7" style="text-align:center; padding:2rem; color: var(--text-light);">
+                                            Đang tải dữ liệu đặt bàn...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHEF SECTION -->
+            <section id="chefSection" style="display:none;">
+                <a id="chef-section-link"></a>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h2 style="color: var(--primary-color);">Bếp - Quản Lý Đơn Hàng</h2>
+                        <p style="color: var(--text-light);">Theo dõi và chuẩn bị các món ăn</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color);">
+                    <button class="tab-btn active" data-status="pending">Chờ Chuẩn Bị</button>
+                    <button class="tab-btn" data-status="preparing">Đang Chuẩn Bị</button>
+                    <button class="tab-btn" data-status="ready">Sẵn Sàng</button>
+                    <button class="tab-btn" data-status="completed">Hoàn Thành</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-header">Đơn Hàng Cần Chuẩn Bị</h2>
+                    <div id="chefOrdersList">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                            <p>Chức năng kết nối đơn bếp sẽ được tích hợp với dữ liệu đơn hàng.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CASHIER SECTION (dữ liệu thật từ Firebase) -->
+            <section id="cashierSection" style="display:none;">
+                <div id="cashier-payments">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="cashierStatRevenue">0đ</h3>
+                            <p>Doanh Thu Hôm Nay</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">
+                            <h3 id="cashierStatPaidCount">0</h3>
+                            <p>Đơn Đã Thanh Toán</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
+                            <h3 id="cashierStatPendingCount">0</h3>
+                            <p>Đơn Chờ Thanh Toán</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                            <h3 id="cashierStatPendingAmount">0đ</h3>
+                            <p>Tổng Chưa Thanh Toán</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-header">Đơn Hàng Chờ Thanh Toán</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Bàn/Khách</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Thời Gian</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cashierPendingBody">
+                                <tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" id="cashier-history" style="margin-top: 2rem;">
+                    <h2 class="card-header">Lịch Sử Thanh Toán Hôm Nay</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Bàn/Khách</th>
+                                <th>Khách Hàng</th>
+                                <th>Tổng Tiền</th>
+                                <th>Thời Gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashierHistoryBody">
+                            <tr><td colspan="5" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal chi tiết đơn / bàn -->
+    <div id="staffDetailModal" class="staff-modal-overlay">
+        <div class="staff-modal">
+            <div class="staff-modal-header">
+                <div id="staffDetailModalTitle" class="staff-modal-title">Chi tiết</div>
+                <button type="button" class="staff-modal-close" id="staffDetailModalCloseBtn" aria-label="Đóng">×</button>
+            </div>
+            <div id="staffDetailModalBody" class="staff-modal-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận hành động -->
+    <div id="staffConfirmModal" class="staff-modal-overlay">
+        <div class="staff-confirm-modal">
+            <div class="staff-modal-header">
+                <div id="staffConfirmTitle" class="staff-modal-title">Xác nhận</div>
+                <button type="button" class="staff-modal-close" aria-label="Đóng"
+                    onclick="document.getElementById('staffConfirmModal').style.display='none'">×</button>
+            </div>
+            <div id="staffConfirmBody" class="staff-confirm-body">
+            </div>
+            <div class="staff-confirm-actions">
+                <button type="button" id="staffConfirmCancel" class="staff-btn-secondary">Hủy</button>
+                <button type="button" id="staffConfirmOk" class="staff-btn-primary">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal nhập lý do / lựa chọn -->
+    <div id="staffInputModal" class="staff-modal-overlay">
+        <div class="staff-confirm-modal">
+            <div class="staff-modal-header">
+                <div id="staffInputTitle" class="staff-modal-title">Nhập thông tin</div>
+                <button type="button" class="staff-modal-close" aria-label="Đóng"
+                    onclick="document.getElementById('staffInputModal').style.display='none'">×</button>
+            </div>
+            <div class="staff-confirm-body">
+                <div id="staffInputBody" style="margin-bottom:0.75rem;"></div>
+                <textarea id="staffInputTextarea"
+                    style="width:100%; min-height:80px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:#1a1a1a; color:#fff; padding:0.5rem 0.75rem; resize:vertical; font-size:0.9rem;"></textarea>
+            </div>
+            <div class="staff-confirm-actions">
+                <button type="button" id="staffInputCancel" class="staff-btn-secondary">Hủy</button>
+                <button type="button" id="staffInputOk" class="staff-btn-primary">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm món vào đơn (waiter) -->
+    <div id="staffAddMenuModal" class="staff-modal-overlay staff-add-menu-modal">
+        <div class="staff-modal">
+            <div class="staff-modal-header">
+                <div class="staff-modal-title">Thêm món vào đơn</div>
+                <button type="button" class="staff-modal-close" id="staffAddMenuModalClose" aria-label="Đóng">×</button>
+            </div>
+            <div class="staff-modal-body">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 1rem;">Chọn số lượng món (chỉ món còn bán).</p>
+                <ul id="staffAddMenuList" class="staff-add-menu-list"></ul>
+            </div>
+            <div class="staff-confirm-actions" style="padding: 1rem 1.5rem;">
+                <button type="button" id="staffAddMenuCancel" class="staff-btn-secondary">Hủy</button>
+                <button type="button" id="staffAddMenuSubmit" class="staff-btn-primary">Thêm vào đơn</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Close modal khi click nút X hoặc nền
+        (function () {
+            const overlay = document.getElementById('staffDetailModal');
+            const closeBtn = document.getElementById('staffDetailModalCloseBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    overlay.style.display = 'none';
+                });
+            }
+            if (overlay) {
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
+

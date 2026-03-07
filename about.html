@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Về Chúng Tôi - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="index-page theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li><a href="news.html">Tin Tức</a></li>
+                <li><a href="about.html" class="active">Về Chúng Tôi</a></li>
+                <li id="navAuthWrap" class="nav-right" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng"><img src="images/icon.png" alt="Giỏ hàng" style="width:22px;height:22px;object-fit:contain;"></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container index-container" style="padding-top:4rem; padding-bottom:4rem;">
+        <section class="card" data-inview>
+            <h1 style="margin-bottom:1rem;">Về Ain Tō Sushi</h1>
+            <p style="margin-bottom:1.5rem;">Chúng tôi mong muốn mang trải nghiệm ẩm thực Nhật Bản chuẩn mực đến với thực khách tại Việt Nam.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;">
+                <div>
+                    <h2 style="margin-bottom:0.5rem;">Câu chuyện thương hiệu</h2>
+                    <p>Ain Tō Sushi được xây dựng từ niềm đam mê với ẩm thực Nhật Bản. Từ những ngày đầu, chúng tôi luôn giữ triết lý: nguyên liệu tươi nhất, kỹ thuật chuẩn nhất và phục vụ tận tâm nhất.</p>
+                </div>
+                <div>
+                    <h2 style="margin-bottom:0.5rem;">Không gian & dịch vụ</h2>
+                    <p>Không gian được thiết kế theo phong cách Nhật hiện đại, ấm cúng nhưng vẫn sang trọng. Đội ngũ nhân viên được đào tạo bài bản, luôn sẵn sàng hỗ trợ và tư vấn món cho khách.</p>
+                </div>
+                <div>
+                    <h2 style="margin-bottom:0.5rem;">Cam kết chất lượng</h2>
+                    <p>Chúng tôi lựa chọn nhà cung cấp uy tín, kiểm soát chặt chẽ quy trình bảo quản và chế biến để đảm bảo mỗi món ăn khi lên bàn đều đạt chuẩn về hương vị và an toàn thực phẩm.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="index-footer">
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from "./js/auth.js";
+
+        onAuthStateChanged(auth, (user) => {
+            const wrap = document.getElementById('navAuthWrap');
+            if (!wrap) return;
+            wrap.style.visibility = 'visible';
+            const guests = wrap.querySelectorAll('.nav-auth-guest');
+            const userSpan = wrap.querySelector('.nav-auth-user');
+            if (user) {
+                guests.forEach(el => { el.style.display = 'none'; });
+                if (userSpan) userSpan.style.display = 'inline-block';
+            } else {
+                guests.forEach(el => { el.style.display = 'inline-block'; });
+                if (userSpan) userSpan.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+

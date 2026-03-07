@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tin Tức - Ain Tō Sushi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .news-list { display: flex; flex-direction: column; gap: 0.7rem; }
+        .news-row { display: flex; flex-wrap: wrap; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; cursor: pointer; transition: box-shadow 0.2s; }
+        .news-row:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+        .news-row-img-wrap { flex: 0 0 32%; min-width: 140px; aspect-ratio: 4/3; overflow: hidden; }
+        .news-row-img { width: 100%; height: 100%; object-fit: contain; background: rgba(0,0,0,0.2); display: block; }
+        .news-row-img-placeholder { width: 100%; height: 100%; min-height: 80px; aspect-ratio: 4/3; background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(0,0,0,0.3)); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+        .news-row-body { flex: 1 1 60%; padding: 0.5rem 0.85rem; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .news-row-title { font-size: 0.88rem; font-weight: 700; color: rgba(255,255,255,0.98); line-height: 1.3; margin-bottom: 0.2rem; }
+        .news-row-meta { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .news-row-meta span { display: inline-flex; align-items: center; gap: 0.2rem; }
+        .news-row-summary { font-size: 0.8rem; color: rgba(255,255,255,0.82); line-height: 1.35; margin-bottom: 0.25rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-row-link { font-size: 0.78rem; color: var(--gold); font-weight: 600; margin-top: auto; }
+        .news-row-link:hover { text-decoration: underline; }
+        .news-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+        .news-pagination button { padding: 0.5rem 1rem; border: 2px solid rgba(255,255,255,0.3); background: transparent; color: rgba(255,255,255,0.9); border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        .news-pagination button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+        .news-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .news-pagination span { color: rgba(255,255,255,0.7); font-size: 0.95rem; }
+        .news-article-body p { margin-bottom: 0.75rem; }
+        .news-article-body ul, .news-article-body ol { margin: 0.5rem 0 0.75rem 1.25rem; }
+        .news-article-body a { color: var(--gold); text-decoration: underline; }
+        .news-article-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; display: block; }
+        .news-modal-overlay { position: fixed; inset: 0; width: 100vw; height: 100vh; background: #1a1a1a; z-index: 9999; display: none; flex-direction: column; box-sizing: border-box; overflow-y: auto; }
+        .news-modal-overlay.show { display: flex; }
+        .news-modal-box { flex: 1; width: 100%; max-width: 100%; min-height: 100%; display: flex; flex-direction: column; border: none; border-radius: 0; }
+        .news-modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end; flex-shrink: 0; }
+        .news-modal-close { background: transparent; border: none; color: rgba(255,255,255,0.8); font-size: 2rem; cursor: pointer; padding: 0 0.5rem; line-height: 1; }
+        .news-modal-body { flex: 1; padding: 1.5rem 2rem 3rem; max-width: 900px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .news-modal-body h2 { color: var(--gold); font-size: 1.75rem; margin-bottom: 0.5rem; }
+        .news-modal-body .news-meta { font-size: 1rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem; }
+        .news-modal-body .news-summary { font-size: 1.1rem; color: rgba(255,255,255,0.9); margin-bottom: 1.25rem; line-height: 1.5; }
+        .news-modal-body .news-article-body { color: rgba(255,255,255,0.85); line-height: 1.7; font-size: 1.05rem; }
+        .news-modal-body .news-modal-img { width: 100%; border-radius: 0; margin-bottom: 1.5rem; max-height: 55vh; object-fit: contain; background: rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body class="index-page theme-aintosushi">
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <img src="images/logo3.png" alt="Ain Tō Sushi Logo">
+                <span>Ain Tō Sushi</span>
+            </a>
+            <ul>
+                <li><a href="index.html">Trang Chủ</a></li>
+                <li><a href="menu.html">Thực Đơn</a></li>
+                <li><a href="reservation.html">Đặt Bàn</a></li>
+                <li><a href="news.html" class="active">Tin Tức</a></li>
+                <li><a href="about.html">Về Chúng Tôi</a></li>
+                <li id="navAuthWrap" class="nav-right" style="visibility: hidden;">
+                    <span class="nav-auth-guest"><a href="auth/register.html">Đăng Ký</a></span>
+                    <span class="nav-auth-guest"><a href="auth/login.html">Đăng Nhập</a></span>
+                    <span class="nav-auth-user" style="display: none;"><a href="profile.html" class="nav-avatar-link" title="Tài khoản"><img class="nav-avatar-img" alt="" style="display:none"><span class="nav-avatar-placeholder">👤</span></a></span>
+                </li>
+                <li><a href="cart.html" class="nav-cart-icon" title="Giỏ hàng" aria-label="Giỏ hàng"><img src="images/icon.png" alt="Giỏ hàng" style="width:22px;height:22px;object-fit:contain;"></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container index-container" style="padding-top:4rem; padding-bottom:4rem;">
+        <section class="card" data-inview>
+            <h1 style="margin-bottom:1rem;">Tin Tức & Sự Kiện</h1>
+            <p style="margin-bottom:1.5rem;">Cập nhật những tin tức mới nhất, chương trình khuyến mãi và sự kiện đặc biệt tại Ain Tō Sushi.</p>
+            <div id="newsLoading" style="margin-bottom:1rem; color: rgba(255,255,255,0.8);">Đang tải tin tức...</div>
+            <div id="newsListWrap" style="display: none;">
+                <div id="newsList" class="news-list"></div>
+                <div id="newsPagination" class="news-pagination"></div>
+            </div>
+            <div id="newsEmpty" style="display: none;">
+                <p style="margin-bottom:0.75rem;">Hiện tại chưa có bài viết mới. Vui lòng quay lại sau hoặc theo dõi fanpage của chúng tôi để không bỏ lỡ các thông tin hấp dẫn.</p>
+            </div>
+        </section>
+    </div>
+
+    <footer class="index-footer">
+        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+    </footer>
+
+    <div id="newsModal" class="news-modal-overlay" aria-hidden="true">
+        <div class="news-modal-box" onclick="event.stopPropagation()">
+            <div class="news-modal-header">
+                <button type="button" class="news-modal-close" id="newsModalClose" aria-label="Đóng">×</button>
+            </div>
+            <div id="newsModalBody" class="news-modal-body"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { auth, database } from "./js/auth.js";
+
+        onAuthStateChanged(auth, (user) => {
+            const wrap = document.getElementById('navAuthWrap');
+            if (!wrap) return;
+            wrap.style.visibility = 'visible';
+            const guests = wrap.querySelectorAll('.nav-auth-guest');
+            const userSpan = wrap.querySelector('.nav-auth-user');
+            if (user) {
+                guests.forEach(el => { el.style.display = 'none'; });
+                if (userSpan) userSpan.style.display = 'inline-block';
+            } else {
+                guests.forEach(el => { el.style.display = 'inline-block'; });
+                if (userSpan) userSpan.style.display = 'none';
+            }
+        });
+
+        const newsLoading = document.getElementById('newsLoading');
+        const newsListWrap = document.getElementById('newsListWrap');
+        const newsList = document.getElementById('newsList');
+        const newsPagination = document.getElementById('newsPagination');
+        const newsEmpty = document.getElementById('newsEmpty');
+        const newsModal = document.getElementById('newsModal');
+        const newsModalBody = document.getElementById('newsModalBody');
+        const newsModalClose = document.getElementById('newsModalClose');
+
+        const NEWS_PER_PAGE = 8;
+        let newsItemsCache = [];
+        let newsCurrentPage = 0;
+
+        function openNewsDetail(id) {
+            const n = newsItemsCache.find(item => item.id === id);
+            if (!n || !newsModalBody) return;
+            const date = (n.createdAt || n.updatedAt) ? new Date(n.createdAt || n.updatedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+            const rawContent = n.content || '';
+            const content = (rawContent.indexOf('<') !== -1) ? rawContent : rawContent.replace(/\n/g, '<br>');
+            const imgHtml = n.imageUrl ? '<img src="' + n.imageUrl + '" alt="" class="news-modal-img">' : '';
+            newsModalBody.innerHTML = imgHtml +
+                '<h2>' + (n.title || 'Tin tức') + '</h2>' +
+                (date ? '<p class="news-meta">' + date + '</p>' : '') +
+                (n.summary ? '<p class="news-summary">' + n.summary + '</p>' : '') +
+                (content ? '<div class="news-article-body">' + content + '</div>' : '');
+            if (newsModal) { newsModal.classList.add('show'); newsModal.setAttribute('aria-hidden', 'false'); }
+        }
+
+        function closeNewsModal() {
+            if (newsModal) { newsModal.classList.remove('show'); newsModal.setAttribute('aria-hidden', 'true'); }
+        }
+
+        if (newsModalClose) newsModalClose.addEventListener('click', closeNewsModal);
+        if (newsModal) newsModal.addEventListener('click', (e) => { if (e.target === newsModal) closeNewsModal(); });
+
+        function renderNewsPage() {
+            const items = newsItemsCache;
+            const totalPages = Math.max(1, Math.ceil(items.length / NEWS_PER_PAGE));
+            if (newsCurrentPage >= totalPages) newsCurrentPage = totalPages - 1;
+            if (newsCurrentPage < 0) newsCurrentPage = 0;
+            const start = newsCurrentPage * NEWS_PER_PAGE;
+            const pageItems = items.slice(start, start + NEWS_PER_PAGE);
+
+            if (!newsList) return;
+            newsList.innerHTML = pageItems.map(n => {
+                const dateStr = (n.createdAt || n.updatedAt) ? new Date(n.createdAt || n.updatedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+                const thumb = n.imageUrl
+                    ? '<img src="' + n.imageUrl + '" alt="" class="news-row-img">'
+                    : '<div class="news-row-img-placeholder">📰</div>';
+                const meta = dateStr ? '<span>🕐 ' + dateStr + '</span>' : '';
+                const summary = (n.summary || '').slice(0, 180) + ((n.summary || '').length > 180 ? '...' : '');
+                return '<article class="news-row" data-id="' + n.id + '" role="button" tabindex="0">' +
+                    '<div class="news-row-img-wrap">' + thumb + '</div>' +
+                    '<div class="news-row-body">' +
+                    '<h2 class="news-row-title">' + (n.title || 'Tin tức') + '</h2>' +
+                    (meta ? '<div class="news-row-meta">' + meta + '</div>' : '') +
+                    (summary ? '<p class="news-row-summary">' + summary + '</p>' : '') +
+                    '<span class="news-row-link">+ Xem tiếp</span>' +
+                    '</div></article>';
+            }).join('');
+            newsList.querySelectorAll('.news-row').forEach(row => {
+                const id = row.getAttribute('data-id');
+                row.addEventListener('click', (e) => { e.preventDefault(); openNewsDetail(id); });
+                row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNewsDetail(id); } });
+            });
+
+            if (newsPagination) {
+                if (totalPages <= 1) {
+                    newsPagination.innerHTML = '';
+                } else {
+                    newsPagination.innerHTML = '<button type="button" id="newsPagePrev" aria-label="Trang trước">←</button><span>Trang ' + (newsCurrentPage + 1) + ' / ' + totalPages + '</span><button type="button" id="newsPageNext" aria-label="Trang sau">→</button>';
+                    const prevBtn = document.getElementById('newsPagePrev');
+                    const nextBtn = document.getElementById('newsPageNext');
+                    if (prevBtn) prevBtn.disabled = newsCurrentPage <= 0;
+                    if (nextBtn) nextBtn.disabled = newsCurrentPage >= totalPages - 1;
+                    if (prevBtn) prevBtn.onclick = () => { newsCurrentPage--; renderNewsPage(); };
+                    if (nextBtn) nextBtn.onclick = () => { newsCurrentPage++; renderNewsPage(); };
+                }
+            }
+        }
+
+        onValue(ref(database, 'news'), (snapshot) => {
+            if (newsLoading) newsLoading.style.display = 'none';
+            const data = snapshot.val() || {};
+            const items = Object.entries(data)
+                .map(([id, n]) => ({ id, ...n }))
+                .filter(n => n.published !== false)
+                .sort((a, b) => (b.createdAt || b.updatedAt || 0) - (a.createdAt || a.updatedAt || 0));
+
+            if (!items.length) {
+                if (newsListWrap) newsListWrap.style.display = 'none';
+                if (newsList) newsList.innerHTML = '';
+                if (newsPagination) newsPagination.innerHTML = '';
+                if (newsEmpty) newsEmpty.style.display = 'block';
+                return;
+            }
+            if (newsEmpty) newsEmpty.style.display = 'none';
+            newsItemsCache = items;
+            newsCurrentPage = 0;
+            if (newsListWrap) newsListWrap.style.display = 'block';
+            renderNewsPage();
+        }, (err) => {
+            if (newsLoading) { newsLoading.style.display = 'none'; newsLoading.textContent = 'Không tải được tin tức.'; }
+            if (newsListWrap) newsListWrap.style.display = 'none';
+            if (newsEmpty) newsEmpty.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
+

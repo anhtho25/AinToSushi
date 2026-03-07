@@ -287,6 +287,10 @@
             successMessage.classList.remove('show');
         }
 
+        if (new URLSearchParams(window.location.search).get('error') === 'disabled') {
+            showError('Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.');
+        }
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();

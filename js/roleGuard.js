@@ -1,21 +1,10 @@
-// Role Guard - Bảo vệ các trang admin
-import { onAuthStateChange, getUserRole, saveUserData } from './auth.js';
+// Role Guard - Bảo vệ các trang admin/staff
+import { onAuthStateChange } from './auth.js';
 
 // Mapping role với các trang được phép truy cập
+// Chỉ còn 3 role: admin, staff, customer
 const rolePermissions = {
-    'Manager': [
-        'dashboard.html',
-        'orders.html',
-        'tables.html',
-        'menu-management.html',
-        'kitchen.html',
-        'payments.html',
-        'staff.html',
-        'reports.html',
-        'inventory.html',
-        'promotions.html'
-    ],
-    'Admin': [
+    admin: [
         'admin.html',
         'dashboard.html',
         'orders.html',
@@ -26,17 +15,11 @@ const rolePermissions = {
         'inventory.html',
         'promotions.html'
     ],
-    'Waiter': [
-        'waiter.html'
+    staff: [
+        'staff.html'
     ],
-    'Chef': [
-        'kitchen.html'
-    ],
-    'Cashier': [
-        'payments.html'
-    ],
-    'Customer': [
-        // Customer không được truy cập trang admin
+    customer: [
+        // Customer không được truy cập trang admin/staff
     ]
 };
 
@@ -75,38 +58,17 @@ export function initRoleGuard() {
             return;
         }
         
-        let { user, role } = authData;
-        
-        // Kiểm tra các email đặc biệt và tự động gán role (ưu tiên kiểm tra email trước)
-        if (user.email === 'admin@gmail.com') {
-            if (!role || role !== 'Admin') {
-                role = 'Admin';
-                await saveUserData(user.uid, user.email, 'Admin', user.displayName || 'Admin');
-            }
-        } else if (user.email === 'waiter@gmail.com') {
-            if (!role || role !== 'Waiter') {
-                role = 'Waiter';
-                await saveUserData(user.uid, user.email, 'Waiter', user.displayName || 'Waiter');
-            }
-        } else if (user.email === 'chef@gmail.com') {
-            if (!role || role !== 'Chef') {
-                role = 'Chef';
-                await saveUserData(user.uid, user.email, 'Chef', user.displayName || 'Chef');
-            }
-        } else if (user.email === 'cashier@gmail.com') {
-            if (!role || role !== 'Cashier') {
-                role = 'Cashier';
-                await saveUserData(user.uid, user.email, 'Cashier', user.displayName || 'Cashier');
-            }
-        } else if (!role) {
-            // Nếu không phải email đặc biệt và không có role
+        const { user, role, position } = authData;
+
+        // role bắt buộc phải có
+        if (!role) {
             console.error('User không có role');
             window.location.href = '../auth/login.html';
             return;
         }
         
-        // Nếu là Customer, không được vào admin → yêu cầu đăng nhập tài khoản phù hợp
-        if (role === 'Customer') {
+        // Customer không được vào vùng admin/staff
+        if (role === 'customer') {
             window.location.href = '../auth/login.html';
             return;
         }
@@ -115,11 +77,8 @@ export function initRoleGuard() {
         if (!checkPermission(role, currentPage)) {
             // Sai role cho layout hiện tại → đưa về layout đúng với role
             const defaultPages = {
-                'Manager': '../admin/dashboard.html',
-                'Admin': '../manager/admin.html',
-                'Waiter': '../manager/waiter.html',
-                'Chef': '../manager/kitchen.html',
-                'Cashier': '../manager/payments.html'
+                admin: '../manager/admin.html',
+                staff: '../manager/staff.html'
             };
             const defaultPage = defaultPages[role] || '../auth/login.html';
             window.location.href = defaultPage;
@@ -131,7 +90,8 @@ export function initRoleGuard() {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
-            role: role
+            role: role,
+            position: position || null
         };
     });
 }
