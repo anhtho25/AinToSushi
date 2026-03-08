@@ -13,15 +13,18 @@ function pad2(n) {
   return n.toString().padStart(2, '0');
 }
 
+// VNPAY yêu cầu GMT+7 (Vietnam)
 function buildCreateDate() {
   const d = new Date();
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+  const vn = new Date(utc + 7 * 60 * 60 * 1000);
   return (
-    d.getFullYear().toString() +
-    pad2(d.getMonth() + 1) +
-    pad2(d.getDate()) +
-    pad2(d.getHours()) +
-    pad2(d.getMinutes()) +
-    pad2(d.getSeconds())
+    vn.getFullYear().toString() +
+    pad2(vn.getMonth() + 1) +
+    pad2(vn.getDate()) +
+    pad2(vn.getHours()) +
+    pad2(vn.getMinutes()) +
+    pad2(vn.getSeconds())
   );
 }
 
@@ -82,14 +85,13 @@ exports.handler = async (event, context) => {
   };
 
   const sortedKeys = Object.keys(params).sort();
-  // Giống PHP urlencode: space thành + (application/x-www-form-urlencoded)
-  function urlEncode(str) {
-    return encodeURIComponent(str).replace(/%20/g, '+');
-  }
-  const hashData = sortedKeys
-    .map((k) => urlEncode(k) + '=' + urlEncode(String(params[k])))
+  // Chuỗi để ký: theo tài liệu VNPAY 2.1.0 có thể dùng raw (key=value) hoặc encoded.
+  // Thử raw trước (VNPAY server decode query rồi build lại chuỗi key=value để verify).
+  const hashData = sortedKeys.map((k) => k + '=' + String(params[k])).join('&');
+  // URL gửi đi: value phải encode (đặc biệt ReturnUrl)
+  const queryString = sortedKeys
+    .map((k) => k + '=' + encodeURIComponent(String(params[k])))
     .join('&');
-  const queryString = hashData;
 
   let vnp_SecureHash;
   const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
