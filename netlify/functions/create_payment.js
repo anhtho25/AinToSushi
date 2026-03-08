@@ -82,11 +82,14 @@ exports.handler = async (event, context) => {
   };
 
   const sortedKeys = Object.keys(params).sort();
-  // Chuỗi dùng để ký: sử dụng giá trị gốc (không encode)
-  const hashData = sortedKeys.map((k) => k + '=' + params[k]).join('&');
-  // Chuỗi query gửi lên VNPay: encodeURIComponent từng value
-  const queryParts = sortedKeys.map((k) => k + '=' + encodeURIComponent(params[k]));
-  const queryString = queryParts.join('&');
+  // Giống PHP urlencode: space thành + (application/x-www-form-urlencoded)
+  function urlEncode(str) {
+    return encodeURIComponent(str).replace(/%20/g, '+');
+  }
+  const hashData = sortedKeys
+    .map((k) => urlEncode(k) + '=' + urlEncode(String(params[k])))
+    .join('&');
+  const queryString = hashData;
 
   let vnp_SecureHash;
   const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';

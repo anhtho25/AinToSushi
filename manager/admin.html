@@ -58,6 +58,8 @@
         #adminNewsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
         #adminNewsSection .card table td { color: #1a1a1a !important; }
         #adminNewsSection .card table .btn { color: #1a1a1a !important; }
+        #adminReportsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
+        #adminReportsSection .card table td { color: #1a1a1a !important; }
         #adminNewsSection .ql-toolbar.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; }
         #adminNewsSection .ql-container.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; min-height: 180px; }
         #adminNewsSection .ql-editor { min-height: 160px; }
@@ -365,6 +367,30 @@
                 const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
                 return { start: new Date(y, m, day).getTime(), end: new Date(y, m, day + 1).getTime() - 1 };
             }
+            function getWeekStartEnd() {
+                const d = new Date();
+                const day = d.getDay();
+                const diff = day === 0 ? 6 : day - 1;
+                const mon = new Date(d);
+                mon.setDate(d.getDate() - diff);
+                mon.setHours(0, 0, 0, 0);
+                const sun = new Date(mon);
+                sun.setDate(mon.getDate() + 6);
+                sun.setHours(23, 59, 59, 999);
+                return { start: mon.getTime(), end: sun.getTime() };
+            }
+            function getMonthStartEnd() {
+                const d = new Date();
+                const y = d.getFullYear(), m = d.getMonth();
+                return { start: new Date(y, m, 1).getTime(), end: new Date(y, m + 1, 0, 23, 59, 59, 999).getTime() };
+            }
+            function getRevenueInRange(orders, start, end) {
+                if (!orders) return { revenue: 0, count: 0 };
+                const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
+                const completed = list.filter(o => o._s === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end);
+                const revenue = completed.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+                return { revenue, count: completed.length };
+            }
 
             function updateDashboard(orders, tables) {
                 const { start, end } = getTodayStartEnd();
@@ -479,10 +505,67 @@
                 }
             }
 
+            function renderReports() {
+                const orders = _orders || {};
+                const { start: todayStart, end: todayEnd } = getTodayStartEnd();
+                const { start: weekStart, end: weekEnd } = getWeekStartEnd();
+                const { start: monthStart, end: monthEnd } = getMonthStartEnd();
+
+                const today = getRevenueInRange(orders, todayStart, todayEnd);
+                const week = getRevenueInRange(orders, weekStart, weekEnd);
+                const month = getRevenueInRange(orders, monthStart, monthEnd);
+
+                const elToday = document.getElementById('adminReportTodayRev');
+                const elWeek = document.getElementById('adminReportWeekRev');
+                const elMonth = document.getElementById('adminReportMonthRev');
+                const elMonthOrders = document.getElementById('adminReportMonthOrders');
+                if (elToday) elToday.textContent = formatPrice(today.revenue);
+                if (elWeek) elWeek.textContent = formatPrice(week.revenue);
+                if (elMonth) elMonth.textContent = formatPrice(month.revenue);
+                if (elMonthOrders) elMonthOrders.textContent = String(month.count);
+
+                const dailyTbody = document.getElementById('adminReportDailyTableBody');
+                if (dailyTbody) {
+                    const dailyRows = [];
+                    for (let i = 13; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        d.setHours(0, 0, 0, 0);
+                        const dayStart = d.getTime();
+                        const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - 1;
+                        const r = getRevenueInRange(orders, dayStart, dayEnd);
+                        const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        dailyRows.push('<tr><td>' + dateStr + '</td><td>' + r.count + '</td><td>' + formatPrice(r.revenue) + '</td></tr>');
+                    }
+                    dailyTbody.innerHTML = dailyRows.join('');
+                }
+
+                const topTbody = document.getElementById('adminReportTopDishesBody');
+                if (topTbody) {
+                    const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
+                    const completedThisMonth = list.filter(o => o._s === 'COMPLETED' && o.completedAt >= monthStart && o.completedAt <= monthEnd);
+                    const dishCount = {};
+                    completedThisMonth.forEach(o => {
+                        (o.items || []).forEach(item => {
+                            const name = (item.name || item.title || 'Món').trim() || 'Món';
+                            const qty = Math.max(0, parseInt(item.quantity, 10) || 0);
+                            dishCount[name] = (dishCount[name] || 0) + qty;
+                        });
+                    });
+                    const topDishes = Object.entries(dishCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
+                    if (!topDishes.length) {
+                        topTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có dữ liệu đơn đã thanh toán trong tháng.</td></tr>';
+                    } else {
+                        topTbody.innerHTML = topDishes.map(([name, qty], idx) => '<tr><td>' + (idx + 1) + '</td><td>' + name + '</td><td>' + qty + '</td></tr>').join('');
+                    }
+                }
+            }
+
             onValue(ref(database, 'orders'), (snap) => {
                 _orders = snap.val() || {};
                 updateDashboard(_orders, _tables);
                 renderAdminOrdersList();
+                renderReports();
             });
             const adminOrderStatusFilterEl = document.getElementById('adminOrderStatusFilter');
             if (adminOrderStatusFilterEl) adminOrderStatusFilterEl.addEventListener('change', () => { adminOrderPage = 0; renderAdminOrdersList(); });
@@ -1605,14 +1688,56 @@
                 </div>
             </section>
 
-            <!-- REPORTS SECTION (placeholder) -->
+            <!-- REPORTS SECTION -->
             <section id="adminReportsSection" style="display:none;">
                 <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Báo Cáo</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Tổng hợp doanh thu và món bán chạy từ đơn hàng đã thanh toán.</p>
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card">
+                        <h3 id="adminReportTodayRev">0đ</h3>
+                        <p>Doanh thu hôm nay</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+                        <h3 id="adminReportWeekRev">0đ</h3>
+                        <p>Doanh thu tuần này</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);">
+                        <h3 id="adminReportMonthRev">0đ</h3>
+                        <p>Doanh thu tháng này</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);">
+                        <h3 id="adminReportMonthOrders">0</h3>
+                        <p>Đơn đã thanh toán (tháng)</p>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 class="card-header">Doanh thu theo ngày (14 ngày gần nhất)</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Số đơn</th>
+                                    <th>Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminReportDailyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="card">
-                    <h2 class="card-header">Trạng Thái Chức Năng</h2>
-                    <div style="padding:1.25rem; color: var(--text-light);">
-                        Báo cáo chi tiết (doanh thu theo ngày/tháng, món bán chạy, v.v.) chưa được xây dựng.
-                        Bạn vẫn xem được số liệu tổng quan tại Dashboard; khi cần có thể thêm biểu đồ và bảng tại tab này.
+                    <h2 class="card-header">Top món bán chạy (tháng này)</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Món</th>
+                                    <th>Số lượng đã bán</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminReportTopDishesBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
