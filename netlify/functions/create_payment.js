@@ -68,12 +68,23 @@ exports.handler = async (event, context) => {
 
   const vnp_TxnRef = 'ORDER_' + Date.now();
   const vnp_CreateDate = buildCreateDate();
+  // Thời gian hết hạn: GMT+7, thường = CreateDate + 15 phút (VNPAY bắt buộc)
+  const vnDate = new Date(new Date().getTime() + (new Date().getTimezoneOffset() + 7 * 60) * 60000);
+  vnDate.setMinutes(vnDate.getMinutes() + 15);
+  const vnp_ExpireDate =
+    vnDate.getFullYear().toString() +
+    pad2(vnDate.getMonth() + 1) +
+    pad2(vnDate.getDate()) +
+    pad2(vnDate.getHours()) +
+    pad2(vnDate.getMinutes()) +
+    pad2(vnDate.getSeconds());
 
   const params = {
     vnp_Amount: Math.round(amount) * 100,
     vnp_Command: 'pay',
     vnp_CreateDate: vnp_CreateDate,
     vnp_CurrCode: 'VND',
+    vnp_ExpireDate: vnp_ExpireDate,
     vnp_IpAddr: event.headers['x-forwarded-for']?.split(',')[0]?.trim() || event.headers['x-client-ip'] || '127.0.0.1',
     vnp_Locale: 'vn',
     vnp_OrderInfo: 'Thanh toan don hang ' + vnp_TxnRef,
@@ -85,13 +96,15 @@ exports.handler = async (event, context) => {
   };
 
   const sortedKeys = Object.keys(params).sort();
-  // Chuỗi để ký: theo tài liệu VNPAY 2.1.0 có thể dùng raw (key=value) hoặc encoded.
-  // Thử raw trước (VNPAY server decode query rồi build lại chuỗi key=value để verify).
-  const hashData = sortedKeys.map((k) => k + '=' + String(params[k])).join('&');
-  // URL gửi đi: value phải encode (đặc biệt ReturnUrl)
+  // Chuỗi ký = đúng query string gửi lên VNPAY (encoded, space = + như PHP)
+  // VNPAY verify bằng cách lấy query nhận được và so HMAC.
+  function urlEncode(str) {
+    return encodeURIComponent(str).replace(/%20/g, '+');
+  }
   const queryString = sortedKeys
-    .map((k) => k + '=' + encodeURIComponent(String(params[k])))
+    .map((k) => k + '=' + urlEncode(String(params[k])))
     .join('&');
+  const hashData = queryString;
 
   let vnp_SecureHash;
   const useLegacyHash = process.env.VNP_LEGACY_HASH === '1' || process.env.VNP_LEGACY_HASH === 'true';
