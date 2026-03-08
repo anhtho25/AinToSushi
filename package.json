@@ -19,6 +19,7 @@
   "homepage": "https://github.com/anhtho25/AinToSushi#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "qs": "^6.15.0"
+    "qs": "^6.15.0",
+    "vnpay": "^2.4.4"
   }
 }
