@@ -1,4 +1,3 @@
-# Website Quản Lý Quán Ăn Nhật Bản - Sakura Restaurant
 
 git init
 git add .
