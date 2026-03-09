@@ -278,7 +278,7 @@
             </div>
 
             <!-- 3. Đơn hàng của tôi -->
-            <div class="profile-card">
+            <div class="profile-card" id="don-hang">
                 <h2>3. Đơn hàng của tôi</h2>
                 <div class="order-history-wrap">
                     <ul class="profile-list" id="orderList"></ul>
@@ -387,6 +387,7 @@
         onAuthStateChanged(auth, async (user) => {
             updateHeader(user);
             if (!user) {
+                try { sessionStorage.setItem('returnUrl', window.location.href); } catch (e) {}
                 window.location.replace('auth/login.html');
                 return;
             }
@@ -444,6 +445,11 @@
                 phone: phone === '—' ? '' : phone,
                 address: address === '—' ? '' : address
             });
+
+            if (window.location.hash === '#don-hang') {
+                const el = document.getElementById('don-hang');
+                if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 300);
+            }
 
             if (photoURL) {
                 avatarImg.src = photoURL;
@@ -624,5 +630,6 @@
             orderNext.onclick = () => { orderPage++; renderOrderPage(); };
         });
     </script>
+    <script src="js/chatbot.js"></script>
 </body>
 </html>

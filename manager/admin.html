@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         /* Tiêu đề và mô tả các tab quản lý: chữ sáng trên nền tối */
         .main-content section h1 { color: #f0f0f0 !important; }
@@ -58,8 +59,9 @@
         #adminNewsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
         #adminNewsSection .card table td { color: #1a1a1a !important; }
         #adminNewsSection .card table .btn { color: #1a1a1a !important; }
-        #adminReportsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
-        #adminReportsSection .card table td { color: #1a1a1a !important; }
+        #adminReviewsSection .card table thead th { background: #1a1a1a; color: #fff !important; }
+        #adminReviewsSection .card table td { color: #1a1a1a !important; }
+        #adminReviewsSection .card table .btn { color: #1a1a1a !important; }
         #adminNewsSection .ql-toolbar.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; }
         #adminNewsSection .ql-container.ql-snow { border-color: rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; min-height: 180px; }
         #adminNewsSection .ql-editor { min-height: 160px; }
@@ -86,6 +88,7 @@
         .admin-modal-actions { padding: 0.75rem 1.25rem 1rem; display: flex; justify-content: flex-end; gap: 0.75rem; }
         .admin-modal-actions .btn { padding: 0.45rem 1rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
         .admin-modal-input { width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; font-size: 0.95rem; margin-top: 0.5rem; box-sizing: border-box; }
+        .admin-revenue-mode-btn.active { background: linear-gradient(135deg, #D4AF37 0%, #b8941f 100%); color: #1a1a1a; border-color: #c9a227; }
     </style>
 </head>
 <body class="theme-aintosushi">
@@ -303,7 +306,7 @@
             if (logoutLink) {
                 logoutLink.href = '#';
                 logoutLink.id = 'logoutBtn';
-                    logoutLink.addEventListener('click', async (e) => {
+                logoutLink.addEventListener('click', async (e) => {
                     e.preventDefault();
                     const ok = await openAdminConfirm({ title: 'Đăng xuất', message: 'Bạn có chắc chắn muốn đăng xuất?', okText: 'Đăng xuất', cancelText: 'Hủy' });
                     if (ok) await logout();
@@ -317,7 +320,8 @@
                 tables: document.getElementById('adminTablesSection'),
                 menu: document.getElementById('adminMenuSection'),
                 staff: document.getElementById('adminStaffSection'),
-                reports: document.getElementById('adminReportsSection'),
+                reviews: document.getElementById('adminReviewsSection'),
+                chatbot: document.getElementById('adminChatbotSection'),
                 news: document.getElementById('adminNewsSection')
             };
             function showSection(key) {
@@ -384,61 +388,31 @@
                 const y = d.getFullYear(), m = d.getMonth();
                 return { start: new Date(y, m, 1).getTime(), end: new Date(y, m + 1, 0, 23, 59, 59, 999).getTime() };
             }
+            function isOnlineOrder(o) {
+                return String(o.paymentMethod || '').toLowerCase() === 'vnpay';
+            }
             function getRevenueInRange(orders, start, end) {
-                if (!orders) return { revenue: 0, count: 0 };
+                if (!orders) return { revenue: 0, count: 0, online: 0, offline: 0 };
                 const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
-                const completed = list.filter(o => o._s === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end);
+                const completed = list.filter(o => {
+                    if (o._s !== 'COMPLETED') return false;
+                    const t = o.completedAt || o.createdAt || 0;
+                    return t >= start && t <= end;
+                });
                 const revenue = completed.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
-                return { revenue, count: completed.length };
+                const online = completed.filter(o => isOnlineOrder(o)).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+                const offline = revenue - online;
+                return { revenue, count: completed.length, online, offline };
             }
 
-            function updateDashboard(orders, tables) {
-                const { start, end } = getTodayStartEnd();
-                const orderList = orders ? Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) })) : [];
-                const completedToday = orderList.filter(o => o._s === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end);
-                const revenue = completedToday.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
-                const tablesList = tables ? Object.values(tables) : [];
-                const occupied = tablesList.filter(t => String(t.status || '').toUpperCase() === 'OCCUPIED').length;
-                const totalTables = tablesList.length || 1;
-                const pendingOrders = orderList.filter(o => ['PENDING', 'APPROVED', 'COOKING', 'READY'].includes(o._s)).length;
-
-                const elRev = document.getElementById('adminStatRevenue');
-                const elOrders = document.getElementById('adminStatOrdersToday');
-                const elTables = document.getElementById('adminStatTables');
-                const elPending = document.getElementById('adminStatPending');
-                if (elRev) elRev.textContent = formatPrice(revenue);
-                if (elOrders) elOrders.textContent = String(completedToday.length);
-                if (elTables) elTables.textContent = occupied + '/' + totalTables;
-                if (elPending) elPending.textContent = String(pendingOrders);
-
-                const tbody = document.getElementById('adminOrdersBody');
-                if (!tbody) return;
-                const recent = orderList.filter(o => ['APPROVED', 'COOKING', 'READY', 'COMPLETED'].includes(o._s))
-                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
-                if (!recent.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đơn hàng nào.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = recent.map(o => {
-                    const info = o.customerInfo || {};
-                    const time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
-                    const label = STATUS_LABELS[o._s] || o._s;
-                    const badge = BADGE[o._s] || 'badge-secondary';
-                    return `<tr>
-                        <td>#${orderCode4(o.id)}</td>
-                        <td>${o.tableName || o.tableId || (info.address ? 'Mang về' : '—')}</td>
-                        <td>${info.name || 'Khách'}</td>
-                        <td>${formatPrice(o.totalAmount)}</td>
-                        <td><span class="badge ${badge}">${label}</span></td>
-                        <td>${time}</td>
-                        <td><a href="orders.html" class="btn btn-info" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Chi tiết</a></td>
-                    </tr>`;
-                }).join('');
-            }
+            function updateDashboard() { /* Dashboard chỉ còn doanh thu & biểu đồ, cập nhật bởi renderReports */ }
 
             let _orders = {}, _tables = {};
             const ADMIN_ORDERS_PAGE_SIZE = 15;
             let adminOrderPage = 0;
+            let _reportRevenueChart = null;
+            let _reportTopDishesChart = null;
+            let _revenueChartMode = 'day'; // 'day' | 'month'
 
             function renderAdminOrdersList() {
                 const tbody = document.getElementById('adminOrdersListBody');
@@ -524,51 +498,252 @@
                 if (elMonth) elMonth.textContent = formatPrice(month.revenue);
                 if (elMonthOrders) elMonthOrders.textContent = String(month.count);
 
-                const dailyTbody = document.getElementById('adminReportDailyTableBody');
-                if (dailyTbody) {
-                    const dailyRows = [];
-                    for (let i = 13; i >= 0; i--) {
-                        const d = new Date();
-                        d.setDate(d.getDate() - i);
-                        d.setHours(0, 0, 0, 0);
-                        const dayStart = d.getTime();
-                        const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - 1;
-                        const r = getRevenueInRange(orders, dayStart, dayEnd);
-                        const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-                        dailyRows.push('<tr><td>' + dateStr + '</td><td>' + r.count + '</td><td>' + formatPrice(r.revenue) + '</td></tr>');
-                    }
-                    dailyTbody.innerHTML = dailyRows.join('');
+                const elOnline = document.getElementById('adminReportOnlineRev');
+                const elOffline = document.getElementById('adminReportOfflineRev');
+                if (elOnline) elOnline.textContent = formatPrice(today.online);
+                if (elOffline) elOffline.textContent = formatPrice(today.offline);
+
+                const dailyLabels = [], dailyRevenues = [], dailyOnline = [], dailyOffline = [];
+                for (let i = 13; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    d.setHours(0, 0, 0, 0);
+                    const dayStart = d.getTime();
+                    const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - 1;
+                    const r = getRevenueInRange(orders, dayStart, dayEnd);
+                    const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+                    dailyLabels.push(dateStr);
+                    dailyRevenues.push(r.revenue);
+                    dailyOnline.push(r.online);
+                    dailyOffline.push(r.offline);
                 }
 
-                const topTbody = document.getElementById('adminReportTopDishesBody');
-                if (topTbody) {
-                    const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
-                    const completedThisMonth = list.filter(o => o._s === 'COMPLETED' && o.completedAt >= monthStart && o.completedAt <= monthEnd);
-                    const dishCount = {};
-                    completedThisMonth.forEach(o => {
-                        (o.items || []).forEach(item => {
-                            const name = (item.name || item.title || 'Món').trim() || 'Món';
-                            const qty = Math.max(0, parseInt(item.quantity, 10) || 0);
-                            dishCount[name] = (dishCount[name] || 0) + qty;
-                        });
+                const monthlyLabels = [], monthlyRevenues = [], monthlyOnline = [], monthlyOffline = [];
+                for (let i = 11; i >= 0; i--) {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    d.setDate(1);
+                    d.setHours(0, 0, 0, 0);
+                    const mStart = d.getTime();
+                    const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() - 1;
+                    const r = getRevenueInRange(orders, mStart, mEnd);
+                    const label = 'T' + (d.getMonth() + 1) + '/' + d.getFullYear();
+                    monthlyLabels.push(label);
+                    monthlyRevenues.push(r.revenue);
+                    monthlyOnline.push(r.online);
+                    monthlyOffline.push(r.offline);
+                }
+
+                const isMonth = _revenueChartMode === 'month';
+                const revLabels = isMonth ? monthlyLabels : dailyLabels;
+                const revOnline = isMonth ? monthlyOnline : dailyOnline;
+                const revOffline = isMonth ? monthlyOffline : dailyOffline;
+                const titleEl = document.getElementById('adminRevenueChartTitle');
+                if (titleEl) titleEl.textContent = _revenueChartMode === 'month' ? 'Doanh thu theo tháng (12 tháng gần nhất)' : 'Doanh thu theo ngày (14 ngày gần nhất)';
+
+                const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
+                const completedThisMonth = list.filter(o => {
+                    if (o._s !== 'COMPLETED') return false;
+                    const t = o.completedAt || o.createdAt || 0;
+                    return t >= monthStart && t <= monthEnd;
+                });
+                const dishCount = {};
+                completedThisMonth.forEach(o => {
+                    (o.items || []).forEach(item => {
+                        const name = (item.name || item.title || 'Món').trim() || 'Món';
+                        const qty = Math.max(0, parseInt(item.quantity, 10) || 0);
+                        dishCount[name] = (dishCount[name] || 0) + qty;
                     });
-                    const topDishes = Object.entries(dishCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
-                    if (!topDishes.length) {
-                        topTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có dữ liệu đơn đã thanh toán trong tháng.</td></tr>';
-                    } else {
-                        topTbody.innerHTML = topDishes.map(([name, qty], idx) => '<tr><td>' + (idx + 1) + '</td><td>' + name + '</td><td>' + qty + '</td></tr>').join('');
+                });
+                const topDishes = Object.entries(dishCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
+
+                if (typeof Chart !== 'undefined') {
+                    const revCanvas = document.getElementById('adminReportRevenueChart');
+                    if (revCanvas) {
+                        if (_reportRevenueChart) _reportRevenueChart.destroy();
+                        _reportRevenueChart = new Chart(revCanvas, {
+                            type: 'bar',
+                            data: {
+                                labels: revLabels,
+                                datasets: [
+                                    {
+                                        label: 'Online',
+                                        data: revOnline,
+                                        backgroundColor: 'rgba(33, 150, 243, 0.65)',
+                                        borderColor: 'rgba(33, 150, 243, 1)',
+                                        borderWidth: 1
+                                    },
+                                    {
+                                        label: 'Offline (tại bàn)',
+                                        data: revOffline,
+                                        backgroundColor: 'rgba(212, 175, 55, 0.6)',
+                                        borderColor: 'rgba(212, 175, 55, 1)',
+                                        borderWidth: 1
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { labels: { color: '#e0e0e0' } }
+                                },
+                                scales: {
+                                    x: { stacked: true, ticks: { color: '#b0b0b0', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                                    y: {
+                                        stacked: true,
+                                        beginAtZero: true,
+                                        ticks: {
+                                            color: '#b0b0b0',
+                                            callback: function(value) { return value >= 1000000 ? (value/1000000) + 'M' : (value >= 1000 ? (value/1000) + 'k' : value); }
+                                        },
+                                        grid: { color: 'rgba(255,255,255,0.08)' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    const topCanvas = document.getElementById('adminReportTopDishesChart');
+                    if (topCanvas) {
+                        if (_reportTopDishesChart) _reportTopDishesChart.destroy();
+                        _reportTopDishesChart = new Chart(topCanvas, {
+                            type: 'bar',
+                            data: {
+                                labels: topDishes.map(([name]) => name.length > 20 ? name.slice(0, 18) + '…' : name),
+                                datasets: [{
+                                    label: 'Số lượng',
+                                    data: topDishes.map(([, qty]) => qty),
+                                    backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                                    borderColor: 'rgba(33, 150, 243, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { labels: { color: '#e0e0e0' } }
+                                },
+                                scales: {
+                                    x: { beginAtZero: true, ticks: { color: '#b0b0b0' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                                    y: { ticks: { color: '#b0b0b0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                                }
+                            }
+                        });
                     }
                 }
             }
 
             onValue(ref(database, 'orders'), (snap) => {
                 _orders = snap.val() || {};
-                updateDashboard(_orders, _tables);
+                updateDashboard();
                 renderAdminOrdersList();
                 renderReports();
             });
             const adminOrderStatusFilterEl = document.getElementById('adminOrderStatusFilter');
             if (adminOrderStatusFilterEl) adminOrderStatusFilterEl.addEventListener('change', () => { adminOrderPage = 0; renderAdminOrdersList(); });
+
+            document.querySelectorAll('.admin-revenue-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const isDay = btn.id === 'adminRevenueChartModeDay';
+                    _revenueChartMode = isDay ? 'day' : 'month';
+                    document.querySelectorAll('.admin-revenue-mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderReports();
+                });
+            });
+
+            // --- Quản lý đánh giá (từ menu/món) ---
+            let _adminReviewsList = [];
+            function renderAdminReviewsList() {
+                const tbody = document.getElementById('adminReviewsListBody');
+                if (!tbody) return;
+                if (!_adminReviewsList.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đánh giá nào.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = _adminReviewsList.map(r => {
+                    const stars = Math.max(0, Math.min(5, parseInt(r.stars, 10) || 0));
+                    const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+                    const date = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+                    const content = (r.content || '').replace(/</g, '&lt;').slice(0, 120) + ((r.content || '').length > 120 ? '…' : '');
+                    const productName = (r.productName || r.productTitle || 'Món').replace(/</g, '&lt;');
+                    return `<tr data-product-id="${r.productId}" data-review-id="${r.reviewId}">
+                        <td>${productName}</td>
+                        <td>${(r.reviewerName || 'Khách').replace(/</g, '&lt;')}</td>
+                        <td><span style="color: var(--gold);">${starStr}</span></td>
+                        <td style="max-width: 220px;">${content}</td>
+                        <td>${date}</td>
+                        <td><button type="button" class="btn table-card-delete admin-review-delete-btn" data-product-id="${r.productId}" data-review-id="${r.reviewId}" style="padding:0.25rem 0.6rem; font-size:0.8rem;">Xóa</button></td>
+                    </tr>`;
+                }).join('');
+                tbody.querySelectorAll('.admin-review-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const productId = btn.getAttribute('data-product-id');
+                        const reviewId = btn.getAttribute('data-review-id');
+                        if (!productId || !reviewId) return;
+                        const ok = await openAdminConfirm({ title: 'Xóa đánh giá', message: 'Bạn có chắc muốn xóa đánh giá này?', okText: 'Xóa', cancelText: 'Hủy' });
+                        if (!ok) return;
+                        try {
+                            await remove(ref(database, MENU_PATH + '/' + productId + '/reviews/' + reviewId));
+                            showAdminMessage('Đã xóa', 'Đánh giá đã được xóa.');
+                        } catch (e) {
+                            console.error(e);
+                            showAdminMessage('Lỗi', 'Không thể xóa đánh giá.');
+                        }
+                    });
+                });
+            }
+            onValue(ref(database, MENU_PATH), (snapshot) => {
+                const data = snapshot.val();
+                _adminReviewsList = [];
+                if (data && typeof data === 'object') {
+                    Object.entries(data).forEach(([productId, product]) => {
+                        const reviews = product && product.reviews && typeof product.reviews === 'object' ? product.reviews : {};
+                        const productName = product.title || product.name || product.id || productId;
+                        Object.entries(reviews).forEach(([reviewId, review]) => {
+                            _adminReviewsList.push({
+                                productId,
+                                productName,
+                                reviewId,
+                                reviewerName: review.reviewerName,
+                                stars: review.stars,
+                                content: review.content,
+                                createdAt: review.createdAt
+                            });
+                        });
+                    });
+                    _adminReviewsList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                }
+                renderAdminReviewsList();
+            }, (err) => {
+                console.error(err);
+                const tbody = document.getElementById('adminReviewsListBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Không tải được đánh giá.</td></tr>';
+            });
+
+            onValue(ref(database, 'chatbot/config'), (snap) => {
+                const data = snap.val();
+                const elHours = document.getElementById('adminChatbotOpeningHours');
+                const elAddr = document.getElementById('adminChatbotAddress');
+                const elPhone = document.getElementById('adminChatbotPhone');
+                if (elHours) elHours.value = (data && data.openingHours) ? data.openingHours : '';
+                if (elAddr) elAddr.value = (data && data.address) ? data.address : '';
+                if (elPhone) elPhone.value = (data && data.phone) ? data.phone : '';
+            });
+            document.getElementById('adminChatbotSave')?.addEventListener('click', async () => {
+                const openingHours = (document.getElementById('adminChatbotOpeningHours')?.value || '').trim();
+                const address = (document.getElementById('adminChatbotAddress')?.value || '').trim();
+                const phone = (document.getElementById('adminChatbotPhone')?.value || '').trim();
+                try {
+                    await update(ref(database, 'chatbot/config'), { openingHours: openingHours || null, address: address || null, phone: phone || null });
+                    showAdminMessage('Đã lưu', 'Cấu hình chatbot đã được cập nhật.');
+                } catch (err) {
+                    console.error(err);
+                    showAdminMessage('Lỗi', 'Không thể lưu cấu hình.');
+                }
+            });
 
             let _users = {};
             function renderAdminStaffList() {
@@ -737,7 +912,7 @@
             onValue(ref(database, 'tables'), (snap) => {
                 _tables = snap.val() || {};
                 adminTablesCache = _tables;
-                updateDashboard(_orders, _tables);
+                updateDashboard();
                 renderAdminTables();
             });
             onValue(ref(database, 'settings/deletedDefaultTableIds'), (snap) => {
@@ -1300,7 +1475,8 @@
                 <li><a href="#" data-section="tables">🪑 Quản Lý Bàn Ăn</a></li>
                 <li><a href="#" data-section="menu">🍽️ Quản Lý Thực Đơn</a></li>
                 <li><a href="#" data-section="staff">👥 Quản Lý Nhân Viên</a></li>
-                <li><a href="#" data-section="reports">📈 Báo Cáo</a></li>
+                <li><a href="#" data-section="reviews">⭐ Quản Lý Đánh Giá</a></li>
+                <li><a href="#" data-section="chatbot">🤖 Cấu Hình Chatbot</a></li>
                 <li><a href="#" data-section="news">📰 Quản Lý Tin Tức</a></li>
                 <li><a href="../auth/admin.html">🚪 Đăng Xuất</a></li>
             </ul>
@@ -1309,71 +1485,57 @@
         <main class="main-content">
             <!-- DASHBOARD SECTION -->
             <section id="adminDashboardSection">
-                <div style="margin-bottom: 2rem;">
-                    <h1 style="color: var(--primary-color);">Dashboard</h1>
-                    <p style="color: var(--text-light);">Tổng quan hoạt động nhà hàng hôm nay</p>
+            <div style="margin-bottom: 2rem;">
+                <h1 style="color: var(--primary-color);">Dashboard</h1>
+                    <p style="color: var(--text-light);">Tổng quan doanh thu, món bán chạy và đơn hàng gần đây.</p>
+            </div>
+
+                <!-- Doanh thu & báo cáo -->
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card">
+                        <h3 id="adminReportTodayRev">0đ</h3>
+                        <p>Doanh thu hôm nay</p>
                 </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+                        <h3 id="adminReportWeekRev">0đ</h3>
+                        <p>Doanh thu tuần này</p>
+                </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);">
+                        <h3 id="adminReportMonthRev">0đ</h3>
+                        <p>Doanh thu tháng này</p>
+                </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);">
+                        <h3 id="adminReportMonthOrders">0</h3>
+                        <p>Đơn đã thanh toán (tháng)</p>
+                </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);">
+                    <h3 id="adminReportOnlineRev">0đ</h3>
+                    <p>🌐 Online (hôm nay)</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #e65100 0%, #bf360c 100%);">
+                    <h3 id="adminReportOfflineRev">0đ</h3>
+                    <p>🍽️ Offline - tại bàn (hôm nay)</p>
+                </div>
+            </div>
 
-                <!-- Stats Cards (dữ liệu thật từ Firebase) -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 id="adminStatRevenue">0đ</h3>
-                        <p>Doanh Thu Hôm Nay</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">
-                        <h3 id="adminStatOrdersToday">0</h3>
-                        <p>Đơn Đã Thanh Toán Hôm Nay</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
-                        <h3 id="adminStatTables">0/0</h3>
-                        <p>Bàn Đang Phục Vụ</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
-                        <h3 id="adminStatPending">0</h3>
-                        <p>Đơn Đang Chờ</p>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 class="card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                        <span id="adminRevenueChartTitle">Doanh thu theo ngày (14 ngày gần nhất)</span>
+                        <span style="display: flex; gap: 0.5rem;">
+                            <button type="button" id="adminRevenueChartModeDay" class="btn btn-secondary admin-revenue-mode-btn active" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">Theo ngày</button>
+                            <button type="button" id="adminRevenueChartModeMonth" class="btn btn-secondary admin-revenue-mode-btn" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">Theo tháng</button>
+                        </span>
+                    </h2>
+                    <div style="position: relative; height: 280px; padding: 1rem;">
+                        <canvas id="adminReportRevenueChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Recent Orders (dữ liệu thật từ Firebase) -->
-                <div class="card">
-                    <h2 class="card-header">Đơn Hàng Gần Đây</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mã Đơn</th>
-                                <th>Bàn</th>
-                                <th>Khách Hàng</th>
-                                <th>Tổng Tiền</th>
-                                <th>Trạng Thái</th>
-                                <th>Thời Gian</th>
-                                <th>Thao Tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminOrdersBody">
-                            <tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="grid-2">
-                    <div class="card">
-                        <h2 class="card-header">Thao Tác Nhanh</h2>
-                        <div style="display: flex; flex-direction: column; gap: 1rem;">
-                            <button type="button" class="btn" data-section-switch="tables">Quản Lý Bàn Ăn</button>
-                            <button type="button" class="btn btn-success" data-section-switch="orders">Tạo Đơn Hàng Mới</button>
-                            <button type="button" class="btn btn-info" data-section-switch="menu">Thêm Món Mới</button>
-                            <button type="button" class="btn btn-warning" data-section-switch="reports">Xem Báo Cáo</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h2 class="card-header">Thống Kê Nhanh</h2>
-                        <div style="margin-top: 1rem;">
-                            <p style="color: var(--text-light); font-size: 0.9rem;">
-                                Xem báo cáo chi tiết tại tab <strong>Báo Cáo</strong>.
-                            </p>
-                        </div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 class="card-header">Top món bán chạy (tháng này)</h2>
+                    <div style="position: relative; height: 320px; padding: 1rem;">
+                        <canvas id="adminReportTopDishesChart"></canvas>
                     </div>
                 </div>
             </section>
@@ -1398,20 +1560,20 @@
                         </div>
                     </div>
                 </div>
-                <div class="card">
+            <div class="card">
                     <h2 class="card-header">Danh Sách Đơn Hàng</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mã Đơn</th>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn</th>
                                 <th>Bàn / Giao hàng</th>
-                                <th>Khách Hàng</th>
-                                <th>Tổng Tiền</th>
-                                <th>Trạng Thái</th>
-                                <th>Thời Gian</th>
-                                <th>Thao Tác</th>
-                            </tr>
-                        </thead>
+                            <th>Khách Hàng</th>
+                            <th>Tổng Tiền</th>
+                            <th>Trạng Thái</th>
+                            <th>Thời Gian</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
                         <tbody id="adminOrdersListBody">
                             <tr><td colspan="7" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
                         </tbody>
@@ -1509,7 +1671,7 @@
                                 <th>Mô Tả</th>
                                 <th>Trạng Thái</th>
                                 <th>Thao Tác</th>
-                            </tr>
+                        </tr>
                         </thead>
                         <tbody id="menuTableBody">
                             <tr><td colspan="7" style="text-align:center;color:var(--text-light);">Đang tải...</td></tr>
@@ -1604,13 +1766,13 @@
                                 <th>Position</th>
                                 <th>Trạng thái</th>
                                 <th>Thao Tác</th>
-                            </tr>
+                        </tr>
                         </thead>
                         <tbody id="adminStaffListBody">
                             <tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
+            </div>
                 <!-- Modal sửa quyền nhân viên -->
                 <div id="adminEditStaffModal" class="admin-modal-overlay">
                     <div class="admin-modal-box">
@@ -1688,56 +1850,52 @@
                 </div>
             </section>
 
-            <!-- REPORTS SECTION -->
-            <section id="adminReportsSection" style="display:none;">
-                <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Báo Cáo</h1>
-                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Tổng hợp doanh thu và món bán chạy từ đơn hàng đã thanh toán.</p>
-                <div class="stats-grid" style="margin-bottom: 1.5rem;">
-                    <div class="stat-card">
-                        <h3 id="adminReportTodayRev">0đ</h3>
-                        <p>Doanh thu hôm nay</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
-                        <h3 id="adminReportWeekRev">0đ</h3>
-                        <p>Doanh thu tuần này</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);">
-                        <h3 id="adminReportMonthRev">0đ</h3>
-                        <p>Doanh thu tháng này</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);">
-                        <h3 id="adminReportMonthOrders">0</h3>
-                        <p>Đơn đã thanh toán (tháng)</p>
-                    </div>
-                </div>
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <h2 class="card-header">Doanh thu theo ngày (14 ngày gần nhất)</h2>
-                    <div style="overflow-x: auto;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Ngày</th>
-                                    <th>Số đơn</th>
-                                    <th>Doanh thu</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminReportDailyTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- REVIEWS SECTION -->
+            <section id="adminReviewsSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Quản Lý Đánh Giá</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Xem và xóa đánh giá của khách theo từng món (đánh giá được gửi từ trang chi tiết món).</p>
                 <div class="card">
-                    <h2 class="card-header">Top món bán chạy (tháng này)</h2>
+                    <h2 class="card-header">Danh sách đánh giá</h2>
                     <div style="overflow-x: auto;">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>Món</th>
-                                    <th>Số lượng đã bán</th>
+                                    <th>Khách</th>
+                                    <th>Sao</th>
+                                    <th>Nội dung</th>
+                                    <th>Ngày</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody id="adminReportTopDishesBody"></tbody>
+                            <tbody id="adminReviewsListBody">
+                                <tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                            </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHATBOT CONFIG SECTION -->
+            <section id="adminChatbotSection" style="display:none;">
+                <h1 style="color: var(--primary-color); margin-bottom: 1rem;">Cấu Hình Chatbot</h1>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Chỉnh sửa câu trả lời mặc định của chatbot (giờ mở cửa, địa chỉ, số điện thoại). Khách hỏi trên website sẽ thấy nội dung bạn nhập bên dưới.</p>
+                <div class="card">
+                    <h2 class="card-header">Câu trả lời chatbot</h2>
+                    <div style="padding: 1.25rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Giờ mở cửa</label>
+                            <input type="text" id="adminChatbotOpeningHours" class="admin-modal-input" placeholder="VD: 10:00 - 22:00 (tất cả các ngày trong tuần)">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Địa chỉ</label>
+                            <input type="text" id="adminChatbotAddress" class="admin-modal-input" placeholder="Địa chỉ nhà hàng">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block; color: rgba(255,255,255,0.9); margin-bottom: 0.35rem;">Số điện thoại</label>
+                            <input type="text" id="adminChatbotPhone" class="admin-modal-input" placeholder="VD: 0908 210 770 hoặc 1900 xxxx">
+                        </div>
+                        <button type="button" id="adminChatbotSave" class="btn">Lưu cấu hình</button>
                     </div>
                 </div>
             </section>
@@ -1802,7 +1960,7 @@
                 </div>
             </section>
         </main>
-    </div>
+                </div>
 
     <!-- Modal thông báo (thay alert) -->
     <div id="adminMessageModal" class="admin-modal-overlay">
@@ -1810,26 +1968,26 @@
             <div class="admin-modal-header">
                 <div id="adminMessageTitle" class="admin-modal-title">Thông báo</div>
                 <button type="button" class="admin-modal-close" id="adminMessageClose" aria-label="Đóng">×</button>
-            </div>
+                        </div>
             <div id="adminMessageBody" class="admin-modal-body"></div>
             <div class="admin-modal-actions">
                 <button type="button" id="adminMessageOk" class="btn">Đóng</button>
-            </div>
-        </div>
-    </div>
+                        </div>
+                        </div>
+                        </div>
     <!-- Modal xác nhận (thay confirm) -->
     <div id="adminConfirmModal" class="admin-modal-overlay">
         <div class="admin-modal-box">
             <div class="admin-modal-header">
                 <div id="adminConfirmTitle" class="admin-modal-title">Xác nhận</div>
                 <button type="button" class="admin-modal-close" id="adminConfirmClose" aria-label="Đóng">×</button>
-            </div>
+                    </div>
             <div id="adminConfirmBody" class="admin-modal-body"></div>
             <div class="admin-modal-actions">
                 <button type="button" id="adminConfirmCancel" class="btn btn-secondary">Hủy</button>
                 <button type="button" id="adminConfirmOk" class="btn">Đồng ý</button>
+                </div>
             </div>
-        </div>
     </div>
     <!-- Modal nhập (thay prompt) -->
     <div id="adminInputModal" class="admin-modal-overlay">

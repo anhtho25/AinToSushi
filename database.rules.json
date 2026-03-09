@@ -6,6 +6,16 @@
         ".write": "auth != null && auth.uid == $uid"
       }
     },
+    "chatbot": {
+      "config": {
+        ".read": "true",
+        ".write": "auth != null"
+      },
+      "conversations": {
+        ".read": "auth != null",
+        ".write": "true"
+      }
+    },
     "menu": {
       "menuOnline": {
         ".read": "true",

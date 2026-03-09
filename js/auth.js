@@ -14,6 +14,7 @@ import {
     getDatabase, 
     ref, 
     set, 
+    update,
     get,
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -41,21 +42,23 @@ googleProvider.setCustomParameters({
 // Lưu user data vào Realtime Database
 // role: 'admin' | 'staff' | 'customer'
 // position (chỉ cho staff): 'waiter' | 'chef' | 'cashier'
-export async function saveUserData(uid, email, role, name = null, position = null) {
+// existingData: { phone, address, photoURL } - giữ lại khi đăng nhập để không mất dữ liệu đã cập nhật trên trang tài khoản
+export async function saveUserData(uid, email, role, name = null, position = null, existingData = null) {
     try {
         const userRef = ref(database, `users/${uid}`);
-        const userData = {
+        const updates = {
             email: email,
             role: role,
             position: position || null,
             createdAt: serverTimestamp()
         };
-        
-        if (name) {
-            userData.name = name;
+        if (name != null) updates.name = name;
+        if (existingData && typeof existingData === 'object') {
+            if (existingData.phone !== undefined) updates.phone = existingData.phone;
+            if (existingData.address !== undefined) updates.address = existingData.address;
+            if (existingData.photoURL !== undefined) updates.photoURL = existingData.photoURL;
         }
-        
-        await set(userRef, userData);
+        await update(userRef, updates);
         return true;
     } catch (error) {
         console.error('Error saving user data:', error);
@@ -243,13 +246,14 @@ export async function login(email, password) {
             };
         }
 
-        // Lưu lại userData chuẩn hoá
+        // Lưu lại userData chuẩn hoá (giữ phone, address, photoURL từ DB để không mất)
         await saveUserData(
             user.uid,
             userData.email,
             userData.role,
             userData.name || null,
-            userData.position || null
+            userData.position || null,
+            { phone: userData.phone, address: userData.address, photoURL: userData.photoURL }
         );
 
         redirectByRole(userData.role, user.email);
@@ -313,13 +317,14 @@ export async function loginWithGoogle() {
             };
         }
         
-        // Lưu lại userData chuẩn hoá
+        // Lưu lại userData chuẩn hoá (giữ phone, address, photoURL từ DB để không mất)
         await saveUserData(
             user.uid,
             userData.email,
             userData.role,
             userData.name || null,
-            userData.position || null
+            userData.position || null,
+            { phone: userData.phone, address: userData.address, photoURL: userData.photoURL }
         );
         
         // Redirect dựa trên role
@@ -362,7 +367,7 @@ function redirectByRole(role, email = '') {
                 const isAuthPage = u.pathname.includes('/auth/login') || u.pathname.includes('/auth/register');
                 const isAdminArea = u.pathname.startsWith('/admin') || u.pathname.startsWith('/staff') || u.pathname.includes('/manager/');
                 if (isSameOrigin && !isAuthPage && !isAdminArea) {
-                    setTimeout(() => { window.location.href = returnUrl; }, 300);
+                    setTimeout(() => { window.location.href = u.href; }, 300);
                     return;
                 }
             } catch (e) {}

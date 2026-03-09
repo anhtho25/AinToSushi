@@ -68,8 +68,8 @@
         .review-form textarea { min-height: 100px; resize: vertical; }
         .review-form .stars-wrap { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
         .review-form .stars-wrap button {
-            width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border-color);
-            background: var(--gray-light); color: var(--text-light); font-size: 1rem; cursor: pointer; transition: all 0.2s;
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border-color);
+            background: var(--gray-light); color: var(--text-light); font-size: 1.35rem; cursor: pointer; transition: all 0.2s;
         }
         .review-form .stars-wrap button.active, .review-form .stars-wrap button:hover { background: var(--gold); color: var(--dark-bg); border-color: var(--gold); }
         .review-form .btn-submit {
@@ -172,13 +172,13 @@
                         <input type="email" id="reviewEmail" required placeholder="email@example.com">
                     </div>
                     <div class="form-group">
-                        <label>Số sao *</label>
+                        <label>Đánh giá sao *</label>
                         <div class="stars-wrap" id="starsWrap">
-                            <button type="button" data-star="1">1</button>
-                            <button type="button" data-star="2">2</button>
-                            <button type="button" data-star="3">3</button>
-                            <button type="button" data-star="4">4</button>
-                            <button type="button" data-star="5">5</button>
+                            <button type="button" data-star="1" title="1 sao">★</button>
+                            <button type="button" data-star="2" title="2 sao">★</button>
+                            <button type="button" data-star="3" title="3 sao">★</button>
+                            <button type="button" data-star="4" title="4 sao">★</button>
+                            <button type="button" data-star="5" title="5 sao">★</button>
                         </div>
                     </div>
                     <div class="form-group">
@@ -203,7 +203,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -363,9 +363,24 @@
             }).join('');
         }
 
+        async function fillReviewAccountFields() {
+            if (!currentUser) return;
+            const nameEl = document.getElementById('reviewName');
+            const emailEl = document.getElementById('reviewEmail');
+            if (emailEl) emailEl.value = currentUser.email || '';
+            let name = currentUser.displayName || (currentUser.email && currentUser.email.split('@')[0]) || '';
+            try {
+                const snap = await get(ref(database, 'users/' + currentUser.uid));
+                if (snap.exists() && snap.val().name) name = snap.val().name;
+            } catch (_) {}
+            if (nameEl) nameEl.value = name;
+        }
+
         function initReviewForm() {
             const form = document.getElementById('reviewForm');
             const starsWrap = document.getElementById('starsWrap');
+
+            fillReviewAccountFields();
 
             starsWrap.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -400,6 +415,7 @@
                     form.reset();
                     selectedStars = 0;
                     starsWrap.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    fillReviewAccountFields();
                 } catch (err) {
                     console.error(err);
                     alert('Gửi đánh giá thất bại. Vui lòng thử lại.');
@@ -454,5 +470,6 @@
             });
         }
     </script>
+    <script src="js/chatbot.js"></script>
 </body>
 </html>

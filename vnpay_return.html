@@ -51,7 +51,22 @@
     </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
+            authDomain: "ain-to-sushi.firebaseapp.com",
+            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ain-to-sushi",
+            storageBucket: "ain-to-sushi.firebasestorage.app",
+            messagingSenderId: "191817237919",
+            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
 
         const CART_KEY = 'cart';
         const params = new URLSearchParams(window.location.search);
@@ -65,34 +80,39 @@
         const btnWrap = document.getElementById('btnWrap');
         const linkPrimary = document.getElementById('linkPrimary');
 
+        function waitForAuth() {
+            return new Promise(resolve => {
+                const unsub = onAuthStateChanged(auth, user => {
+                    unsub();
+                    resolve(user);
+                });
+            });
+        }
+
         (async function () {
             if (responseCode === '00') {
                 let orderUpdated = false;
                 if (orderId) {
                     try {
-                        const firebaseConfig = {
-                            apiKey: "AIzaSyCZNsCgsIMSKsiWE3AcBNQBX_icDhKez38",
-                            authDomain: "ain-to-sushi.firebaseapp.com",
-                            databaseURL: "https://ain-to-sushi-default-rtdb.asia-southeast1.firebasedatabase.app",
-                            projectId: "ain-to-sushi",
-                            storageBucket: "ain-to-sushi.firebasestorage.app",
-                            messagingSenderId: "191817237919",
-                            appId: "1:191817237919:web:532c656464fe58bd0ce9aa"
-                        };
-                        const app = initializeApp(firebaseConfig);
-                        const database = getDatabase(app);
-                        await update(ref(database, 'orders/' + orderId), { status: 'confirmed' });
+                        await waitForAuth();
+                        await update(ref(database, 'orders/' + orderId), {
+                            status: 'COMPLETED',
+                            completedAt: Date.now(),
+                            paidVia: 'vnpay',
+                            paidAt: Date.now()
+                        });
                         orderUpdated = true;
-                    } catch (e) { console.error(e); }
+                    } catch (e) { console.error('Cập nhật đơn hàng thất bại:', e); }
                 }
-                // Chỉ xóa giỏ hàng khi đã xác nhận đơn thành công (tránh xóa khi hủy/return nhầm)
-                if (orderUpdated) localStorage.setItem(CART_KEY, '[]');
+                localStorage.setItem(CART_KEY, '[]');
                 resultEl.classList.add('success');
                 iconEl.textContent = '✓';
                 titleEl.textContent = 'Thanh toán thành công';
-                msgEl.textContent = 'Đơn hàng của bạn đã được thanh toán qua VNPay. Cảm ơn bạn đã sử dụng dịch vụ.';
+                msgEl.textContent = orderUpdated
+                    ? 'Đơn hàng của bạn đã được thanh toán qua VNPay. Cảm ơn bạn đã sử dụng dịch vụ.'
+                    : 'Thanh toán VNPay thành công. Đơn hàng sẽ được xử lý trong giây lát.';
                 linkPrimary.textContent = 'Đơn hàng của tôi';
-                linkPrimary.href = 'profile.html';
+                linkPrimary.href = 'profile.html#don-hang';
                 const a2 = document.createElement('a');
                 a2.href = 'index.html';
                 a2.className = 'secondary';
