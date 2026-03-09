@@ -8,6 +8,191 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .about-hero {
+            position: relative;
+            width: 100%;
+            height: 520px;
+            overflow: hidden;
+        }
+        .about-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 35%;
+            display: block;
+        }
+        .about-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.3) 50%, rgba(10,10,10,0.15) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 3.5rem;
+            text-align: center;
+        }
+        .about-hero-overlay h1 {
+            color: #fff;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 16px rgba(0,0,0,0.5);
+        }
+        .about-hero-overlay p {
+            color: var(--gold);
+            font-size: 1.15rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+
+        .about-section {
+            padding: 4rem 2rem;
+        }
+        .about-section-dark {
+            background: #111;
+        }
+        .about-row {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .about-row-reverse { direction: rtl; }
+        .about-row-reverse > * { direction: ltr; }
+
+        .about-text h2 {
+            color: var(--gold);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .about-divider {
+            width: 50px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 2px;
+            margin-bottom: 1.25rem;
+        }
+        .about-divider-center { margin-left: auto; margin-right: auto; }
+        .about-text p {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.98rem;
+            line-height: 1.75;
+            margin-bottom: 0.75rem;
+        }
+        .about-img {
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .about-img img {
+            width: 100%;
+            height: 340px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+        .about-img:hover img {
+            transform: scale(1.04);
+        }
+
+        .about-gallery-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+        }
+        .about-gallery-header h2 {
+            color: var(--gold);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .about-gallery-header p {
+            color: rgba(255,255,255,0.65);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .about-gallery {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .about-gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+        }
+        .about-gallery-item img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+        .about-gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        .about-gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .about-cta {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            border-top: 1px solid rgba(212,175,55,0.15);
+        }
+        .about-cta h2 {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .about-cta p {
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        .about-cta-btns {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .about-hero { height: 360px; }
+            .about-hero-overlay h1 { font-size: 1.8rem; }
+            .about-hero-overlay p { font-size: 1rem; }
+            .about-row,
+            .about-row-reverse {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .about-row-reverse { direction: ltr; }
+            .about-gallery {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .about-section { padding: 2.5rem 1.25rem; }
+        }
+    </style>
 </head>
 <body class="index-page theme-aintosushi">
     <header>
@@ -32,29 +217,132 @@
         </nav>
     </header>
 
-    <div class="container index-container" style="padding-top:4rem; padding-bottom:4rem;">
-        <section class="card" data-inview>
-            <h1 style="margin-bottom:1rem;">Về Ain Tō Sushi</h1>
-            <p style="margin-bottom:1.5rem;">Chúng tôi mong muốn mang trải nghiệm ẩm thực Nhật Bản chuẩn mực đến với thực khách tại Việt Nam.</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;">
-                <div>
-                    <h2 style="margin-bottom:0.5rem;">Câu chuyện thương hiệu</h2>
-                    <p>Ain Tō Sushi được xây dựng từ niềm đam mê với ẩm thực Nhật Bản. Từ những ngày đầu, chúng tôi luôn giữ triết lý: nguyên liệu tươi nhất, kỹ thuật chuẩn nhất và phục vụ tận tâm nhất.</p>
-                </div>
-                <div>
-                    <h2 style="margin-bottom:0.5rem;">Không gian & dịch vụ</h2>
-                    <p>Không gian được thiết kế theo phong cách Nhật hiện đại, ấm cúng nhưng vẫn sang trọng. Đội ngũ nhân viên được đào tạo bài bản, luôn sẵn sàng hỗ trợ và tư vấn món cho khách.</p>
-                </div>
-                <div>
-                    <h2 style="margin-bottom:0.5rem;">Cam kết chất lượng</h2>
-                    <p>Chúng tôi lựa chọn nhà cung cấp uy tín, kiểm soát chặt chẽ quy trình bảo quản và chế biến để đảm bảo mỗi món ăn khi lên bàn đều đạt chuẩn về hương vị và an toàn thực phẩm.</p>
+    <!-- Hero Banner -->
+    <section class="about-hero">
+        <img src="images/hinh/1.png" alt="Mặt tiền Ain Tō Sushi">
+        <div class="about-hero-overlay">
+            <h1>Về Ain Tō Sushi</h1>
+            <p>Tinh hoa ẩm thực Nhật Bản — Trọn vẹn trong từng trải nghiệm</p>
+        </div>
+    </section>
+
+    <!-- Câu chuyện thương hiệu -->
+    <section class="about-section">
+        <div class="about-row">
+            <div class="about-text">
+                <h2>Câu chuyện thương hiệu</h2>
+                <div class="about-divider"></div>
+                <p>Ain Tō Sushi được xây dựng từ niềm đam mê sâu sắc với ẩm thực Nhật Bản. Từ những ngày đầu, chúng tôi luôn giữ vững triết lý: <strong>nguyên liệu tươi nhất, kỹ thuật chuẩn nhất và phục vụ tận tâm nhất</strong>.</p>
+                <p>Mỗi món ăn tại Ain Tō Sushi là sự kết hợp giữa truyền thống lâu đời của ẩm thực xứ Phù Tang và sự sáng tạo hiện đại, mang đến hương vị khó quên cho thực khách.</p>
+            </div>
+            <div class="about-img">
+                <img src="images/hinh/3.png" alt="Không gian chính Ain Tō Sushi">
+            </div>
+        </div>
+    </section>
+
+    <!-- Không gian -->
+    <section class="about-section about-section-dark">
+        <div class="about-row about-row-reverse">
+            <div class="about-text">
+                <h2>Không gian sang trọng</h2>
+                <div class="about-divider"></div>
+                <p>Không gian nhà hàng được thiết kế theo phong cách Nhật hiện đại — ấm cúng, tinh tế và sang trọng. Từ đèn lồng truyền thống, tranh hạc vàng cho đến nội thất gỗ tối, mọi chi tiết đều được chăm chút tỉ mỉ.</p>
+                <p>Chúng tôi mong muốn mỗi bữa ăn không chỉ là thưởng thức món ngon, mà còn là một hành trình văn hóa đầy cảm hứng.</p>
+            </div>
+            <div class="about-img">
+                <img src="images/hinh/5.png" alt="Không gian tổng thể Ain Tō Sushi">
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery 3 cột -->
+    <section class="about-section">
+        <div class="about-gallery-header">
+            <h2>Đa dạng khu vực phục vụ</h2>
+            <div class="about-divider about-divider-center"></div>
+            <p>Từ quầy counter riêng tư, phòng VIP đến khu vực bàn Western — luôn có không gian phù hợp cho bạn.</p>
+        </div>
+        <div class="about-gallery">
+            <div class="about-gallery-item">
+                <img src="images/hinh/7.png" alt="Khu vực bàn Western">
+                <div class="about-gallery-caption">Khu vực bàn Western</div>
+            </div>
+            <div class="about-gallery-item">
+                <img src="images/hinh/2.png" alt="Phòng riêng Private Room">
+                <div class="about-gallery-caption">Phòng riêng Private Room</div>
+            </div>
+            <div class="about-gallery-item">
+                <img src="images/hinh/4.png" alt="Quầy Counter Omakase">
+                <div class="about-gallery-caption">Quầy Counter Omakase</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Đầu bếp & Cam kết -->
+    <section class="about-section about-section-dark">
+        <div class="about-row">
+            <div class="about-text">
+                <h2>Nghệ thuật từ đôi tay đầu bếp</h2>
+                <div class="about-divider"></div>
+                <p>Đội ngũ đầu bếp tại Ain Tō Sushi được đào tạo bài bản, tận tâm với từng lát cắt, từng cách bày trí. Mỗi phần sushi, sashimi đều được chế biến trực tiếp trước mắt thực khách — đảm bảo sự tươi ngon tuyệt đối.</p>
+                <p>Chúng tôi lựa chọn nhà cung cấp uy tín, kiểm soát chặt chẽ quy trình bảo quản và chế biến để mỗi món ăn khi lên bàn đều đạt chuẩn về <strong>hương vị và an toàn thực phẩm</strong>.</p>
+            </div>
+            <div class="about-img">
+                <img src="images/hinh/6.png" alt="Đầu bếp chế biến sushi">
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="about-cta">
+        <h2>Sẵn sàng trải nghiệm?</h2>
+        <p>Đặt bàn ngay hôm nay để tận hưởng ẩm thực Nhật Bản đích thực tại Ain Tō Sushi.</p>
+        <div class="about-cta-btns">
+            <a href="reservation.html" class="btn">Đặt Bàn Ngay</a>
+            <a href="menu.html" class="btn btn-secondary">Xem Thực Đơn</a>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="site-footer-main">
+            <div class="site-footer-brand">
+                <a href="index.html" class="footer-logo">
+                    <img src="images/logo3.png" alt="Ain Tō Sushi">
+                    <span>Ain Tō Sushi</span>
+                </a>
+                <p class="footer-tagline">Trải nghiệm ẩm thực Nhật Bản chuẩn mực — nguyên liệu tươi ngon, kỹ thuật tinh tế, phục vụ tận tâm.</p>
+                <div class="footer-socials">
+                    <a href="#" title="Facebook" aria-label="Facebook"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                    <a href="#" title="Instagram" aria-label="Instagram"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                    <a href="#" title="TikTok" aria-label="TikTok"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-2.65-.78 4.83 4.83 0 01-1.35-1.12V6.69z"/></svg></a>
                 </div>
             </div>
-        </section>
-    </div>
-
-    <footer class="index-footer">
-        <p>&copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.</p>
+            <div class="site-footer-col">
+                <h4>Liên kết</h4>
+                <ul>
+                    <li><a href="index.html">Trang Chủ</a></li>
+                    <li><a href="menu.html">Thực Đơn</a></li>
+                    <li><a href="reservation.html">Đặt Bàn</a></li>
+                    <li><a href="news.html">Tin Tức</a></li>
+                    <li><a href="about.html">Về Chúng Tôi</a></li>
+                </ul>
+            </div>
+            <div class="site-footer-col">
+                <h4>Liên hệ</h4>
+                <div class="footer-contact-item"><span class="fc-icon">📍</span><span>124A, Đường Trưng Nữ Vương, Phường 1, TP. Vĩnh Long</span></div>
+                <div class="footer-contact-item"><span class="fc-icon">📞</span><span>082 826 7101</span></div>
+                <div class="footer-contact-item"><span class="fc-icon">✉</span><span>aintosushi@gmail.com</span></div>
+            </div>
+            <div class="site-footer-col">
+                <h4>Giờ mở cửa</h4>
+                <div class="footer-contact-item"><span class="fc-icon">🕐</span><span>Thứ 2 – Thứ 7: 08:00 – 21:00</span></div>
+                <div class="footer-contact-item"><span class="fc-icon">🕐</span><span>CN: 08:00 – 22:00</span></div>
+            </div>
+        </div>
+        <div class="site-footer-bottom">
+            &copy; 2024 Ain Tō Sushi. Tất cả quyền được bảo lưu.
+        </div>
     </footer>
 
     <script type="module">
