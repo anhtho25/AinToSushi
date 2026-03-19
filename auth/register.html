@@ -185,19 +185,7 @@
         .auth-footer a:hover {
             text-decoration: underline;
         }
-        .info-box {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #EFF6FF;
-            border-radius: 12px;
-            border: 1px solid #BFDBFE;
-        }
-        .info-box p {
-            font-size: 0.85rem;
-            color: #1E40AF;
-            margin: 0;
-            line-height: 1.6;
-        }
+        /* removed info-box (no longer used) */
     </style>
 </head>
 <body class="theme-aintosushi">
@@ -254,10 +242,6 @@
                 Đăng ký với Google
             </button>
 
-            <div class="info-box">
-                <p><strong>Lưu ý:</strong> Chỉ khách hàng (Customer) mới có thể đăng ký tài khoản mới. Tài khoản nhân viên được quản lý bởi hệ thống.</p>
-            </div>
-
             <div class="auth-footer">
                 <p>Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
                 <p><a href="../index.html">← Về trang chủ</a></p>
@@ -274,6 +258,23 @@
             }
         })();
         import { register, registerWithGoogle } from '../js/auth.js';
+
+        // Safety net: remove legacy "Lưu ý" box if present (cached/old markup)
+        (function removeLegacyInfoBox() {
+            try {
+                document.querySelectorAll('.info-box').forEach(el => el.remove());
+                const needles = ['Lưu ý:', 'Chỉ khách hàng', 'Tài khoản nhân viên'];
+                document.querySelectorAll('p, div, span').forEach(el => {
+                    const t = (el.textContent || '').trim();
+                    if (!t) return;
+                    if (needles.some(n => t.includes(n))) {
+                        // remove the nearest box-like wrapper if any
+                        const box = el.closest('.info-box') || el.closest('.auth-card > div') || el;
+                        box.remove();
+                    }
+                });
+            } catch (_) {}
+        })();
 
         const registerForm = document.getElementById('registerForm');
         const googleRegisterBtn = document.getElementById('googleRegisterBtn');
