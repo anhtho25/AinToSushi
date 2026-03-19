@@ -40,6 +40,38 @@
         }
         .product-detail .product-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin: 1rem 0; }
         .product-detail .product-description { color: var(--text-dark); line-height: 1.7; margin-bottom: 1.5rem; }
+        .product-qty {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .product-qty-label { color: var(--text-light); font-weight: 600; font-size: 0.9rem; }
+        .qty-control {
+            display: inline-flex;
+            align-items: center;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--white);
+        }
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .qty-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .qty-value {
+            min-width: 44px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
         .product-detail .btn-add-cart {
             display: inline-block; padding: 0.85rem 2rem; background: linear-gradient(135deg, var(--primary-color) 0%, var(--gray-dark) 100%);
             color: var(--white); border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
@@ -156,6 +188,14 @@
                     <h1 id="productName"></h1>
                     <div class="product-price" id="productPrice"></div>
                     <p class="product-description" id="productDescription"></p>
+                    <div class="product-qty" aria-label="Chọn số lượng">
+                        <span class="product-qty-label">Số lượng</span>
+                        <div class="qty-control">
+                            <button type="button" class="qty-btn" id="qtyMinus" aria-label="Giảm số lượng">−</button>
+                            <div class="qty-value" id="qtyValue">1</div>
+                            <button type="button" class="qty-btn" id="qtyPlus" aria-label="Tăng số lượng">+</button>
+                        </div>
+                    </div>
                     <a href="#" id="btnAddToCart" class="btn-add-cart">Thêm vào giỏ hàng</a>
                 </div>
             </div>
@@ -299,6 +339,16 @@
         let currentProduct = null;
         let selectedStars = 0;
         let allMenuItems = [];
+        let selectedQty = 1;
+
+        function setQty(next) {
+            const v = Math.max(1, Math.min(99, Number(next) || 1));
+            selectedQty = v;
+            const valueEl = document.getElementById('qtyValue');
+            const minusEl = document.getElementById('qtyMinus');
+            if (valueEl) valueEl.textContent = String(v);
+            if (minusEl) minusEl.disabled = v <= 1;
+        }
 
         function renderProduct(product, productId) {
             const name = product.name || product.nameEn || 'Món';
@@ -329,8 +379,14 @@
                     return;
                 }
                 addCurrentProductToCart();
+                // Chuyển sang giỏ hàng sau khi thêm
                 window.location.href = 'cart.html';
             };
+
+            // Qty controls (trang chi tiết món)
+            setQty(1);
+            document.getElementById('qtyMinus')?.addEventListener('click', () => setQty(selectedQty - 1));
+            document.getElementById('qtyPlus')?.addEventListener('click', () => setQty(selectedQty + 1));
         }
 
         function addCurrentProductToCart() {
@@ -340,7 +396,7 @@
                 name: currentProduct.name || currentProduct.nameEn || 'Món',
                 image: (currentProduct.image && currentProduct.image.trim()) ? currentProduct.image.trim() : '',
                 price: Number(currentProduct.price) || 0,
-                quantity: 1
+                quantity: Math.max(1, Number(selectedQty) || 1)
             };
             let cart = [];
             try {
@@ -348,7 +404,7 @@
                 cart = raw ? JSON.parse(raw) : [];
             } catch (err) {}
             const existing = cart.find(x => x.id === item.id);
-            if (existing) existing.quantity = (existing.quantity || 1) + 1;
+            if (existing) existing.quantity = (existing.quantity || 0) + item.quantity;
             else cart.push(item);
             localStorage.setItem('cart', JSON.stringify(cart));
         }

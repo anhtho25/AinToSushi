@@ -358,9 +358,17 @@
             if (user) {
                 guests.forEach(el => { el.style.display = 'none'; });
                 if (userSpan) userSpan.style.display = 'inline-block';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg && user.photoURL) { navImg.src = user.photoURL; navImg.style.display = 'inline-block'; if (ph) ph.style.display = 'none'; }
+                else if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; if (ph) ph.style.display = 'inline-block'; }
             } else {
                 guests.forEach(el => { el.style.display = 'inline-block'; });
                 if (userSpan) userSpan.style.display = 'none';
+                const navImg = document.querySelector('.nav-avatar-img');
+                const ph = document.querySelector('.nav-avatar-placeholder');
+                if (navImg) { navImg.removeAttribute('src'); navImg.style.display = 'none'; }
+                if (ph) ph.style.display = 'inline-block';
             }
         });
     </script>

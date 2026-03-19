@@ -94,14 +94,21 @@
                 let orderUpdated = false;
                 if (orderId) {
                     try {
-                        await waitForAuth();
+                        const u = await waitForAuth();
+                        // VNPay thành công: đánh dấu đơn đã được duyệt để bếp thấy và chế biến
+                        // (COMPLETED là trạng thái đã thanh toán xong, sẽ bỏ qua luồng bếp/ready)
                         await update(ref(database, 'orders/' + orderId), {
-                            status: 'COMPLETED',
-                            completedAt: Date.now(),
+                            status: 'APPROVED',
+                            approvedAt: Date.now(),
                             paidVia: 'vnpay',
                             paidAt: Date.now()
                         });
                         orderUpdated = true;
+                        // Nếu đã đăng nhập, cho phép vào thẳng trang đơn hàng
+                        if (u) {
+                            linkPrimary.textContent = 'Đơn hàng của tôi';
+                            linkPrimary.href = 'profile.html#don-hang';
+                        }
                     } catch (e) { console.error('Cập nhật đơn hàng thất bại:', e); }
                 }
                 localStorage.setItem(CART_KEY, '[]');
@@ -111,8 +118,12 @@
                 msgEl.textContent = orderUpdated
                     ? 'Đơn hàng của bạn đã được thanh toán qua VNPay. Cảm ơn bạn đã sử dụng dịch vụ.'
                     : 'Thanh toán VNPay thành công. Đơn hàng sẽ được xử lý trong giây lát.';
-                linkPrimary.textContent = 'Đơn hàng của tôi';
-                linkPrimary.href = 'profile.html#don-hang';
+                // Nếu chưa đăng nhập (thường do khác domain / hết phiên), chuyển sang đăng nhập rồi quay lại đơn hàng
+                const u2 = await waitForAuth();
+                if (!u2) {
+                    linkPrimary.textContent = 'Đăng nhập để xem đơn';
+                    linkPrimary.href = 'auth/login.html';
+                }
                 const a2 = document.createElement('a');
                 a2.href = 'index.html';
                 a2.className = 'secondary';

@@ -79,12 +79,40 @@
         #adminNewsSection .ql-font-serif { font-family: serif; }
         #adminNewsSection .ql-font-monospace { font-family: monospace; }
         /* Admin modals (thay alert/confirm/prompt) */
-        .admin-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 9999; }
-        .admin-modal-box { background: #1a1a1a; border-radius: 12px; border: 2px solid #D4AF37; box-shadow: 0 18px 45px rgba(0,0,0,0.5); max-width: 420px; width: 90%; display: flex; flex-direction: column; overflow: hidden; }
+        .admin-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+        .admin-modal-box {
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 2px solid #D4AF37;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.5);
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
         .admin-modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; }
         .admin-modal-title { font-size: 1.1rem; font-weight: 600; color: #D4AF37; }
         .admin-modal-close { background: transparent; border: none; color: rgba(255,255,255,0.8); font-size: 1.25rem; cursor: pointer; padding: 0 0.25rem; }
-        .admin-modal-body { padding: 1.25rem 1.25rem 1rem; color: rgba(255,255,255,0.9); font-size: 0.95rem; }
+        .admin-modal-body {
+            padding: 1.25rem 1.25rem 1rem;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95rem;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
         .admin-modal-actions { padding: 0.75rem 1.25rem 1rem; display: flex; justify-content: flex-end; gap: 0.75rem; }
         .admin-modal-actions .btn { padding: 0.45rem 1rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
         .admin-modal-input { width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: #2d2d2d; color: #fff; font-size: 0.95rem; margin-top: 0.5rem; box-sizing: border-box; }

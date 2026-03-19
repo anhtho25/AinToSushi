@@ -179,6 +179,59 @@
             color: #fff;
             font-size: 0.92rem;
         }
+        .staff-modal-list li.staff-order-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .staff-order-item-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+        .staff-order-item-remove:hover { background: rgba(255,255,255,0.14); }
+        .staff-order-item-remove:disabled { opacity: 0.6; cursor: not-allowed; }
+        .staff-order-item-text { flex: 1 1 auto; min-width: 0; }
+
+        /* Print invoice: 1 trang, không scroll cắt món, ẩn nút thao tác */
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body { background: #fff !important; }
+
+            /* Chỉ in phần hóa đơn (modal), ẩn toàn bộ layout phía sau (không để chiếm chỗ tạo trang trắng) */
+            body > div:not(#staffDetailModal) { display: none !important; }
+            #staffConfirmModal, #staffInputModal, #staffAddMenuModal { display: none !important; }
+
+            #staffDetailModal {
+                position: fixed !important;
+                inset: 0 !important;
+                display: flex !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+
+            .staff-modal-overlay { position: fixed !important; inset: 0 !important; background: transparent !important; display: flex !important; padding: 0 !important; }
+            .staff-modal { max-width: 100% !important; width: 100% !important; max-height: none !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+            .staff-modal-header { border: none !important; padding: 0 0 0.5rem 0 !important; }
+            .staff-modal-close { display: none !important; }
+            .staff-modal-body { padding: 0 !important; overflow: visible !important; }
+            .invoice-actions { display: none !important; }
+            .invoice-items-scroll { max-height: none !important; overflow: visible !important; border: 1px solid #ddd !important; }
+            .invoice-header h3 { color: #111 !important; }
+            .invoice-header p { color: #333 !important; }
+            .staff-modal-label, .staff-modal-value { color: #111 !important; }
+            .staff-modal-section-title { color: #111 !important; }
+            table { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
+        }
 
         /* Modal xác nhận */
         .staff-confirm-modal {
@@ -1025,7 +1078,13 @@
                     const tableInfo = o.tableName || o.tableNumber || o.tableId || 'Chưa gán bàn';
                     const items = (o.items || []).map(it => {
                         const q = Math.max(1, Number(it.quantity) || 1);
-                        return `<li>- ${it.name || 'Món'} (x${q})</li>`;
+                        const itemId = String(it.id || it.itemId || '');
+                        return `
+                            <li class="staff-order-item" data-item-id="${itemId}">
+                                <div class="staff-order-item-text">- ${it.name || 'Món'} (x${q})</div>
+                                <button type="button" class="staff-order-item-remove" data-item-id="${itemId}" aria-label="Xóa món">−</button>
+                            </li>
+                        `;
                     }).join('');
                     const bodyHtml = `
                         <div class="staff-modal-row">
@@ -1054,7 +1113,7 @@
                         </div>
                         <div class="staff-modal-row">
                             <div class="staff-modal-label">Tổng tiền</div>
-                            <div class="staff-modal-value">${formatPrice(o.totalAmount)}</div>
+                            <div class="staff-modal-value" data-field="totalAmount">${formatPrice(o.totalAmount)}</div>
                         </div>
                         <div class="staff-modal-row">
                             <div class="staff-modal-label">Ghi chú</div>
@@ -1066,6 +1125,47 @@
                         </ul>
                     `;
                     openDetailModal(`Chi tiết đơn ${orderCode4(id)}`, bodyHtml);
+
+                    // Chỉ thêm nút trừ để xóa món ngay trong danh sách món đã thêm (popup chi tiết)
+                    const overlay = document.getElementById('staffDetailModal');
+                    const bodyEl = document.getElementById('staffDetailModalBody');
+                    if (!overlay || !bodyEl) return;
+                    bodyEl.querySelectorAll('.staff-order-item-remove[data-item-id]').forEach(btnRemove => {
+                        btnRemove.addEventListener('click', async () => {
+                            const itemId = btnRemove.getAttribute('data-item-id') || '';
+                            if (!itemId) return;
+                            const order = ordersCache[id];
+                            if (!order) return;
+
+                            btnRemove.disabled = true;
+                            try {
+                                const currentItems = Array.isArray(order.items) ? order.items : [];
+                                const newItems = currentItems.filter(it => String(it.id || it.itemId || '') !== itemId);
+                                let totalAmount = 0;
+                                newItems.forEach(it => { totalAmount += (Number(it.price) || 0) * (Number(it.quantity) || 0); });
+
+                                await update(ref(database, 'orders/' + id), {
+                                    items: newItems,
+                                    totalAmount: Math.round(totalAmount)
+                                });
+
+                                // Update UI ngay trong modal (không cần thêm chỗ khác)
+                                const li = bodyEl.querySelector('.staff-order-item[data-item-id="' + CSS.escape(itemId) + '"]');
+                                if (li) li.remove();
+                                const totalEl = bodyEl.querySelector('[data-field="totalAmount"]');
+                                if (totalEl) totalEl.textContent = formatPrice(Math.round(totalAmount));
+                                const listEl = bodyEl.querySelector('.staff-modal-list');
+                                if (listEl && !listEl.querySelector('.staff-order-item')) {
+                                    listEl.innerHTML = '<li>Không có món nào.</li>';
+                                }
+                            } catch (e) {
+                                console.error('Xóa món thất bại', e);
+                                showMessageModal('Lỗi', 'Không thể xóa món. Vui lòng thử lại.');
+                            } finally {
+                                btnRemove.disabled = false;
+                            }
+                        });
+                    });
                 });
             });
 
@@ -1236,9 +1336,13 @@
                             <span class="badge ${badgeClass}">${statusLabel}</span>
                             ${note ? `<br><small style="color: var(--text-light);">Có ghi chú</small>` : ''}
                         </td>
-                        <td>
-                            ${canConfirm ? `<button class="btn btn-success btn-sm btn-reservation-confirm" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.3rem; width: 100%;">Xác nhận</button>` : ''}
-                            ${canReject ? `<button class="btn btn-danger btn-sm btn-reservation-reject" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: 100%;">Từ chối</button>` : ''}
+                        <td style="min-width:130px;">
+                            ${canConfirm || canReject
+                                ? `
+                                    ${canConfirm ? `<button class="btn btn-success btn-sm btn-reservation-confirm" style="padding: 0.25rem 0.7rem; font-size: 0.8rem; margin-bottom: 0.25rem; display:block; width:100%;">Xác nhận</button>` : ''}
+                                    ${canReject ? `<button class="btn btn-danger btn-sm btn-reservation-reject" style="padding: 0.25rem 0.7rem; font-size: 0.8rem; display:block; width:100%;">Từ chối</button>` : ''}
+                                  `
+                                : `<span style="color: var(--text-light); font-size: 0.85rem;">—</span>`}
                         </td>
                     </tr>
                 `;
@@ -1563,7 +1667,13 @@
                     const info = o.customerInfo || {};
                     const items = (o.items || []).map(it => {
                         const q = Math.max(1, Number(it.quantity) || 1);
-                        return `<li>- ${it.name || 'Món'} (x${q})</li>`;
+                        const itemId = String(it.id || it.itemId || '');
+                        return `
+                            <li class="staff-order-item" data-item-id="${itemId}">
+                                <div class="staff-order-item-text">- ${it.name || 'Món'} (x${q})</div>
+                                <button type="button" class="staff-order-item-remove" data-item-id="${itemId}" aria-label="Xóa món">−</button>
+                            </li>
+                        `;
                     }).join('');
                     const bodyHtml = `
                         <div class="staff-modal-row">
@@ -1584,7 +1694,7 @@
                         </div>
                         <div class="staff-modal-row">
                             <div class="staff-modal-label">Tổng tiền</div>
-                            <div class="staff-modal-value">${formatPrice(o.totalAmount)}</div>
+                            <div class="staff-modal-value" data-field="totalAmount">${formatPrice(o.totalAmount)}</div>
                         </div>
                         <div class="staff-modal-section-title">Món ăn</div>
                         <ul class="staff-modal-list">
@@ -1595,6 +1705,45 @@
                         </div>
                     `;
                     openDetailModal(`Đơn tại ${tablesCache[tableId]?.name || ('bàn ' + tableId)}`, bodyHtml);
+
+                    // Dấu trừ xóa món: chỉ hiển thị ngay trong danh sách món đã thêm của popup này
+                    const bodyEl = document.getElementById('staffDetailModalBody');
+                    if (!bodyEl) return;
+                    bodyEl.querySelectorAll('.staff-order-item-remove[data-item-id]').forEach(btnRemove => {
+                        btnRemove.addEventListener('click', async () => {
+                            const itemId = btnRemove.getAttribute('data-item-id') || '';
+                            if (!itemId) return;
+                            const order = ordersCache[o.id];
+                            if (!order) return;
+
+                            btnRemove.disabled = true;
+                            try {
+                                const currentItems = Array.isArray(order.items) ? order.items : [];
+                                const newItems = currentItems.filter(it => String(it.id || it.itemId || '') !== itemId);
+                                let totalAmount = 0;
+                                newItems.forEach(it => { totalAmount += (Number(it.price) || 0) * (Number(it.quantity) || 0); });
+
+                                await update(ref(database, 'orders/' + o.id), {
+                                    items: newItems,
+                                    totalAmount: Math.round(totalAmount)
+                                });
+
+                                const li = bodyEl.querySelector('.staff-order-item[data-item-id="' + CSS.escape(itemId) + '"]');
+                                if (li) li.remove();
+                                const totalEl = bodyEl.querySelector('[data-field="totalAmount"]');
+                                if (totalEl) totalEl.textContent = formatPrice(Math.round(totalAmount));
+                                const listEl = bodyEl.querySelector('.staff-modal-list');
+                                if (listEl && !listEl.querySelector('.staff-order-item')) {
+                                    listEl.innerHTML = '<li>Không có món nào.</li>';
+                                }
+                            } catch (e) {
+                                console.error('Xóa món thất bại', e);
+                                showMessageModal('Lỗi', 'Không thể xóa món. Vui lòng thử lại.');
+                            } finally {
+                                btnRemove.disabled = false;
+                            }
+                        });
+                    });
                 });
             });
 
@@ -1788,7 +1937,7 @@
                             <div class="staff-modal-value">${createdTime}</div>
                         </div>
                         <div class="staff-modal-section-title" style="margin-top:1rem;">Chi tiết món</div>
-                        <div style="max-height:260px; overflow:auto; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#ffffff;">
+                        <div class="invoice-items-scroll" style="max-height:260px; overflow:auto; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#ffffff;">
                             <table style="width:100%; border-collapse:collapse; font-size:0.9rem; color:#111;">
                                 <thead>
                                     <tr style="background:#f5f5f5;">
@@ -1807,9 +1956,9 @@
                             <div class="staff-modal-label">Tổng cộng</div>
                             <div class="staff-modal-value"><strong>${total}</strong></div>
                         </div>
-                        <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                        <div class="invoice-actions" style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
                             <button type="button" class="staff-btn-secondary" onclick="document.getElementById('staffDetailModal').style.display='none'">Đóng</button>
-                            <button type="button" class="staff-btn-secondary" onclick="window.print()" style="min-width:120px;">In hóa đơn</button>
+                            <button type="button" class="staff-btn-secondary btn-invoice-print" onclick="window.print()" style="min-width:120px; display:none;">In hóa đơn</button>
                             <button type="button" class="staff-btn-primary btn-invoice-confirm" data-order-id="${id}">Xác nhận thanh toán</button>
                         </div>
                     `;
@@ -1826,7 +1975,7 @@
                 .filter(o => o._status === 'COMPLETED' && o.completedAt >= start && o.completedAt <= end)
                 .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
             if (!orders.length) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đơn thanh toán nào hôm nay.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Chưa có đơn thanh toán nào hôm nay.</td></tr>';
                 return;
             }
             tbody.innerHTML = orders.map(o => {
@@ -1839,9 +1988,84 @@
                         <td>${info.name || 'Khách'}</td>
                         <td>${formatPrice(o.totalAmount)}</td>
                         <td>${timeStr}</td>
+                        <td>
+                            <button type="button" class="btn btn-info btn-sm btn-history-print-invoice" data-id="${o.id}" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">In hóa đơn</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
+
+            tbody.querySelectorAll('.btn-history-print-invoice').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id || !ordersCache[id]) return;
+                    const o = ordersCache[id];
+                    const info = o.customerInfo || {};
+                    const tableInfo = o.tableName || o.tableId || (info.address ? 'Mang về/Giao' : '—');
+                    const itemsHtml = (o.items || []).map(it => {
+                        const q = Math.max(1, Number(it.quantity) || 1);
+                        const price = Number(it.price) || 0;
+                        const lineTotal = q * price;
+                        return `
+                            <tr>
+                                <td style="text-align:left; padding:0.45rem 0.5rem; color:#111;">${it.name || 'Món'}</td>
+                                <td style="text-align:center; padding:0.45rem 0.5rem; color:#111;">${q}</td>
+                                <td style="text-align:right; padding:0.45rem 0.5rem; color:#111;">${formatPrice(price)}</td>
+                                <td style="text-align:right; padding:0.45rem 0.5rem; color:#111;">${formatPrice(lineTotal)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    const createdTime = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—';
+                    const total = formatPrice(o.totalAmount);
+                    const bodyHtml = `
+                        <div class="invoice-header">
+                            <h3 style="margin:0 0 0.25rem 0;">Hóa đơn Ain Tō Sushi</h3>
+                            <p style="margin:0; color:rgba(255,255,255,0.7); font-size:0.85rem;">Mã đơn #${orderCode4(id)}</p>
+                        </div>
+                        <div class="staff-modal-row" style="margin-top:1rem;">
+                            <div class="staff-modal-label">Bàn / Khách</div>
+                            <div class="staff-modal-value">${tableInfo}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Khách hàng</div>
+                            <div class="staff-modal-value">${info.name || 'Khách'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Số điện thoại</div>
+                            <div class="staff-modal-value">${info.phone || '-'}</div>
+                        </div>
+                        <div class="staff-modal-row">
+                            <div class="staff-modal-label">Thời gian tạo</div>
+                            <div class="staff-modal-value">${createdTime}</div>
+                        </div>
+                        <div class="staff-modal-section-title" style="margin-top:1rem;">Chi tiết món</div>
+                        <div class="invoice-items-scroll" style="max-height:260px; overflow:auto; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#ffffff;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.9rem; color:#111;">
+                                <thead>
+                                    <tr style="background:#f5f5f5;">
+                                        <th style="text-align:left; padding:0.5rem; color:#111 !important;">Món</th>
+                                        <th style="text-align:center; padding:0.5rem; color:#111 !important;">SL</th>
+                                        <th style="text-align:right; padding:0.5rem; color:#111 !important;">Đơn giá</th>
+                                        <th style="text-align:right; padding:0.5rem; color:#111 !important;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHtml || `<tr><td colspan="4" style="padding:0.75rem; text-align:center; color:#333;">Không có món nào.</td></tr>`}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="staff-modal-row" style="margin-top:1rem; font-size:1rem;">
+                            <div class="staff-modal-label">Tổng cộng</div>
+                            <div class="staff-modal-value"><strong>${total}</strong></div>
+                        </div>
+                        <div class="invoice-actions" style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                            <button type="button" class="staff-btn-secondary" onclick="document.getElementById('staffDetailModal').style.display='none'">Đóng</button>
+                            <button type="button" class="staff-btn-secondary btn-invoice-print" onclick="window.print()" style="min-width:120px; display:inline-flex;">In hóa đơn</button>
+                        </div>
+                    `;
+                    openDetailModal('Hóa đơn #' + orderCode4(id), bodyHtml);
+                });
+            });
         }
 
         // Tự động giải phóng bàn khi đơn COMPLETED
@@ -2152,16 +2376,21 @@
                         if (!id || !ordersCache[id]) return;
                         const o = ordersCache[id];
                         if (normalizeStatus(o.status, 'order') !== 'READY') return;
+                        payBtn.disabled = true;
                         try {
                             await update(ref(database, 'orders/' + id), {
                                 status: 'COMPLETED',
                                 completedAt: Date.now()
                             });
-                            closeDetailModal();
-                            showMessageModal('Đã thanh toán', 'Đơn đã được đánh dấu hoàn thành và lưu vào lịch sử thanh toán.');
+                            // Sau khi thanh toán: hiện nút In hóa đơn ngay trong popup
+                            const bodyEl = document.getElementById('staffDetailModalBody');
+                            const printBtn = bodyEl ? bodyEl.querySelector('.btn-invoice-print') : null;
+                            if (printBtn) printBtn.style.display = 'inline-flex';
+                            payBtn.style.display = 'none';
                         } catch (err) {
                             console.error('Thanh toán đơn thất bại', err);
                             showMessageModal('Lỗi', 'Không thể cập nhật đơn. Vui lòng thử lại.');
+                            payBtn.disabled = false;
                         }
                     }
                 });
@@ -2233,7 +2462,7 @@
                                 <h2 style="color: var(--primary-color);">Quản Lý Đơn Hàng</h2>
                                 <p style="color: var(--text-light);">Xem, duyệt và theo dõi đơn khách vừa đặt</p>
                             </div>
-                            <button class="btn">+ Tạo Đơn Hàng Mới</button>
+                            <button id="createOrderBtn" class="btn">+ Tạo Đơn Hàng Mới</button>
                         </div>
 
                         <!-- Filter Orders -->
@@ -2291,10 +2520,6 @@
                             <div>
                                 <h2 style="color: var(--primary-color); font-size:1.4rem;">Sơ Đồ Bàn Ăn</h2>
                                 <p style="color: var(--text-light); font-size:0.9rem; margin-top:0.25rem;">Quản lý trạng thái và phân bổ bàn</p>
-                            </div>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button id="addTableBtn" class="btn" style="border-radius:999px; padding:0.45rem 1.1rem;">+ Thêm bàn</button>
-                                <button id="editTableBtn" class="btn btn-secondary" style="border-radius:999px; padding:0.45rem 1.1rem;">✏️ Sửa bàn</button>
                             </div>
                         </div>
 
@@ -2410,10 +2635,7 @@
             <section id="chefSection" style="display:none;">
                 <a id="chef-section-link"></a>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div>
-                        <h2 style="color: var(--primary-color);">Bếp - Quản Lý Đơn Hàng</h2>
-                        <p style="color: var(--text-light);">Theo dõi và chuẩn bị các món ăn</p>
-                    </div>
+                
                 </div>
 
                 <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color);">
@@ -2485,10 +2707,11 @@
                                 <th>Khách Hàng</th>
                                 <th>Tổng Tiền</th>
                                 <th>Thời Gian</th>
+                                <th>Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody id="cashierHistoryBody">
-                            <tr><td colspan="5" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
+                            <tr><td colspan="6" style="text-align:center; padding:1.5rem; color: var(--text-light);">Đang tải...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -2580,6 +2803,34 @@
                     }
                 });
             }
+        })();
+
+        // Nút "+ Tạo Đơn Hàng Mới" – chuyển sang tab "Bàn Ăn" để chọn bàn và tạo đơn
+        (function () {
+            const createOrderBtn = document.getElementById('createOrderBtn');
+            const waiterSection = document.getElementById('waiterSection');
+            if (!createOrderBtn || !waiterSection) return;
+
+            const tabs = waiterSection.querySelectorAll('.tab-container .tab');
+            const tabContents = waiterSection.querySelectorAll('.tab-content');
+            const tablesTabButton = waiterSection.querySelector('.tab[data-tab="waiter-tables-tab"]');
+            const tablesTabContent = document.getElementById('waiter-tables-tab');
+
+            createOrderBtn.addEventListener('click', function () {
+                if (!tablesTabButton || !tablesTabContent) return;
+
+                // Chuyển active từ tab Đơn Hàng sang tab Bàn Ăn
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                tabContents.forEach(function (c) { c.classList.remove('active'); });
+                tablesTabButton.classList.add('active');
+                tablesTabContent.classList.add('active');
+
+                // Cuộn xuống khu vực sơ đồ bàn để nhân viên chọn bàn và tạo đơn
+                const tablesGrid = document.getElementById('tablesGrid');
+                if (tablesGrid && typeof tablesGrid.scrollIntoView === 'function') {
+                    tablesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
         })();
     </script>
 </body>

@@ -8,7 +8,8 @@ import {
     onAuthStateChanged,
     GoogleAuthProvider,
     signInWithPopup,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
     getDatabase, 
@@ -66,6 +67,24 @@ export async function saveUserData(uid, email, role, name = null, position = nul
     }
 }
 
+async function saveUserDataToDb(db, uid, email, role, name = null, position = null, existingData = null) {
+    const userRef = ref(db, `users/${uid}`);
+    const updates = {
+        email: email,
+        role: role,
+        position: position || null,
+        createdAt: serverTimestamp()
+    };
+    if (name != null) updates.name = name;
+    if (existingData && typeof existingData === 'object') {
+        if (existingData.phone !== undefined) updates.phone = existingData.phone;
+        if (existingData.address !== undefined) updates.address = existingData.address;
+        if (existingData.photoURL !== undefined) updates.photoURL = existingData.photoURL;
+    }
+    await update(userRef, updates);
+    return true;
+}
+
 // Lấy user role từ database
 export async function getUserRole(uid) {
     try {
@@ -98,13 +117,23 @@ async function getUserData(uid) {
     }
 }
 
-// Admin: tạo tài khoản nhân viên (sau khi tạo sẽ đăng xuất, admin cần đăng nhập lại)
+// Admin: tạo tài khoản nhân viên (tạo bằng secondary app để KHÔNG làm đổi phiên admin)
 export async function createStaffAccount(email, password, name, role, position) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const secondaryApp = initializeApp(firebaseConfig, 'secondary');
+    const secondaryAuth = getAuth(secondaryApp);
+    const secondaryDb = getDatabase(secondaryApp);
+
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
     const user = userCredential.user;
+
     if (name) await updateProfile(user, { displayName: name });
-    await saveUserData(user.uid, email, role || 'staff', name, position || null);
-    await signOut(auth);
+
+    // Ghi profile/role bằng chính phiên của user mới để qua được rules kiểu auth.uid == $uid
+    await saveUserDataToDb(secondaryDb, user.uid, email, (role || 'staff').toLowerCase(), name, position || null);
+
+    // Dọn phiên secondary để tránh giữ session của user mới
+    await signOut(secondaryAuth);
+
     return user.uid;
 }
 
@@ -333,6 +362,17 @@ export async function loginWithGoogle() {
         return { user, role: userData.role, position: userData.position || null };
     } catch (error) {
         console.error('Google login error:', error);
+        throw error;
+    }
+}
+
+// Gửi email đặt lại mật khẩu (quên mật khẩu)
+export async function sendPasswordReset(email) {
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return true;
+    } catch (error) {
+        console.error('Send password reset error:', error);
         throw error;
     }
 }

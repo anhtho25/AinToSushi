@@ -30,8 +30,8 @@
     },
     "orders": {
       "$orderId": {
-        ".read": "auth != null && data.child('userId').val() == auth.uid",
-        ".write": "auth != null && newData.child('userId').val() == auth.uid"
+        ".read": "auth != null && (data.child('userId').val() == auth.uid || root.child('users/' + auth.uid + '/role').val() == 'staff' || root.child('users/' + auth.uid + '/role').val() == 'admin')",
+        ".write": "auth != null && (newData.child('userId').val() == auth.uid || root.child('users/' + auth.uid + '/role').val() == 'staff' || root.child('users/' + auth.uid + '/role').val() == 'admin') && (!data.exists() || newData.child('userId').val() == data.child('userId').val())"
       }
     }
   }
