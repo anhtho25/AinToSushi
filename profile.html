@@ -616,6 +616,15 @@
                 return String(Math.abs(num) % 10000).padStart(4, '0');
             }
 
+            function normalizeOrderStatus(raw) {
+                if (!raw) return 'PENDING';
+                const up = String(raw).toUpperCase();
+                // Tương thích dữ liệu cũ
+                if (up === 'CONFIRMED') return 'APPROVED';
+                if (up === 'PAID') return 'COMPLETED';
+                return up;
+            }
+
             function renderOrderPage() {
                 const total = orderListFull.length;
                 const totalPages = Math.max(1, Math.ceil(total / ORDER_PAGE_SIZE));
@@ -623,10 +632,18 @@
                 if (orderPage < 0) orderPage = 0;
                 const start = orderPage * ORDER_PAGE_SIZE;
                 const pageItems = orderListFull.slice(start, start + ORDER_PAGE_SIZE);
-                const statusText = { confirmed: 'Đã xác nhận', completed: 'Hoàn thành' };
+                const statusText = {
+                    PENDING: 'Chờ xác nhận',
+                    APPROVED: 'Đã xác nhận',
+                    COOKING: 'Đang chế biến',
+                    READY: 'Sẵn sàng / Chờ nhận',
+                    COMPLETED: 'Hoàn thành',
+                    CANCELLED: 'Đã hủy'
+                };
                 orderList.innerHTML = pageItems.map(o => {
                     const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : (o.date || '—');
-                    const status = statusText[o.status] || o.status || 'Đã xác nhận';
+                    const st = normalizeOrderStatus(o.status);
+                    const status = statusText[st] || st || 'Đang xử lý';
                     const code = orderCode4(o.id || o.key);
                     return `
                     <li>
@@ -649,7 +666,11 @@
                     orderListFull = !data ? [] : Object.entries(data)
                         .map(([id, o]) => ({ id, ...o }))
                         .filter(o => o.userId === user.uid)
-                        .filter(o => o.status === 'confirmed' || o.status === 'completed') // COD đã xác nhận hoặc VNPay thanh toán thành công
+                        // Hiển thị toàn bộ đơn của user theo các trạng thái hợp lệ (tương thích cả dữ liệu cũ)
+                        .filter(o => {
+                            const st = normalizeOrderStatus(o.status);
+                            return ['PENDING', 'APPROVED', 'COOKING', 'READY', 'COMPLETED', 'CANCELLED'].includes(st);
+                        })
                         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                     if (orderListFull.length === 0) {
                         orderList.innerHTML = '<li class="profile-list-empty">Chưa có đơn hàng nào.</li>';

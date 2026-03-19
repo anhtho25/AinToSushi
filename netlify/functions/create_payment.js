@@ -1,6 +1,7 @@
 const { VNPay } = require('vnpay');
 
-const VNP_RETURN_URL = 'https://aintosushi.netlify.app/vnpay_return.html';
+// Mặc định dùng Netlify domain, nhưng ưu tiên returnUrl client gửi lên để giữ đúng domain (giữ phiên đăng nhập)
+const DEFAULT_VNP_RETURN_URL = 'https://aintosushi.netlify.app/vnpay_return.html';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -44,7 +45,13 @@ exports.handler = async (event, context) => {
   }
 
   const orderId = body.orderId ? String(body.orderId).trim() : '';
-  const returnUrl = orderId ? VNP_RETURN_URL + '?orderId=' + encodeURIComponent(orderId) : VNP_RETURN_URL;
+  const baseReturnUrl = body.returnUrl
+    ? String(body.returnUrl).trim()
+    : DEFAULT_VNP_RETURN_URL;
+
+  const returnUrl = orderId
+    ? baseReturnUrl + (baseReturnUrl.includes('?') ? '&' : '?') + 'orderId=' + encodeURIComponent(orderId)
+    : baseReturnUrl;
   const vnp_TxnRef = 'ORDER_' + Date.now();
   const ipAddr = event.headers['x-forwarded-for']?.split(',')[0]?.trim() || event.headers['x-client-ip'] || '127.0.0.1';
 
