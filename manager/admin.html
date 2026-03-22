@@ -417,14 +417,29 @@
                 return { start: new Date(y, m, 1).getTime(), end: new Date(y, m + 1, 0, 23, 59, 59, 999).getTime() };
             }
             function isOnlineOrder(o) {
-                return String(o.paymentMethod || '').toLowerCase() === 'vnpay';
+                const pm = String(o.paymentMethod || '').toLowerCase();
+                const pv = String(o.paidVia || '').toLowerCase();
+                return pm === 'vnpay' || pv === 'vnpay';
+            }
+            /** Ghi nhận doanh thu: đơn COMPLETED, hoặc VNPay đã thanh toán (có paidAt) dù đơn vẫn APPROVED cho bếp */
+            function isRevenueCounted(o) {
+                const s = normalizeStatus(o.status);
+                if (s === 'CANCELLED') return false;
+                if (s === 'COMPLETED') return true;
+                if (o.paidAt != null && isOnlineOrder(o)) return true;
+                return false;
+            }
+            function getRevenueTimestamp(o) {
+                const s = normalizeStatus(o.status);
+                if (s === 'COMPLETED') return o.completedAt || o.paidAt || o.createdAt || 0;
+                return o.paidAt || o.completedAt || o.createdAt || 0;
             }
             function getRevenueInRange(orders, start, end) {
                 if (!orders) return { revenue: 0, count: 0, online: 0, offline: 0 };
                 const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
                 const completed = list.filter(o => {
-                    if (o._s !== 'COMPLETED') return false;
-                    const t = o.completedAt || o.createdAt || 0;
+                    if (!isRevenueCounted(o)) return false;
+                    const t = getRevenueTimestamp(o);
                     return t >= start && t <= end;
                 });
                 const revenue = completed.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
@@ -571,8 +586,8 @@
 
                 const list = Object.entries(orders).map(([id, o]) => ({ id, ...o, _s: normalizeStatus(o.status) }));
                 const completedThisMonth = list.filter(o => {
-                    if (o._s !== 'COMPLETED') return false;
-                    const t = o.completedAt || o.createdAt || 0;
+                    if (!isRevenueCounted(o)) return false;
+                    const t = getRevenueTimestamp(o);
                     return t >= monthStart && t <= monthEnd;
                 });
                 const dishCount = {};
