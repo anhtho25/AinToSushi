@@ -1487,24 +1487,31 @@
                 return;
             }
 
-            const availableCount = withStatus.filter(t => t._status === 'AVAILABLE').length;
-            const reservedCount = withStatus.filter(t => t._status === 'RESERVED').length;
-            const occupiedCount = withStatus.filter(t => t._status === 'OCCUPIED').length;
-
-            if (statAvailableEl) statAvailableEl.textContent = String(availableCount);
-            if (statReservedEl) statReservedEl.textContent = String(reservedCount);
-            if (statOccupiedEl) statOccupiedEl.textContent = String(occupiedCount);
-            if (statTotalEl) statTotalEl.textContent = String(withStatus.length);
-
             const activeOrdersByTable = {};
             Object.entries(ordersCache || {}).forEach(([oid, o]) => {
                 const status = normalizeStatus(o.status, 'order');
                 if (status === 'COMPLETED' || status === 'CANCELLED') return;
                 const tableId = o.tableId || o.table || o.tableNumber;
                 if (!tableId) return;
-                activeOrdersByTable[tableId] = activeOrdersByTable[tableId] || [];
-                activeOrdersByTable[tableId].push({ id: oid, ...o, _status: status });
+                const key = String(tableId);
+                activeOrdersByTable[key] = activeOrdersByTable[key] || [];
+                activeOrdersByTable[key].push({ id: oid, ...o, _status: status });
             });
+
+            const effectiveStatus = (t) => {
+                const ordersHere = activeOrdersByTable[String(t.id)] || [];
+                if (ordersHere.length > 0) return 'OCCUPIED';
+                return t._status;
+            };
+
+            const availableCount = withStatus.filter(t => effectiveStatus(t) === 'AVAILABLE').length;
+            const reservedCount = withStatus.filter(t => effectiveStatus(t) === 'RESERVED').length;
+            const occupiedCount = withStatus.filter(t => effectiveStatus(t) === 'OCCUPIED').length;
+
+            if (statAvailableEl) statAvailableEl.textContent = String(availableCount);
+            if (statReservedEl) statReservedEl.textContent = String(reservedCount);
+            if (statOccupiedEl) statOccupiedEl.textContent = String(occupiedCount);
+            if (statTotalEl) statTotalEl.textContent = String(withStatus.length);
 
             const reservationByTableId = {};
             Object.entries(reservationsCache || {}).forEach(([rid, r]) => {
@@ -1512,26 +1519,27 @@
                 if (st !== 'CONFIRMED') return;
                 const tid = r.tableId;
                 if (!tid) return;
-                reservationByTableId[tid] = { id: rid, ...r };
+                reservationByTableId[String(tid)] = { id: rid, ...r };
             });
 
             grid.innerHTML = withStatus.map(t => {
                 const label = t.name || t.label || ('Bàn ' + t.id);
                 const cap = t.capacity || t.seats || '—';
                 const st = t._status;
-                const statusLabel = TABLE_STATUS_LABELS[st] || st;
-                const badgeClass = TABLE_STATUS_BADGES[st] || 'badge-success';
-
-                const orders = activeOrdersByTable[t.id] || [];
+                const orders = activeOrdersByTable[String(t.id)] || [];
                 const mainOrder = orders[0];
                 const orderCode = mainOrder ? orderCode4(mainOrder.id) : null;
-                const res = reservationByTableId[t.id];
+                // Có đơn đang mở → luôn hiển thị "Đang phục vụ" (tránh lệch DB vẫn ghi AVAILABLE)
+                const displaySt = orderCode ? 'OCCUPIED' : st;
+                const statusLabel = TABLE_STATUS_LABELS[displaySt] || displaySt;
+                const badgeClass = TABLE_STATUS_BADGES[displaySt] || 'badge-success';
+
+                const res = reservationByTableId[String(t.id)];
                 const reservedGuestName = res ? (res.name || res.customerName || 'Khách') : '';
                 const reservedTime = res ? `${res.date || '—'} ${res.time || ''}` : '';
 
-                const canAssign = st === 'AVAILABLE';
-                const showOpenTable = st === 'RESERVED' || (st === 'OCCUPIED' && !orderCode);
-                const showViewOrder = st === 'OCCUPIED' && orderCode;
+                const showOpenTable = !orderCode && (st === 'RESERVED' || st === 'OCCUPIED');
+                const showViewOrder = !!orderCode;
 
                 return `
                     <div class="table-card" data-id="${t.id}">
@@ -2068,19 +2076,34 @@
             });
         }
 
-        // Tự động giải phóng bàn khi đơn COMPLETED
+        // Đồng bộ trạng thái bàn với đơn: đơn đang mở → OCCUPIED; đơn hoàn tất/hủy → AVAILABLE (nếu không còn đơn nào trên bàn)
         async function syncTablesFromOrders() {
             try {
-                const updates = {};
+                const desiredByTable = {};
                 Object.entries(ordersCache || {}).forEach(([id, o]) => {
                     const status = normalizeStatus(o.status, 'order');
-                    if (status !== 'COMPLETED') return;
                     const tableId = o.tableId || o.table || o.tableNumber;
                     if (!tableId) return;
-                    const table = tablesCache[tableId];
-                    const currentStatus = normalizeTableStatus(table?.status);
-                    if (currentStatus !== 'AVAILABLE') {
-                        updates['tables/' + tableId + '/status'] = 'AVAILABLE';
+                    const key = String(tableId);
+                    if (status === 'COMPLETED' || status === 'CANCELLED') return;
+                    desiredByTable[key] = 'OCCUPIED';
+                });
+                Object.entries(ordersCache || {}).forEach(([id, o]) => {
+                    const status = normalizeStatus(o.status, 'order');
+                    const tableId = o.tableId || o.table || o.tableNumber;
+                    if (!tableId) return;
+                    const key = String(tableId);
+                    if (status !== 'COMPLETED' && status !== 'CANCELLED') return;
+                    if (desiredByTable[key] === 'OCCUPIED') return;
+                    desiredByTable[key] = 'AVAILABLE';
+                });
+
+                const updates = {};
+                Object.entries(desiredByTable).forEach(([key, desired]) => {
+                    const table = tablesCache[key];
+                    const current = normalizeTableStatus(table?.status);
+                    if (current !== desired) {
+                        updates['tables/' + key + '/status'] = desired;
                     }
                 });
                 if (Object.keys(updates).length) {
